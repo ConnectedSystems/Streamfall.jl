@@ -8,12 +8,12 @@ using ModelParameters
 
 include("./network_creation.jl")
 
-climate_data = DataFrame!(CSV.File("../tests/data/climate/climate_historic.csv", 
+climate_data = DataFrame!(CSV.File("../test/data/climate/climate_historic.csv", 
                           comment="#",
                           dateformat="YYYY-mm-dd"))
 
-hist_dam_levels = DataFrame!(CSV.File("../tests/data/dam/historic_levels_for_fit.csv", dateformat="YYYY-mm-dd"))
-hist_dam_releases = DataFrame!(CSV.File("../tests/data/dam/historic_releases.csv", dateformat="YYYY-mm-dd"))
+hist_dam_levels = DataFrame!(CSV.File("../test/data/dam/historic_levels_for_fit.csv", dateformat="YYYY-mm-dd"))
+hist_dam_releases = DataFrame!(CSV.File("../test/data/dam/historic_releases.csv", dateformat="YYYY-mm-dd"))
 
 # Subset to same range
 last_date = hist_dam_levels.Date[end]

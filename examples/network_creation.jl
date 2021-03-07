@@ -8,7 +8,7 @@ using Streamfall
 using Infiltrator
 
 
-network = YAML.load_file("../tests/data/AWRA_R_Network/campaspe_network.yml")
+network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
 g, mg = create_network("Example Network", network)
 
 inlets, outlets = find_inlets_and_outlets(g)
@@ -17,7 +17,7 @@ inlets, outlets = find_inlets_and_outlets(g)
 
 
 
-# climate_data = DataFrame!(CSV.File("../tests/data/climate/climate_historic.csv", 
+# climate_data = DataFrame!(CSV.File("../test/data/climate/climate_historic.csv", 
 #                           comment="#",
 #                           dateformat="YYYY-mm-dd"))
 # climate = Climate(climate_data, "_rain", "_evap")
