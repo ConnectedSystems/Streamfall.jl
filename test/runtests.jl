@@ -1,4 +1,4 @@
-using Waterflow
+using Streamfall
 
 
 function test_run(s::Float64, e::Float64)::Array{Float64, 1}
@@ -11,7 +11,7 @@ end
 
 @info test_run(100.0, 200.0)
 
-test_node = StreamNode{Float64}(
+test_node = IHACRESNode{Float64}(
     100.0,  # area
     100.0,  # d 
     0.1,  # d2
