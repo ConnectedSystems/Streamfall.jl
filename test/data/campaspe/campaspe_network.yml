@@ -1,7 +1,7 @@
 # Not related to AWRA - previous created file.
 
 406214:
-    node_type: StreamNode
+    node_type: IHACRESNode
     inlets:
     outlets: 406201
     parameters:
@@ -28,7 +28,7 @@
 
 
 406219:
-    node_type: StreamNode
+    node_type: IHACRESNode
     inlets:
     outlets: 406000
     parameters:
@@ -89,7 +89,7 @@
             end
 
 406201:
-    node_type: StreamNode
+    node_type: IHACRESNode
     inlets:
         - 406214
         - 406000
@@ -118,7 +118,7 @@
         - 133.718
 
 406224:
-    node_type: StreamNode
+    node_type: IHACRESNode
     inlets:
     outlets: 406218
     parameters:
@@ -145,7 +145,7 @@
         - 130.984
 
 406218:
-    node_type: StreamNode
+    node_type: IHACRESNode
     inlets:
         - 406201
         - 406224
@@ -174,7 +174,7 @@
         - 120.380
 
 406202:
-    node_type: StreamNode
+    node_type: IHACRESNode
     inlets: 406218
     outlets: 406265
     parameters:
@@ -201,7 +201,7 @@
         - 104.981
 
 406265:
-    node_type: StreamNode
+    node_type: IHACRESNode
     inlets: 406202
     outlets:
     parameters:

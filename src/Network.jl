@@ -1,6 +1,6 @@
 using LightGraphs, MetaGraphs
 using ModelParameters
-using Waterflow
+using Streamfall
 
 
 """Determine a node's connection"""
@@ -50,8 +50,8 @@ function create_node(mg, node_id, details, nid)
     if isempty(match)
         node_type = details["node_type"]
 
-        if node_type == "StreamNode"
-            n = StreamNode{Param}(; node_id=node_id, area=details["area"])
+        if node_type == "IHACRESNode"
+            n = IHACRESNode{Param}(; node_id=node_id, area=details["area"])
         elseif node_type == "DamNode"
             n = DamNode{Param}(node_id=node_id, area=details["area"], max_storage=details["max_storage"])
         else

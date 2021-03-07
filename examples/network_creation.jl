@@ -3,7 +3,7 @@ using LightGraphs, MetaGraphs
 using DataFrames, CSV
 
 import ModelParameters: update, update!, Model
-using Waterflow
+using Streamfall
 
 using Infiltrator
 

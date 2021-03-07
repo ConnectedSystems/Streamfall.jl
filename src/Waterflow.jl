@@ -1,4 +1,4 @@
-module Waterflow
+module Streamfall
 
 using LightGraphs, MetaGraphs, Distributed, DataFrames
 using Infiltrator
@@ -30,7 +30,7 @@ end
 
 
 include("Node.jl")
-include("StreamNode.jl")
+include("IHACRESNode.jl")
 include("DamNode.jl")
 include("Climate.jl")
 
@@ -91,7 +91,7 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
 
     # Calculate outflow for this node
     func = get_prop(mg, node_id, :nfunc)
-    if curr_node isa StreamNode
+    if curr_node isa IHACRESNode
         outflow, level = func(curr_node, rain, et, inflow, 0.0)
     elseif curr_node isa DamNode
         outflow, level = func(curr_node, rain, et, inflow, wo, ex)
@@ -106,7 +106,7 @@ include("Network.jl")
 
 
 export @def
-export ihacres, StreamNode, DamNode, Climate
+export ihacres, IHACRESNode, DamNode, Climate
 export find_inlets_and_outlets, create_network, create_node
 export update_params!, run_node!, reset!, sim_length
 export climate_values

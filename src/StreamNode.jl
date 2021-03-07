@@ -2,7 +2,7 @@ using Parameters
 using ModelParameters
 
 
-Base.@kwdef mutable struct StreamNode{A} <: NetworkNode{A}
+Base.@kwdef mutable struct IHACRESNode{A} <: NetworkNode{A}
     @network_node
 
     # https://wiki.ewater.org.au/display/SD41/IHACRES-CMD+-+SRG
@@ -38,10 +38,10 @@ Base.@kwdef mutable struct StreamNode{A} <: NetworkNode{A}
 end
 
 
-function StreamNode(node_id::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
+function IHACRESNode(node_id::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
                     a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
                     store::Float64, quick::Float64, slow::Float64)
-    return StreamNode(
+    return IHACRESNode(
         node_id=node_id,
         area=area,
         d=d,
@@ -59,7 +59,7 @@ function StreamNode(node_id::String, area::Float64, d::Float64, d2::Float64, e::
 end
 
 
-function update_state(s_node::StreamNode, storage::Float64, e_rainfall::Float64, et::Float64, qflow_store::Float64, sflow_store::Float64, outflow::Float64, level::Float64)
+function update_state(s_node::IHACRESNode, storage::Float64, e_rainfall::Float64, et::Float64, qflow_store::Float64, sflow_store::Float64, outflow::Float64, level::Float64)
     push!(s_node.storage, storage)
     push!(s_node.effective_rainfall, e_rainfall)
     push!(s_node.et, et)
@@ -87,7 +87,7 @@ Returns
 ----------
 float, outflow from node
 """
-function run_node!(s_node::StreamNode,
+function run_node!(s_node::IHACRESNode,
                   rain::Float64,
                   evap::Float64,
                   inflow::Float64,
@@ -174,7 +174,7 @@ end
 
 """
 """
-function update_params!(node::StreamNode, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
+function update_params!(node::IHACRESNode, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
                         p1::Float64, p2::Float64, p3::Float64, p4::Float64, p5::Float64, p6::Float64, p7::Float64, p8::Float64, CTF::Float64)
     node.area = area
@@ -193,7 +193,7 @@ end
 
 
 
-function reset!(s_node::StreamNode)
+function reset!(s_node::IHACRESNode)
     s_node.storage = [s_node.storage[1]]
 
     s_node.quickflow = [s_node.quickflow[1]]
