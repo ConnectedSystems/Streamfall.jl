@@ -1,0 +1,18 @@
+name = "Streamfall"
+
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+Cairo = "159f3aea-2a34-519c-b102-8c37f9878175"
+Compose = "a81c6b42-2e10-5240-aca2-a61377ecd94b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
+GraphPlot = "a2cc645c-3eea-5389-862e-a155d0052231"
+Infiltrator = "5903a43b-9cc3-4c30-8d17-598619ec4e9b"
+LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
+MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
+Mixers = "2a8e4939-dab8-5edc-8f64-72a8776f13de"
+ModelParameters = "4744a3fa-6c31-4707-899e-a3298e4618ad"
+Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
+YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
