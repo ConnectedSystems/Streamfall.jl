@@ -3,7 +3,7 @@ module Streamfall
 using LightGraphs, MetaGraphs, Distributed, DataFrames
 using Infiltrator
 
-const MODPATH = @__MODULE__
+const MODPATH = pathof(@__MODULE__)
 
 if Sys.iswindows()
     libext = ".dll"
@@ -18,7 +18,7 @@ end
 # Can't use string, DLL location has to be a const
 # (which makes sense but still, many hours wasted!)
 # https://github.com/JuliaLang/julia/issues/29602
-const IHACRES = joinpath(MODPATH, "deps", "usr", "lib", "ihacres$(libext)")
+const IHACRES = joinpath(MODPATH, "../../deps", "usr", "lib", "ihacres$(libext)")
 
 """@def macro
 
