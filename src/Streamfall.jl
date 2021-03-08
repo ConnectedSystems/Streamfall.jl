@@ -3,11 +3,22 @@ module Streamfall
 using LightGraphs, MetaGraphs, Distributed, DataFrames
 using Infiltrator
 
+const MODPATH = @__MODULE__
+
+if Sys.iswindows()
+    libext = ".dll"
+elseif Sys.islinux()
+    libext = ".so"
+elseif Sys.isapple()
+    libext = ".dynlib"
+else
+    throw(DomainError("Unsupported platform"))
+end
 
 # Can't use string, DLL location has to be a const
 # (which makes sense but still, many hours wasted!)
 # https://github.com/JuliaLang/julia/issues/29602
-const ihacres = "../../ihacres_nim/lib/ihacres.dll"
+const IHACRES = joinpath(MODPATH, "deps", "usr", "lib", "ihacres$(libext)")
 
 """@def macro
 

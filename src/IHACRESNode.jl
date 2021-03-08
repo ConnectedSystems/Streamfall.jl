@@ -98,7 +98,7 @@ function run_node!(s_node::IHACRESNode,
     current_store = s_node.storage[arr_len]
 
     interim_results = [0.0, 0.0, 0.0]
-    @ccall ihacres.calc_ft_interim(interim_results::Ptr{Cdouble},
+    @ccall IHACRES.calc_ft_interim(interim_results::Ptr{Cdouble},
                                    current_store::Cdouble,
                                    rain::Cdouble,
                                    s_node.d::Cdouble,
@@ -107,7 +107,7 @@ function run_node!(s_node::IHACRESNode,
 
     (mf, e_rainfall, recharge) = interim_results
 
-    et::Float64 = @ccall ihacres.calc_ET(
+    et::Float64 = @ccall IHACRES.calc_ET(
         s_node.e::Cdouble,
         evap::Cdouble,
         mf::Cdouble,
@@ -115,7 +115,7 @@ function run_node!(s_node::IHACRESNode,
         s_node.d::Cdouble
     )::Cdouble
 
-    cmd::Float64 = @ccall ihacres.calc_cmd(
+    cmd::Float64 = @ccall IHACRES.calc_cmd(
         current_store::Cdouble,
         rain::Cdouble,
         s_node.d::Cdouble,
@@ -130,7 +130,7 @@ function run_node!(s_node::IHACRESNode,
     push!(s_node.inflow, inflow)
 
     flow_results = [0.0, 0.0, 0.0]
-    @ccall ihacres.calc_ft_flows(
+    @ccall IHACRES.calc_ft_flows(
         flow_results::Ptr{Cdouble},
         s_node.quickflow[arr_len]::Cdouble,
         s_node.slowflow[arr_len]::Cdouble,
@@ -150,7 +150,7 @@ function run_node!(s_node::IHACRESNode,
     #     outflow = calc_outflow(outflow, ext)
     # # End if
     routing_res = [0.0, 0.0]
-    @ccall ihacres.routing(
+    @ccall IHACRES.routing(
         routing_res::Ptr{Cdouble},
         cmd::Cdouble,
         s_node.storage_coef::Cdouble,
@@ -161,7 +161,7 @@ function run_node!(s_node::IHACRESNode,
 
     (cmd, outflow) = routing_res
 
-    level::Float64 = @ccall ihacres.calc_ft_level(
+    level::Float64 = @ccall IHACRES.calc_ft_level(
         outflow::Cdouble,
         s_node.level_params::Ptr{Cdouble}
     )::Cdouble
