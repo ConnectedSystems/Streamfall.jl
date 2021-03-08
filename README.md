@@ -31,7 +31,7 @@ The typical use pattern is to identify the outlets for a given network...
 inlets, outlets = find_inlets_and_outlets(g)
 ```
 
-... and call `run_node!` for each outlet (with relevant climate data), which will recurse through all relevant nodes.
+... and call `run_node!` for each outlet (with relevant climate data), which will recurse through all relevant nodes upstream.
 
 ```julia
 @info "Running example stream..."
