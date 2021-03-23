@@ -1,7 +1,7 @@
 module Streamfall
 
 using LightGraphs, MetaGraphs, Distributed, DataFrames
-using Infiltrator
+
 
 const MODPATH = pathof(@__MODULE__)
 
@@ -88,8 +88,9 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
         release_col = filter(x -> occursin(gauge_id, string(x))
                                   & occursin("releases", string(x)),
                                   names(water_order))
-        
-        wo = checkbounds(Bool, water_order.Date, timestep) ? water_order[timestep, release_col][1] : 0.0
+        if !isempty(release_col)
+            wo = checkbounds(Bool, water_order.Date, timestep) ? water_order[timestep, release_col][1] : 0.0
+        end
     end
 
     ex = 0.0
@@ -97,7 +98,10 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
         exchange_col = filter(x -> occursin(gauge_id, x)
                                   & occursin("exchange", x),
                                   names(exchange))
-        ex = checkbounds(Bool, exchange.Date, timestep) ? exchange[timestep, exchange_col][1] : 0.0
+        
+        if !isempty(exchange_col)
+            ex = checkbounds(Bool, exchange.Date, timestep) ? exchange[timestep, exchange_col][1] : 0.0
+        end
     end
 
     # Calculate outflow for this node
