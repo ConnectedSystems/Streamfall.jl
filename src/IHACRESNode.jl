@@ -16,15 +16,15 @@ Base.@kwdef mutable struct IHACRESNode{A} <: NetworkNode{A}
     alpha::A = Param(0.1, bounds=(1e-5, 1 - 1/10^9))
 
     level_params::Array{A} = [
-        Param(-0.01, bounds=(-0.01, -10.0))
-        Param(0.8, bounds=(0.0, 1.5))
-        Param(4.5, bounds=(0.0, 20.0))
-        Param(5.0, bounds=(1.0, 10.0))
-        Param(0.35, bounds=(0.0, 1.0))
-        Param(1.41, bounds=(-2.0, 2.0))
-        Param(-1.45, bounds=(0.0, -2.5))
-        Param(6.75, bounds=(0.0, 10.0))
-        Param(150.0, bounds=(50.0, 200.0))
+        Param(-0.01, bounds=(-10.0, -0.01))  # p1
+        Param(0.8, bounds=(0.0, 1.5))  # p2
+        Param(4.5, bounds=(0.0, 20.0)) # p3
+        Param(5.0, bounds=(1.0, 10.0)) # p4
+        Param(0.35, bounds=(0.0, 1.0)) # p5
+        Param(1.41, bounds=(-2.0, 2.0)) # p6
+        Param(-1.45, bounds=(-2.5, 0.0)) # p7
+        Param(6.75, bounds=(0.0, 10.0)) # p8
+        Param(150.0, bounds=(50.0, 200.0)) # ctf
     ]
 
     storage::Array{Float64} = [100.0]
