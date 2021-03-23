@@ -235,13 +235,16 @@ end
 
 
 
-function reset!(s_node::IHACRESNode)
+function reset!(s_node::IHACRESNode)::Nothing
     s_node.storage = [s_node.storage[1]]
 
     s_node.quickflow = [s_node.quickflow[1]]
     s_node.slowflow = [s_node.slowflow[1]]
     s_node.outflow = []
+    s_node.level = []
     s_node.effective_rainfall = []
     s_node.et = []
     s_node.inflow = []
+
+    return nothing
 end
