@@ -38,10 +38,15 @@ Base.@kwdef mutable struct IHACRESNode{A} <: NetworkNode{A}
 end
 
 
+function IHACRESNode(node_id::String, area::Float64)
+    return IHACRESNode{Param}(node_id=node_id, area=area)
+end
+
+
 function IHACRESNode(node_id::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
                     a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
                     store::Float64, quick::Float64, slow::Float64)
-    return IHACRESNode(
+    return IHACRESNode{Float64}(
         node_id=node_id,
         area=area,
         d=d,
