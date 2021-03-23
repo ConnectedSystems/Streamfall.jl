@@ -199,9 +199,26 @@ end
 
 """
 """
+function update_params!(node::IHACRESNode, d::Float64, d2::Float64, e::Float64, f::Float64,
+                        a::Float64, b::Float64, s_coef::Float64, alpha::Float64)::Nothing
+    node.d = d
+    node.d2 = d2
+    node.e = e
+    node.f = f
+    node.a = a
+    node.b = b
+    node.storage_coef = s_coef
+    node.alpha = alpha
+
+    return nothing
+end
+
+
+"""
+"""
 function update_params!(node::IHACRESNode, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
-                        p1::Float64, p2::Float64, p3::Float64, p4::Float64, p5::Float64, p6::Float64, p7::Float64, p8::Float64, CTF::Float64)
+                        p1::Float64, p2::Float64, p3::Float64, p4::Float64, p5::Float64, p6::Float64, p7::Float64, p8::Float64, CTF::Float64)::Nothing
     node.area = area
     node.d = d
     node.d2 = d2
