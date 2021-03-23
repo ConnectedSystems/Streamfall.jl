@@ -93,14 +93,29 @@ Returns
 float, outflow from node
 """
 function run_node!(s_node::IHACRESNode,
-                  rain::Float64,
-                  evap::Float64,
-                  inflow::Float64,
-                  ext::Float64,
-                  gw_exchange::Float64=0.0,
-                  loss::Float64=0.0)::Tuple{Float64, Float64}
+                   rain::Float64,
+                   evap::Float64,
+                   inflow::Float64,
+                   ext::Float64,
+                   gw_exchange::Float64=0.0,
+                   loss::Float64=0.0;
+                   current_store=nothing,
+                   quickflow=nothing,
+                   slowflow=nothing)::Tuple{Float64, Float64}
+                   
     arr_len = length(s_node.storage)
-    current_store = s_node.storage[arr_len]
+
+    if isnothing(current_store)
+        current_store = s_node.storage[arr_len]
+    end
+
+    if isnothing(quickflow)
+        quickflow = s_node.quickflow[arr_len]
+    end
+
+    if isnothing(slowflow)
+        slowflow = s_node.slowflow[arr_len]
+    end
 
     interim_results = [0.0, 0.0, 0.0]
     @ccall IHACRES.calc_ft_interim(interim_results::Ptr{Cdouble},
@@ -137,8 +152,8 @@ function run_node!(s_node::IHACRESNode,
     flow_results = [0.0, 0.0, 0.0]
     @ccall IHACRES.calc_ft_flows(
         flow_results::Ptr{Cdouble},
-        s_node.quickflow[arr_len]::Cdouble,
-        s_node.slowflow[arr_len]::Cdouble,
+        quickflow::Cdouble,
+        slowflow::Cdouble,
         e_rainfall::Cdouble,
         recharge::Cdouble,
         s_node.area::Cdouble,
