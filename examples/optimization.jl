@@ -63,7 +63,7 @@ function obj_func(params, climate, mg, g, v_id, hist_levels)
     h_levels = h_levels[1000:end]
 
     # Calculate score (NSE)
-    NSE = 1 - sum((node_levels .- h_levels).^2) / sum(h_levels .- mean(h_levels).^2)
+    NSE = 1 - sum((h_levels .- node_levels).^2) / sum((h_levels .- mean(h_levels)).^2)
 
     # Normalized NSE so that score ranges from 0 to 1. NNSE of 0.5 is equivalent to NSE = 0.
     NNSE = 1 / (2 - NSE)
@@ -129,9 +129,24 @@ using Plots
 
 timesteps = sim_length(climate)
 for ts in (1:timesteps)
-    run_node!(mg, g, v_id, climate, ts; water_order=hist_dam_releases)
+    run_node!(mg, g, 1, climate, ts; water_order=hist_dam_releases)
+end
+
+node = get_prop(mg, 1, :node)
+h_level = inlet_levels[:, "406219_level"]
+plot(node.level)
+plot!(h_level)
+
+NSE = 1 - sum((h_level .- node.level).^2) / sum((h_level .- mean(h_level)).^2)
+
+@info NSE
+
+
+timesteps = sim_length(climate)
+for ts in (1:timesteps)
+    run_node!(mg, g, 2, climate, ts; water_order=hist_dam_releases)
 end
 
 node = get_prop(mg, 2, :node)
 plot(node.level)
-plot!(inlet_levels[:, "406219_level"])
+plot!(hist_dam_levels[:, "Dam Level [mAHD]"])
