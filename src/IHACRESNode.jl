@@ -181,9 +181,14 @@ function run_node!(s_node::IHACRESNode,
 
     (cmd, outflow) = routing_res
 
+    level_params = s_node.level_params
+    if typeof(level_params[1]) <: Param
+        level_params = map(v -> v.val[1], level_params)
+    end
+
     level::Float64 = @ccall IHACRES.calc_ft_level(
         outflow::Cdouble,
-        s_node.level_params::Ptr{Cdouble}
+        level_params::Ptr{Cdouble}
     )::Cdouble
 
     update_state(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, level)
