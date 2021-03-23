@@ -97,7 +97,17 @@ function calibrate(g, mg, v_id)
 
     node = get_prop(mg, v_id, :node)
     target_node = Model(node)
-    res = bboptimize(opt_func; SearchRange=collect(target_node.bounds), 
+
+    # Add area as static parameter (assume known)
+    # param_bounds = nothing
+    # try
+    #     param_bounds = vcat((node.area, node.area), target_node.bounds..., [x.bounds for x in node.level_params])
+    # catch
+    #     param_bounds = collect(target_node.bounds)
+    # end
+    param_bounds = collect(target_node.bounds)
+
+    res = bboptimize(opt_func; SearchRange=param_bounds,
                        Method=:borg_moea,
                        FitnessScheme=ParetoFitnessScheme{1}(is_minimizing=true),
                        MaxTime=180.0,
