@@ -20,3 +20,12 @@ for ts in (1:timesteps)
         run_node!(mg, g, outlet, climate, ts)
     end
 end
+
+using MetaGraphs, Plots
+
+out = outlets[1]
+out_node = get_prop(mg, out, :node)
+
+
+
+plot(out_node.outflow)
