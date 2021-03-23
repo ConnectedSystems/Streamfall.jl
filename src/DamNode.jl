@@ -186,7 +186,7 @@ end
 
 """
 """
-function update_params!(node::DamNode, params::Array{Float64, 1})::Nothing
-    node.storage_coef = params[1]
+function update_params!(node::DamNode, storage_coef::Float64)::Nothing
+    node.storage_coef = storage_coef
     return nothing
 end
