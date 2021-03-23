@@ -4,36 +4,46 @@ using BlackBoxOptim
 
 using Infiltrator
 using ModelParameters
+using LightGraphs, MetaGraphs
 
 
 include("./network_creation.jl")
 
-climate_data = DataFrame!(CSV.File("../test/data/climate/climate_historic.csv", 
+climate_data = DataFrame!(CSV.File("../test/data/campaspe/climate/climate_historic.csv", 
                           comment="#",
                           dateformat="YYYY-mm-dd"))
 
-hist_dam_levels = DataFrame!(CSV.File("../test/data/dam/historic_levels_for_fit.csv", dateformat="YYYY-mm-dd"))
-hist_dam_releases = DataFrame!(CSV.File("../test/data/dam/historic_releases.csv", dateformat="YYYY-mm-dd"))
+hist_dam_levels = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_levels_for_fit.csv", dateformat="YYYY-mm-dd"))
+hist_dam_releases = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_releases.csv", dateformat="YYYY-mm-dd"))
+
+inlet_levels = DataFrame!(CSV.File("../test/data/campaspe/gauges/406219_edited.csv", dateformat="YYYY-mm-dd"))
+
 
 # Subset to same range
-last_date = hist_dam_levels.Date[end]
-climate_data = climate_data[climate_data.Date .<= last_date, :]
-hist_dam_releases = hist_dam_releases[hist_dam_releases.Date .<= last_date, :]
+first_date = max(hist_dam_levels.Date[1], hist_dam_releases.Date[1], inlet_levels.Date[1])
+last_date = min(hist_dam_levels.Date[end], hist_dam_releases.Date[end], inlet_levels.Date[end])
+
+@info "Date ranges:" first_date last_date
+
+climate_data = climate_data[first_date .<= climate_data.Date .<= last_date, :]
+hist_dam_releases = hist_dam_releases[first_date .<= hist_dam_releases.Date .<= last_date, :]
+hist_dam_levels = hist_dam_levels[first_date .<= hist_dam_levels.Date .<= last_date, :]
+inlet_levels = inlet_levels[first_date .<= inlet_levels.Date .<= last_date, :]
+
+hist_levels = Dict(
+    "406000" => hist_dam_levels,
+    "406219" => inlet_levels
+)
 
 climate = Climate(climate_data, "_rain", "_evap")
 
 
-function obj_func(params)
-    global climate
-    global hist_dam_levels
+function obj_func(params, climate, mg, g, v_id, hist_levels)
     global hist_dam_releases
-    global mg
-    global g
-    global v_id
 
-    node = get_prop(mg, v_id, :node)
-    node = deepcopy(node)
-    update_params!(node, params)  # node = ModelParameters.update(node, params)
+    orig_node = get_prop(mg, v_id, :node)
+    node = deepcopy(orig_node)
+    update_params!(node, params...)
     set_prop!(mg, v_id, :node, node)
 
     timesteps = sim_length(climate)
@@ -41,14 +51,35 @@ function obj_func(params)
         run_node!(mg, g, v_id, climate, ts; water_order=hist_dam_releases)
     end
 
+    node_id = node.node_id
+    obs_levels = hist_levels[node_id]
+    if node_id == "406000"
+        h_levels = obs_levels[:, "Dam Level [mAHD]"]
+    else
+        h_levels = obs_levels[:, "$(node_id)_level"]
+    end
+
+    node_levels = node.level[1000:end]
+    h_levels = h_levels[1000:end]
+
     # Calculate score (NSE)
-    hist_levels = hist_dam_levels[:, "Dam Level [mAHD]"]
-    score = -(1.0 - sum((node.level .- hist_levels).^2) / sum((hist_levels .- mean(hist_levels)).^2))
+    NSE = 1 - sum((node_levels .- h_levels).^2) / sum(h_levels .- mean(h_levels).^2)
+
+    # Normalized NSE so that score ranges from 0 to 1. NNSE of 0.5 is equivalent to NSE = 0.
+    NNSE = 1 / (2 - NSE)
+
+    # Swap signs as we want to minimize
+    score = -NNSE
+
+    # RMSE = (sum((node_levels .- h_levels).^2)/length(node_levels))^0.5
+    # score = RMSE
 
     # reset to clear stored values
-    # reset!(get_prop(mg, v_id, :node))
+    # set_prop!(mg, v_id, :node, orig_node)
+    reset!(node)
 
-    return score
+    # Borg method expects tuple to be returned
+    return (score, )
 end
 
 
@@ -61,15 +92,23 @@ function calibrate(g, mg, v_id)
         end
     end
 
-    @infiltrate
-
     # Create new optimization function
-    opt_func = x -> obj_func(x, climate, mg, g, v_id, discharge, levels)
+    opt_func = x -> obj_func(x, climate, mg, g, v_id, hist_levels)
 
-    target_node = Model(get_prop(mg, v_id, :node))
-    score = bboptimize(opt_func; SearchRange=collect(target_node.bounds))
+    node = get_prop(mg, v_id, :node)
+    target_node = Model(node)
+    res = bboptimize(opt_func; SearchRange=collect(target_node.bounds), 
+                       Method=:borg_moea,
+                       FitnessScheme=ParetoFitnessScheme{1}(is_minimizing=true),
+                       MaxTime=180.0,
+                       TraceMode = :silent)
 
-    return score
+    @info "Calibrated $(v_id), with score: $(best_fitness(res))"
+
+    bs = best_candidate(res)
+    update_params!(get_prop(mg, v_id, :node), bs...)
+
+    return res
 end
 
 
@@ -77,4 +116,22 @@ match = collect(filter_vertices(mg, :name, "406000"))
 v_id = match[1]
 # target_node = Model(get_prop(mg, v_id, :node))
 
-@info calibrate(g, mg, v_id)
+res = calibrate(g, mg, v_id)
+
+@info best_fitness(res)
+@info best_candidate(res)
+
+node = get_prop(mg, v_id, :node)
+@info node
+
+
+using Plots
+
+timesteps = sim_length(climate)
+for ts in (1:timesteps)
+    run_node!(mg, g, v_id, climate, ts; water_order=hist_dam_releases)
+end
+
+node = get_prop(mg, 2, :node)
+plot(node.level)
+plot!(inlet_levels[:, "406219_level"])
