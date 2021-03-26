@@ -117,13 +117,26 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
     return outflow, level
 end
 
+
+function run_catchment!(mg, g, climate)
+    inlets, outlets = find_inlets_and_outlets(g)
+
+    timesteps = sim_length(climate)
+    for ts in (1:timesteps)
+        for outlet in outlets
+            run_node!(mg, g, outlet, climate, ts)
+        end
+    end
+end
+
+
 include("Network.jl")
 
 
 export @def
 export ihacres, IHACRESNode, DamNode, Climate
 export find_inlets_and_outlets, create_network, create_node
-export update_params!, run_node!, reset!, sim_length
+export update_params!, run_node!, reset!, sim_length, run_catchment!
 export climate_values
 
 end  # end module

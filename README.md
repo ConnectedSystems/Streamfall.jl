@@ -25,13 +25,43 @@ In the (near) future, it will be possible to read in stream network information 
 
 ## Running a network
 
-The typical use pattern is to identify the outlets for a given network...
+```julia
+using YAML, DataFrames, CSV, Plots
+using MetaGraphs, Streamfall
+
+
+# Load and generate stream network
+# Gets the graph representation of the stream and associated metadata.
+# g = graph network
+# mg = meta-graph
+network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
+g, mg = create_network("Example Network", network)
+
+# Load climate data
+climate_data = DataFrame!(CSV.File("../test/data/campaspe/climate/climate_historic.csv", 
+                          comment="#",
+                          dateformat="YYYY-mm-dd"))
+climate = Climate(climate_data, "_rain", "_evap")
+
+
+@info "Running example stream..."
+run_catchment!(mg, g, climate)
+
+node_id = 1
+@info "Displaying outflow from node $(node_id)"
+
+out_node = get_prop(mg, node_id, :node)
+plot(out_node.outflow)
+```
+
+For more fine-grain control, one approach is to identify the outlets for a given network...
 
 ```julia
 inlets, outlets = find_inlets_and_outlets(g)
 ```
 
 ... and call `run_node!` for each outlet (with relevant climate data), which will recurse through all relevant nodes upstream.
+
 
 ```julia
 @info "Running example stream..."
