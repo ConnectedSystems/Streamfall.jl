@@ -12,26 +12,26 @@ Base.@kwdef mutable struct IHACRESNode{A <: Union{Real, Param}} <: NetworkNode{A
     d2::A = Param(2.0, bounds=(10.0, 500.0))   # flow threshold2
     e::A = Param(1.0, bounds=(0.1, 1.5))  # temperature to PET conversion factor
     f::A = Param(0.8, bounds=(0.01, 3.0))  # plant stress threshold factor (multiplicative factor of d)
-    a::A = Param(200.0, bounds=(0.1, 100.0))
-    b::A = Param(200.0, bounds=(0.001, 1.0))
+    a::A = Param(0.9, bounds=(0.1, 100.0))
+    b::A = Param(0.1, bounds=(0.001, 1.0))
     storage_coef::A = Param(2.9, bounds=(0.2, 10.0))
     alpha::A = Param(0.1, bounds=(1e-5, 1 - 1/10^9))
 
-    level_params::Array{A} = [
-        Param(-0.01, bounds=(-10.0, -0.01))  # p1
-        Param(0.8, bounds=(0.0, 1.5))  # p2
-        Param(4.5, bounds=(0.0, 20.0)) # p3
-        Param(5.0, bounds=(1.0, 10.0)) # p4
-        Param(0.35, bounds=(0.0, 1.0)) # p5
-        Param(1.41, bounds=(-2.0, 2.0)) # p6
-        Param(-1.45, bounds=(-2.5, 0.0)) # p7
-        Param(6.75, bounds=(0.0, 10.0)) # p8
+    level_params::Array{A, 1} = [
+        Param(-0.01, bounds=(-10.0, -0.01)),  # p1
+        Param(0.8, bounds=(0.0, 1.5)),  # p2
+        Param(4.5, bounds=(0.0, 20.0)), # p3
+        Param(5.0, bounds=(1.0, 10.0)), # p4
+        Param(0.35, bounds=(0.0, 1.0)), # p5
+        Param(1.41, bounds=(-2.0, 2.0)), # p6
+        Param(-1.45, bounds=(-2.5, 0.0)), # p7
+        Param(6.75, bounds=(0.0, 10.0)), # p8
         Param(150.0, bounds=(50.0, 200.0)) # ctf
     ]
 
     storage::Array{Float64} = [100.0]
-    quickflow::Array{Float64} = [100.0]
-    slowflow::Array{Float64} = [100.0]
+    quick_store::Array{Float64} = [100.0]
+    slow_store::Array{Float64} = [100.0]
     outflow::Array{Float64} = []
     effective_rainfall::Array{Float64} = []
     et::Array{Float64} = []
@@ -60,8 +60,8 @@ function IHACRESNode(node_id::String, area::Float64, d::Float64, d2::Float64, e:
         storage_coef=s_coef,
         alpha=alpha,
         storage=[store],
-        quickflow=[quick],
-        slowflow=[slow]
+        quick_store=[quick],
+        slow_store=[slow]
         )
 end
 
@@ -72,8 +72,8 @@ function update_state(s_node::IHACRESNode, storage::Float64, e_rainfall::Float64
     push!(s_node.et, et)
     push!(s_node.outflow, outflow)
 
-    push!(s_node.quickflow, qflow_store)
-    push!(s_node.slowflow, sflow_store)
+    push!(s_node.quick_store, qflow_store)
+    push!(s_node.slow_store, sflow_store)
     push!(s_node.level, level)
 end
 
@@ -102,21 +102,18 @@ function run_node!(s_node::IHACRESNode,
                    gw_exchange::Float64=0.0,
                    loss::Float64=0.0;
                    current_store=nothing,
-                   quickflow=nothing,
-                   slowflow=nothing)::Tuple{Float64, Float64}
-                   
-    arr_len = length(s_node.storage)
-
+                   quick_store=nothing,
+                   slow_store=nothing)::Tuple{Float64, Float64}
     if isnothing(current_store)
-        current_store = s_node.storage[arr_len]
+        current_store = s_node.storage[end]
     end
 
-    if isnothing(quickflow)
-        quickflow = s_node.quickflow[arr_len]
+    if isnothing(quick_store)
+        quick_store = s_node.quick_store[end]
     end
 
-    if isnothing(slowflow)
-        slowflow = s_node.slowflow[arr_len]
+    if isnothing(slow_store)
+        slow_store = s_node.slow_store[end]
     end
 
     interim_results = [0.0, 0.0, 0.0]
@@ -140,9 +137,9 @@ function run_node!(s_node::IHACRESNode,
     cmd::Float64 = @ccall IHACRES.calc_cmd(
         current_store::Cdouble,
         rain::Cdouble,
-        s_node.d::Cdouble,
-        s_node.d2::Cdouble,
-        s_node.alpha::Cdouble
+        et::Cdouble,
+        e_rainfall::Cdouble,
+        recharge::Cdouble
     )::Cdouble
 
     # var inflow = 0.0
@@ -154,8 +151,8 @@ function run_node!(s_node::IHACRESNode,
     flow_results = [0.0, 0.0, 0.0]
     @ccall IHACRES.calc_ft_flows(
         flow_results::Ptr{Cdouble},
-        quickflow::Cdouble,
-        slowflow::Cdouble,
+        quick_store::Cdouble,
+        slow_store::Cdouble,
         e_rainfall::Cdouble,
         recharge::Cdouble,
         s_node.area::Cdouble,
@@ -164,7 +161,7 @@ function run_node!(s_node::IHACRESNode,
         loss::Cdouble
     )::Cvoid
 
-    (quick_store, slow_store, outflow) = flow_results
+    (nq_store, ns_store, outflow) = flow_results
 
     # if self.next_node:  # and ('dam' not in self.next_node.node_type):
     #     cmd, outflow = routing(cmd, s_node.storage_coef, inflow, outflow, ext, gamma=gw_exchange)
@@ -183,17 +180,17 @@ function run_node!(s_node::IHACRESNode,
 
     (cmd, outflow) = routing_res
 
-    level_params = s_node.level_params
-    if typeof(level_params[1]) <: Param
-        level_params = map(v -> v.val[1], level_params)
-    end
-
+    level_params = Array{Float64}(s_node.level_params)
     level::Float64 = @ccall IHACRES.calc_ft_level(
         outflow::Cdouble,
         level_params::Ptr{Cdouble}
     )::Cdouble
 
-    update_state(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, level)
+    # if s_node.node_id == "406219"
+    #     @infiltrate
+    # end
+
+    update_state(s_node, cmd, e_rainfall, et, nq_store, ns_store, outflow, level)
 
     return outflow, level
 end
@@ -240,8 +237,8 @@ end
 function reset!(s_node::IHACRESNode)::Nothing
     s_node.storage = [s_node.storage[1]]
 
-    s_node.quickflow = [s_node.quickflow[1]]
-    s_node.slowflow = [s_node.slowflow[1]]
+    s_node.quick_store = [s_node.quick_store[1]]
+    s_node.slow_store = [s_node.slow_store[1]]
     s_node.outflow = []
     s_node.level = []
     s_node.effective_rainfall = []
