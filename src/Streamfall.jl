@@ -3,7 +3,7 @@ module Streamfall
 using LightGraphs, MetaGraphs, Distributed, DataFrames
 
 
-const MODPATH = pathof(@__MODULE__)
+const MODPATH = @__DIR__
 
 if Sys.iswindows()
     libext = ".dll"
@@ -18,7 +18,7 @@ end
 # Can't use string, DLL location has to be a const
 # (which makes sense but still, many hours wasted!)
 # https://github.com/JuliaLang/julia/issues/29602
-const IHACRES = joinpath(MODPATH, "../../deps", "usr", "lib", "ihacres$(libext)")
+const IHACRES = joinpath(MODPATH, "../deps", "usr", "lib", "ihacres$(libext)")
 
 """@def macro
 
@@ -134,7 +134,7 @@ include("Network.jl")
 
 
 export @def
-export ihacres, IHACRESNode, DamNode, Climate
+export IHACRES, IHACRESNode, DamNode, Climate
 export find_inlets_and_outlets, create_network, create_node
 export update_params!, run_node!, reset!, sim_length, run_catchment!
 export climate_values
