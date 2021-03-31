@@ -1,8 +1,10 @@
 using Parameters
 using ModelParameters
 
+using Infiltrator
 
-Base.@kwdef mutable struct IHACRESNode{A} <: NetworkNode{A}
+
+Base.@kwdef mutable struct IHACRESNode{A <: Union{Real, Param}} <: NetworkNode{A}
     @network_node
 
     # https://wiki.ewater.org.au/display/SD41/IHACRES-CMD+-+SRG

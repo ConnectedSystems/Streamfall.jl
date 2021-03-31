@@ -51,9 +51,17 @@ function create_node(mg, node_id, details, nid)
         node_type = details["node_type"]
 
         if node_type == "IHACRESNode"
-            n = IHACRESNode{Param}(; node_id=node_id, area=details["area"])
+            n = IHACRESNode{Union{Real, Param}}(; node_id=node_id, area=details["area"])
+            setfield!(n, :storage_coef, details["storage_coef"])
+            setfield!(n, :storage, [details["initial_storage"]])
+
+            # Using setfield! here causes TypeError?
+            # ERROR: TypeError: in setfield!, expected Array{Union{Float64, ModelParameters.Param},1}, got a value of type Array{Float64,1}
+            # setfield!(n, :level_params, details["level_params"])
+            n.level_params = details["level_params"]
+            
         elseif node_type == "DamNode"
-            n = DamNode{Param}(node_id=node_id, area=details["area"], max_storage=details["max_storage"])
+            n = DamNode{Union{Param, Float64}}(node_id=node_id, area=details["area"], max_storage=details["max_storage"])
         else
             throw(ArgumentError("Unsupported node type: $(node_type)"))
         end
@@ -62,12 +70,10 @@ function create_node(mg, node_id, details, nid)
         for (k, p) in node_params
             s = Symbol(k)
             if p isa String
-                attr = eval(Meta.parse(p))
-                setfield!(n, s, attr)
-            else
-                nk = getfield(n, s)
-                nk = update(nk, p)
+                p = eval(Meta.parse(p))
             end
+
+            setfield!(n, s, p)
         end
 
         set_props!(mg, nid, Dict(:name=>node_id,
