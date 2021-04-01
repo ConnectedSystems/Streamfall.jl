@@ -178,7 +178,7 @@ function run_node!(s_node::IHACRESNode,
         ext::Cdouble,
         gw_exchange::Cdouble)::Cvoid
 
-    (cmd, outflow) = routing_res
+    (vol, outflow) = routing_res
 
     level_params = Array{Float64}(s_node.level_params)
     level::Float64 = @ccall IHACRES.calc_ft_level(
