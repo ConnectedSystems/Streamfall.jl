@@ -1,8 +1,6 @@
 using Parameters
 using ModelParameters
 
-using Infiltrator
-
 
 Base.@kwdef mutable struct IHACRESNode{A <: Union{Real, Param}} <: NetworkNode{A}
     @network_node
@@ -83,12 +81,16 @@ Run node to calculate outflow and update state.
 
 Parameters
 ----------
-timestep: int, time step
+s_node
 rain: float, rainfall
 evap: float, evapotranspiration
-extractions: float, irrigation and other water extractions
+inflow: float, inflow from previous node
+ext: float, irrigation and other water extractions
 gw_exchange: float, flux in ML - positive is contribution to stream, negative is infiltration
 loss: float,
+current_store
+quick_store
+slow_store
 
 Returns
 ----------
@@ -185,10 +187,6 @@ function run_node!(s_node::IHACRESNode,
         outflow::Cdouble,
         level_params::Ptr{Cdouble}
     )::Cdouble
-
-    # if s_node.node_id == "406219"
-    #     @infiltrate
-    # end
 
     update_state(s_node, cmd, e_rainfall, et, nq_store, ns_store, outflow, level)
 
