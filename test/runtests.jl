@@ -45,6 +45,18 @@ end
     @test !isnan(recharge)
 end
 
+@testset "Catchment Moisture Deficit" begin
+    cmd = 100.0
+    et = 6.22
+    e_rain = 6.83380027058404E-06
+    recharge = 3.84930005080411E-06
+    rain = 0.0000188
+
+    n_cmd = @ccall IHACRES.calc_cmd(cmd::Cdouble, rain::Cdouble, et::Cdouble, e_rain::Cdouble, recharge::Cdouble)::Float64
+
+    @test isapprox(n_cmd, 106.22, atol=0.001)
+end
+
 
 @testset "IHACRES calculations" begin
     area = 1985.73
@@ -59,7 +71,7 @@ end
 
     flow_results = [0.0, 0.0, 0.0]
     @ccall IHACRES.calc_ft_flows(
-        flow_results::Ref{Cdouble},
+        flow_results::Ptr{Cdouble},
         prev_quick::Cdouble,
         prev_slow::Cdouble,
         e_rain::Cdouble,
@@ -70,5 +82,41 @@ end
         loss::Cdouble
     )::Cvoid
 
-    @test flow_results[1] == (1.0 / (1.0 + a) * (100.0 + (e_rain * area)))
+    @info flow_results
+
+    @test flow_results[1] == (1.0 / (1.0 + a) * (prev_quick + (e_rain * area)))
+
+    b2 = 1.0
+    slow_store = prev_slow + (recharge * area) - (loss * b2)
+    slow_store = 1.0 / (1.0 + b) * slow_store
+    @test flow_results[2] == slow_store
+
+    e_rain = 0.0
+    recharge = 0.0
+
+    cmd = 72.47431523846738
+    prev_quick = 3.3317177943791187
+    prev_slow = 144.32012122323678
+
+    flow_results = [0.0, 0.0, 0.0]
+    @ccall IHACRES.calc_ft_flows(
+        flow_results::Ptr{Cdouble},
+        prev_quick::Cdouble,
+        prev_slow::Cdouble,
+        e_rain::Cdouble,
+        recharge::Cdouble,
+        area::Cdouble,
+        a::Cdouble,
+        b::Cdouble,
+        loss::Cdouble
+    )::Cvoid
+
+    @info flow_results
+
+    @test flow_results[1] == (1.0 / (1.0 + a) * (prev_quick + (e_rain * area)))
+
+    b2 = 1.0
+    slow_store = prev_slow + (recharge * area) - (loss * b2)
+    slow_store = 1.0 / (1.0 + b) * slow_store
+    @test flow_results[2] == slow_store
 end
