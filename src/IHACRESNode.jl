@@ -198,14 +198,14 @@ end
 """
 function update_params!(node::IHACRESNode, d::Float64, d2::Float64, e::Float64, f::Float64,
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64)::Nothing
-    node.d = d
-    node.d2 = d2
-    node.e = e
-    node.f = f
-    node.a = a
-    node.b = b
-    node.storage_coef = s_coef
-    node.alpha = alpha
+    node.d = Param(d, bounds=node.d.bounds)
+    node.d2 = Param(d2, bounds=node.d2.bounds)
+    node.e = Param(e, bounds=node.e.bounds)
+    node.f = Param(f, bounds=node.f.bounds)
+    node.a = Param(a, bounds=node.a.bounds)
+    node.b = Param(b, bounds=node.b.bounds)
+    node.storage_coef = Param(s_coef, bounds=node.storage_coef.bounds)
+    node.alpha = Param(alpha, bounds=node.alpha.bounds)
 
     return nothing
 end
@@ -217,14 +217,14 @@ function update_params!(node::IHACRESNode, area::Float64, d::Float64, d2::Float6
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
                         p1::Float64, p2::Float64, p3::Float64, p4::Float64, p5::Float64, p6::Float64, p7::Float64, p8::Float64, CTF::Float64)::Nothing
     node.area = area
-    node.d = d
-    node.d2 = d2
-    node.e = e
-    node.f = f
-    node.a = a
-    node.b = b
-    node.storage_coef = s_coef
-    node.alpha = alpha
+    node.d = Param(d, bounds=node.d.bounds)
+    node.d2 = Param(d2, bounds=node.d2.bounds)
+    node.e = Param(e, bounds=node.e.bounds)
+    node.f = Param(f, bounds=node.f.bounds)
+    node.a = Param(a, bounds=node.a.bounds)
+    node.b = Param(b, bounds=node.b.bounds)
+    node.storage_coef = Param(storage_coef, bounds=node.storage_coef.bounds)
+    node.alpha = Param(alpha, bounds=node.alpha.bounds)
     node.level_params = [p1, p2, p3, p4, p5, p6, p7, p8, CTF]
 
     return nothing

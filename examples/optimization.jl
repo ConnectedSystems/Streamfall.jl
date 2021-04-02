@@ -23,8 +23,8 @@ addprocs(3, exeflags="--project=../")
     # @info "Network has the following inlets and outlets:" inlets outlets
 
     climate_data = DataFrame!(CSV.File("../test/data/campaspe/climate/climate_historic.csv", 
-                          comment="#",
-                          dateformat="YYYY-mm-dd"))
+                              comment="#",
+                              dateformat="YYYY-mm-dd"))
 
     hist_dam_levels = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_levels_for_fit.csv", dateformat="YYYY-mm-dd"))
     hist_dam_releases = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_releases.csv", dateformat="YYYY-mm-dd"))

@@ -2,6 +2,7 @@ using LightGraphs, MetaGraphs
 using ModelParameters
 using Streamfall
 
+using Infiltrator
 
 """Determine a node's connection"""
 function in_or_out(G, v)
@@ -50,9 +51,13 @@ function create_node(mg, node_id, details, nid)
     if isempty(match)
         node_type = details["node_type"]
 
+        # node_params = details["parameters"]
         if node_type == "IHACRESNode"
-            n = IHACRESNode{Union{Real, Param}}(; node_id=node_id, area=details["area"])
-            setfield!(n, :storage_coef, details["storage_coef"])
+            n = IHACRESNode{Param}(; node_id=node_id, area=details["area"])
+            # TODO: Use update_params! here...
+            # update_params!(n, node_params..., )
+
+            n.storage_coef = Param(details["storage_coef"], bounds=n.storage_coef.bounds)
             setfield!(n, :storage, [details["initial_storage"]])
 
             # Using setfield! here causes TypeError?
@@ -73,7 +78,12 @@ function create_node(mg, node_id, details, nid)
                 p = eval(Meta.parse(p))
             end
 
-            setfield!(n, s, p)
+            try
+                f = getfield(n, s)
+                setfield!(n, s, Param(p, bounds=f.bounds))
+            catch err
+                setfield!(n, s, p)
+            end
         end
 
         set_props!(mg, nid, Dict(:name=>node_id,
