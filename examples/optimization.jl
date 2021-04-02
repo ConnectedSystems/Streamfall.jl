@@ -80,8 +80,8 @@ addprocs(3, exeflags="--project=../")
         reset!(node)
     
         # Borg method expects tuple to be returned
-        # return (score, )
-        return score
+        return (score, )
+        # return score
     end
 end
 
@@ -121,9 +121,9 @@ function calibrate(g, mg, v_id, climate, hist_levels)
     param_bounds = collect(target_node.bounds)
 
     opt = bbsetup(opt_func; SearchRange=param_bounds,
-                  # Method=:xnes,
-                  # ϵ=0.05,
-                  # FitnessScheme=ParetoFitnessScheme{1}(is_minimizing=true),
+                  Method=:borg_moea,
+                  ϵ=0.05,
+                  FitnessScheme=ParetoFitnessScheme{1}(is_minimizing=true),
                   MaxTime=600.0,  #spend 10 minutes calibrating each node
                   TraceMode=:silent,
                   Workers=workers())
