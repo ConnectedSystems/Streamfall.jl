@@ -2,7 +2,7 @@ using Parameters
 using ModelParameters
 
 
-Base.@kwdef mutable struct IHACRESNode{A <: Union{Real, Param}} <: NetworkNode{A}
+Base.@kwdef mutable struct IHACRESNode{A <: Union{Param, Real}} <: NetworkNode{A}
     @network_node
 
     # https://wiki.ewater.org.au/display/SD41/IHACRES-CMD+-+SRG
@@ -43,6 +43,51 @@ function IHACRESNode(node_id::String, area::Float64)
 end
 
 
+function IHACRESNode(node_id::String, spec::Dict)
+    area = spec["area"]
+    n = IHACRESNode{Param}(; node_id=node_id, area=spec["area"])
+
+    node_params = spec["parameters"]
+    n_lparams = n.level_params
+    s_lparams = spec["level_params"]
+    node_params["level_params"] = Param[
+        Param(s_lparams[1], bounds=n_lparams[1].bounds)
+        Param(s_lparams[2], bounds=n_lparams[2].bounds)
+        Param(s_lparams[3], bounds=n_lparams[3].bounds)
+        Param(s_lparams[4], bounds=n_lparams[4].bounds)
+        Param(s_lparams[5], bounds=n_lparams[5].bounds)
+        Param(s_lparams[6], bounds=n_lparams[6].bounds)
+        Param(s_lparams[7], bounds=n_lparams[7].bounds)
+        Param(s_lparams[8], bounds=n_lparams[8].bounds)
+        Param(s_lparams[9], bounds=n_lparams[9].bounds)
+    ]
+
+    node_params["storage"] = [node_params["initial_storage"]]
+    delete!(node_params, "initial_storage")
+
+    for (k, p) in node_params
+        s = Symbol(k)
+        if p isa String
+            p = eval(Meta.parse(p))
+        end
+
+        try
+            f = getfield(n, s)
+            setfield!(n, s, Param(p, bounds=f.bounds))
+        catch err
+            msg = sprint(showerror, err, catch_backtrace())
+            if occursin("no field bounds", msg)
+                setfield!(n, s, p)
+            else
+                throw(err)
+            end
+        end
+    end
+
+    return n
+end
+
+
 function IHACRESNode(node_id::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
                     a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
                     store::Float64, quick::Float64, slow::Float64)
@@ -60,7 +105,7 @@ function IHACRESNode(node_id::String, area::Float64, d::Float64, d2::Float64, e:
         storage=[store],
         quick_store=[quick],
         slow_store=[slow]
-        )
+    )
 end
 
 
@@ -223,9 +268,21 @@ function update_params!(node::IHACRESNode, area::Float64, d::Float64, d2::Float6
     node.f = Param(f, bounds=node.f.bounds)
     node.a = Param(a, bounds=node.a.bounds)
     node.b = Param(b, bounds=node.b.bounds)
-    node.storage_coef = Param(storage_coef, bounds=node.storage_coef.bounds)
+    node.storage_coef = Param(s_coef, bounds=node.storage_coef.bounds)
     node.alpha = Param(alpha, bounds=node.alpha.bounds)
-    node.level_params = [p1, p2, p3, p4, p5, p6, p7, p8, CTF]
+
+    n_lparams = node.level_params
+    node.level_params = [
+        Param(p1, bounds=n_lparams[1].bounds)
+        Param(p2, bounds=n_lparams[2].bounds)
+        Param(p3, bounds=n_lparams[3].bounds)
+        Param(p4, bounds=n_lparams[4].bounds)
+        Param(p5, bounds=n_lparams[5].bounds)
+        Param(p6, bounds=n_lparams[6].bounds)
+        Param(p7, bounds=n_lparams[7].bounds)
+        Param(p8, bounds=n_lparams[8].bounds)
+        Param(CTF, bounds=n_lparams[9].bounds)
+    ] 
 
     return nothing
 end
