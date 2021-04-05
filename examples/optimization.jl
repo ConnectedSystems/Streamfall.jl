@@ -1,7 +1,9 @@
 using Distributed
 using BlackBoxOptim
 
-addprocs(3, exeflags="--project=../")
+using Infiltrator
+
+addprocs(2, exeflags="--project=../")
 
 
 @everywhere begin
@@ -80,8 +82,8 @@ addprocs(3, exeflags="--project=../")
         reset!(node)
     
         # Borg method expects tuple to be returned
-        return (score, )
-        # return score
+        # return (score, )
+        return score
     end
 end
 
@@ -120,14 +122,18 @@ function calibrate(g, mg, v_id, climate, hist_levels)
     # Calibrate subset only
     param_bounds = collect(target_node.bounds)
 
+    # opt = bbsetup(opt_func; SearchRange=param_bounds,
+    #               Method=:borg_moea,
+    #               ϵ=0.05,
+    #               FitnessScheme=ParetoFitnessScheme{1}(is_minimizing=true),
+    #               MaxTime=600.0,  #spend 10 minutes calibrating each node
+    #               TraceMode=:silent,
+    #               Workers=workers())
+    # NThreads=Threads.nthreads()-1
     opt = bbsetup(opt_func; SearchRange=param_bounds,
-                  Method=:borg_moea,
-                  ϵ=0.05,
-                  FitnessScheme=ParetoFitnessScheme{1}(is_minimizing=true),
                   MaxTime=600.0,  #spend 10 minutes calibrating each node
                   TraceMode=:silent,
                   Workers=workers())
-    # NThreads=Threads.nthreads()-1
     
     res = bboptimize(opt)
 
