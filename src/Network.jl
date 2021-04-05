@@ -2,7 +2,6 @@ using LightGraphs, MetaGraphs
 using ModelParameters
 using Streamfall
 
-using Infiltrator
 
 """Determine a node's connection"""
 function in_or_out(G, v)
@@ -47,43 +46,38 @@ end
 
 """Create a node if needed"""
 function create_node(mg, node_id, details, nid)
+    details = copy(details)
     match = collect(filter_vertices(mg, :name, node_id))
     if isempty(match)
         node_type = details["node_type"]
 
-        # node_params = details["parameters"]
+        # TODO: Clean this up...
+        # Needs to just dispatch on node_type and specification
         if node_type == "IHACRESNode"
-            n = IHACRESNode{Param}(; node_id=node_id, area=details["area"])
-            # TODO: Use update_params! here...
-            # update_params!(n, node_params..., )
-
-            n.storage_coef = Param(details["storage_coef"], bounds=n.storage_coef.bounds)
-            setfield!(n, :storage, [details["initial_storage"]])
-
-            # Using setfield! here causes TypeError?
-            # ERROR: TypeError: in setfield!, expected Array{Union{Float64, ModelParameters.Param},1}, got a value of type Array{Float64,1}
-            # setfield!(n, :level_params, details["level_params"])
-            n.level_params = details["level_params"]
-            
+            n = IHACRESNode(node_id, details)
         elseif node_type == "DamNode"
-            n = DamNode{Union{Param, Float64}}(node_id=node_id, area=details["area"], max_storage=details["max_storage"])
+            n = DamNode{Param}(node_id=node_id, area=details["area"], max_storage=details["max_storage"])
+
+            node_params = details["parameters"]
+            for (k, p) in node_params
+                s = Symbol(k)
+                if p isa String
+                    p = eval(Meta.parse(p))
+                end
+
+                try
+                    if k == "initial_storage"
+                        setfield!(n, :storage, [p])
+                    else
+                        f = getfield(n, s)
+                        setfield!(n, s, Param(p, bounds=f.bounds))
+                    end
+                catch err
+                    setfield!(n, s, p)
+                end
+            end
         else
             throw(ArgumentError("Unsupported node type: $(node_type)"))
-        end
-
-        node_params = details["parameters"]
-        for (k, p) in node_params
-            s = Symbol(k)
-            if p isa String
-                p = eval(Meta.parse(p))
-            end
-
-            try
-                f = getfield(n, s)
-                setfield!(n, s, Param(p, bounds=f.bounds))
-            catch err
-                setfield!(n, s, p)
-            end
         end
 
         set_props!(mg, nid, Dict(:name=>node_id,
