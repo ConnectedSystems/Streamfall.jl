@@ -30,7 +30,7 @@ Base.@kwdef mutable struct DamNode{A} <: NetworkNode{A}
     @network_node
 
     max_storage::Float64
-    storage_coef::A = Param(0.5, bounds=(0.01, 10.0))
+    storage_coef::A = Param(0.5, bounds=(0.00001, 10.0))
 
 
     # Function to use to calculate dam level from storage volume
@@ -187,6 +187,6 @@ end
 """
 """
 function update_params!(node::DamNode, storage_coef::Float64)::Nothing
-    node.storage_coef = storage_coef
+    node.storage_coef = Param(storage_coef, bounds=node.storage_coef.bounds)
     return nothing
 end
