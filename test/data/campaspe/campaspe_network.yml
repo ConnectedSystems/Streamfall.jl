@@ -4,6 +4,7 @@
     node_type: IHACRESNode
     inlets:
     outlets: 406201
+    area: 268.77  # subcatchment area in km^2
     parameters:
         d: 95.578  # millimeters
         d2: 1.743
@@ -12,9 +13,8 @@
         alpha: 0.785
         a: 99.134  # What are these parameters?
         b: 0.259
-    initial_storage: 0.0  # initial CMD value, CMD > 0 means there is a deficit
-    storage_coef: 2.9
-    area: 268.77  # subcatchment area in km^2
+        storage_coef: 2.9
+        initial_storage: 0.0  # initial CMD value, CMD > 0 means there is a deficit
     level_params:
         - -3.3502  # p1
         - 0.68340  # p2
@@ -31,6 +31,7 @@
     node_type: IHACRESNode
     inlets:
     outlets: 406000
+    area: 1985.73
     parameters:
         d: 200.0
         d2: 2.0
@@ -39,10 +40,8 @@
         alpha: 0.727
         a: 54.352
         b: 0.187
-    initial_storage: 100.0
-    storage_coef: 2.9
-    area: 1985.73
-
+        storage_coef: 2.9
+        initial_storage: 100.0
     level_params:
         - -3.3502
         - 0.68340
@@ -58,9 +57,8 @@
     node_type: DamNode
     inlets: 406219
     outlets: 406201
-    initial_storage: 300000.0
-    max_storage: 306000.0
     area: 30.11
+    max_storage: 306000.0
     parameters:
         storage_coef: 0.001
         # Methods defined here must take volume as input
@@ -87,6 +85,7 @@
             function c_dam_outflow(discharge, irrigation_extraction)
                 return discharge + irrigation_extraction
             end
+        initial_storage: 304398.6
 
 406201:
     node_type: IHACRESNode
@@ -94,6 +93,7 @@
         - 406214
         - 406000
     outlets: 406218
+    area: 452.22
     parameters:
         d: 200.0
         d2: 2.0
@@ -102,10 +102,8 @@
         alpha: 0.95
         a: 0.9
         b: 0.1
-    initial_storage: 0.0
-    storage_coef: 2.9
-    area: 452.22
-
+        storage_coef: 2.9
+        initial_storage: 0.0
     level_params:
         - -4.6175
         - 0.99139
@@ -121,6 +119,7 @@
     node_type: IHACRESNode
     inlets:
     outlets: 406218
+    area: 220.71
     parameters:
         d: 71.708
         d2: 2.16
@@ -129,10 +128,8 @@
         alpha: 0.722
         a: 68.585
         b: 0.388
-    initial_storage: 0.0
-    storage_coef: 2.9
-    area: 220.71
-
+        storage_coef: 2.9
+        initial_storage: 0.0
     level_params:
         - -3.8190
         - 0.95560
@@ -150,6 +147,7 @@
         - 406201
         - 406224
     outlets: 406202
+    area: 254.07
     parameters:
         d: 200.0
         d2: 2.0
@@ -158,10 +156,8 @@
         alpha: 0.95
         a: 0.9
         b: 0.1
-    initial_storage: 0.0
-    storage_coef: 2.9
-    area: 254.07
-
+        storage_coef: 2.9
+        initial_storage: 0.0
     level_params:
         - -5.6175
         - 0.99139
@@ -177,6 +173,7 @@
     node_type: IHACRESNode
     inlets: 406218
     outlets: 406265
+    area: 62.78
     parameters:
         d: 200.0
         d2: 2.0
@@ -185,10 +182,8 @@
         alpha: 0.95
         a: 0.9
         b: 0.1
-    initial_storage: 0.0
-    storage_coef: 2.9
-    area: 62.78
-
+        storage_coef: 2.9
+        initial_storage: 0.0
     level_params:
         - -2.2477
         - 1.00050
@@ -204,6 +199,7 @@
     node_type: IHACRESNode
     inlets: 406202
     outlets:
+    area: 162.84
     parameters:
         d: 200.0
         d2: 2.0
@@ -212,10 +208,8 @@
         alpha: 0.95
         a: 0.9
         b: 0.1
-    initial_storage: 0.0
-    storage_coef: 2.9
-    area: 162.84
-
+        storage_coef: 2.9
+        initial_storage: 0.0
     level_params:
         - -2.7704
         - 0.66010
