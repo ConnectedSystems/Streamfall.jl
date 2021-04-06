@@ -7,12 +7,12 @@
     area: 268.77  # subcatchment area in km^2
     parameters:
         d: 95.578  # millimeters
-        d2: 1.743
-        e: 1.047  # dimensionless
-        f: 1.315  # dimensionless
-        alpha: 0.785
-        a: 99.134  # What are these parameters?
-        b: 0.259
+        d2: 1.743  # multiplier applied to `d`
+        e: 1.047  # ET scaling factor, dimensionless
+        f: 1.315  # multiplier applied to `d` to determine effective rainfall, dimensionless
+        alpha: 0.785  # effective rainfall scaling factor
+        a: 99.134  # quickflow scaling factor
+        b: 0.259   # slowflow scaling factor
         storage_coef: 2.9
         initial_storage: 0.0  # initial CMD value, CMD > 0 means there is a deficit
     level_params:
