@@ -75,6 +75,33 @@ function DamNode(
 end
 
 
+function DamNode(node_id::String, spec::Dict)
+    n = DamNode{Param}(; node_id=node_id, area=spec["area"], route=false,
+                       max_storage=spec["max_storage"])
+
+    node_params = spec["parameters"]
+    for (k, p) in node_params
+        s = Symbol(k)
+        if p isa String
+            p = eval(Meta.parse(p))
+        end
+
+        try
+            if k == "initial_storage"
+                setfield!(n, :storage, [p])
+            else
+                f = getfield(n, s)
+                setfield!(n, s, Param(p, bounds=f.bounds))
+            end
+        catch err
+            setfield!(n, s, p)
+        end
+    end
+
+    return n
+end
+
+
 function level(node::DamNode)
     return last(node.level)
 end

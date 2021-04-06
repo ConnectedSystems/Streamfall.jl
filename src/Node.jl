@@ -5,6 +5,7 @@ abstract type NetworkNode{A} end
 @def network_node begin
     node_id::String
     area::Float64  # area in km^2
+    route::Bool
 end
 
 

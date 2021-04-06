@@ -28,8 +28,8 @@ Base.@kwdef mutable struct IHACRESNode{A <: Union{Param, Real}} <: NetworkNode{A
     ]
 
     storage::Array{Float64} = [100.0]
-    quick_store::Array{Float64} = [100.0]
-    slow_store::Array{Float64} = [100.0]
+    quick_store::Array{Float64} = [0.0]
+    slow_store::Array{Float64} = [0.0]
     outflow::Array{Float64} = []
     effective_rainfall::Array{Float64} = []
     et::Array{Float64} = []
@@ -38,14 +38,14 @@ Base.@kwdef mutable struct IHACRESNode{A <: Union{Param, Real}} <: NetworkNode{A
 end
 
 
-function IHACRESNode(node_id::String, area::Float64)
-    return IHACRESNode{Param}(node_id=node_id, area=area)
-end
-
-
 function IHACRESNode(node_id::String, spec::Dict)
-    area = spec["area"]
-    n = IHACRESNode{Param}(; node_id=node_id, area=spec["area"])
+    route = true
+    if isnothing(spec["inlets"]) || isempty(spec["inlets"])
+        route = false
+    end
+        
+    n = IHACRESNode{Param}(; node_id=node_id, area=spec["area"], 
+                           route=route)
 
     node_params = spec["parameters"]
     n_lparams = n.level_params
@@ -88,12 +88,13 @@ function IHACRESNode(node_id::String, spec::Dict)
 end
 
 
-function IHACRESNode(node_id::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
+function IHACRESNode(node_id::String, area::Float64, route::Bool, d::Float64, d2::Float64, e::Float64, f::Float64, 
                     a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
                     store::Float64, quick::Float64, slow::Float64)
     return IHACRESNode{Float64}(
         node_id=node_id,
         area=area,
+        route=route,
         d=d,
         d2=d2,
         e=e,
@@ -189,12 +190,6 @@ function run_node!(s_node::IHACRESNode,
         recharge::Cdouble
     )::Cdouble
 
-    # var inflow = 0.0
-    # for nid in s_node.prev_node:
-    #     inflow += s_node.prev_node[nid].run(timestep, rain_evap, ext)
-    # # End for
-    push!(s_node.inflow, inflow)
-
     flow_results = [0.0, 0.0, 0.0]
     @ccall IHACRES.calc_ft_flows(
         flow_results::Ptr{Cdouble},
@@ -215,17 +210,19 @@ function run_node!(s_node::IHACRESNode,
     # else:
     #     outflow = calc_outflow(outflow, ext)
     # # End if
-    routing_res = [0.0, 0.0]
-    @ccall IHACRES.routing(
-        routing_res::Ptr{Cdouble},
-        cmd::Cdouble,
-        s_node.storage_coef::Cdouble,
-        inflow::Cdouble,
-        outflow::Cdouble,
-        ext::Cdouble,
-        gw_exchange::Cdouble)::Cvoid
+    if s_node.route
+        routing_res = [0.0, 0.0]
+        @ccall IHACRES.routing(
+            routing_res::Ptr{Cdouble},
+            cmd::Cdouble,
+            s_node.storage_coef::Cdouble,
+            inflow::Cdouble,
+            outflow::Cdouble,
+            ext::Cdouble,
+            gw_exchange::Cdouble)::Cvoid
 
-    (vol, outflow) = routing_res
+        (vol, outflow) = routing_res
+    end
 
     level_params = Array{Float64}(s_node.level_params)
     level::Float64 = @ccall IHACRES.calc_ft_level(
@@ -233,6 +230,7 @@ function run_node!(s_node::IHACRESNode,
         level_params::Ptr{Cdouble}
     )::Cdouble
 
+    push!(s_node.inflow, inflow)
     update_state(s_node, cmd, e_rainfall, et, nq_store, ns_store, outflow, level)
 
     return outflow, level
@@ -291,7 +289,6 @@ end
 
 function reset!(s_node::IHACRESNode)::Nothing
     s_node.storage = [s_node.storage[1]]
-
     s_node.quick_store = [s_node.quick_store[1]]
     s_node.slow_store = [s_node.slow_store[1]]
     s_node.outflow = []
