@@ -63,7 +63,7 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
     inflow = 0.0
 
     ins = inneighbors(g, node_id)
-    if length(ins) == 0
+    if isempty(ins)
         inflow = 0.0
         src_name = "Out-of-Catchment"
     else
