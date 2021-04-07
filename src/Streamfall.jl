@@ -118,13 +118,13 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
 end
 
 
-function run_catchment!(mg, g, climate)
+function run_catchment!(mg, g, climate; water_order=nothing)
     inlets, outlets = find_inlets_and_outlets(g)
 
     timesteps = sim_length(climate)
     for ts in (1:timesteps)
         for outlet in outlets
-            run_node!(mg, g, outlet, climate, ts)
+            run_node!(mg, g, outlet, climate, ts; water_order=water_order)
         end
     end
 end
