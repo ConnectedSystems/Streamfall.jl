@@ -7,11 +7,11 @@ Base.@kwdef mutable struct IHACRESNode{A <: Union{Param, Real}} <: NetworkNode{A
 
     # https://wiki.ewater.org.au/display/SD41/IHACRES-CMD+-+SRG
     d::A = Param(200.0, bounds=(10.0, 550.0))  # flow threshold
-    d2::A = Param(2.0, bounds=(10.0, 500.0))   # flow threshold2
+    d2::A = Param(2.0, bounds=(0.0001, 10.0))   # flow threshold2
     e::A = Param(1.0, bounds=(0.1, 1.5))  # temperature to PET conversion factor
     f::A = Param(0.8, bounds=(0.01, 3.0))  # plant stress threshold factor (multiplicative factor of d)
     a::A = Param(0.9, bounds=(0.1, 100.0))
-    b::A = Param(0.1, bounds=(0.001, 1.0))
+    b::A = Param(0.1, bounds=(0.0, 1.0))
     storage_coef::A = Param(2.9, bounds=(0.2, 10.0))
     alpha::A = Param(0.1, bounds=(1e-5, 1 - 1/10^9))
 
@@ -240,15 +240,18 @@ end
 """
 Extract node parameter values and bounds
 """
-function param_info(node::IHACRESNode)::Tuple
+function param_info(node::IHACRESNode; with_level::Bool = true)::Tuple
     tmp = Model(node)
     values = collect(tmp.val)
-    level_param_vals = map(x->x.val, node.level_params)
-    append!(values, level_param_vals)
-
     bounds = collect(tmp.bounds)
-    level_param_bounds = map(x->x.bounds, node.level_params)
-    append!(bounds, level_param_bounds)
+
+    if with_level
+        level_param_vals = map(x->x.val, node.level_params)
+        append!(values, level_param_vals)
+
+        level_param_bounds = map(x->x.bounds, node.level_params)
+        append!(bounds, level_param_bounds)
+    end
     
     return values, bounds
 end
