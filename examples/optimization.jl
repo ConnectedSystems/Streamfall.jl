@@ -30,11 +30,11 @@ using BlackBoxOptim
     hist_dam_releases = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_releases.csv", dateformat="YYYY-mm-dd"))
 
     inlet_levels = DataFrame!(CSV.File("../test/data/campaspe/gauges/406219_edited.csv", dateformat="YYYY-mm-dd"))
-    inlet_flows = DataFrame!(CSV.File("../test/data/campaspe/gauges/406219_outflow_edited.csv", dateformat="YYYY-mm-dd"))
+    # inlet_flows = DataFrame!(CSV.File("../test/data/campaspe/gauges/406219_outflow_edited.csv", dateformat="YYYY-mm-dd"))
 
     # Subset to same range
-    first_date = max(hist_dam_levels.Date[1], hist_dam_releases.Date[1], inlet_flows.Date[1])
-    last_date = min(hist_dam_levels.Date[end], hist_dam_releases.Date[end], inlet_flows.Date[end])
+    first_date = max(hist_dam_levels.Date[1], hist_dam_releases.Date[1])
+    last_date = min(hist_dam_levels.Date[end], hist_dam_releases.Date[end])
 
     # @info "Date ranges:" first_date last_date
 
@@ -42,30 +42,32 @@ using BlackBoxOptim
     hist_dam_releases = hist_dam_releases[first_date .<= hist_dam_releases.Date .<= last_date, :]
     hist_dam_levels = hist_dam_levels[first_date .<= hist_dam_levels.Date .<= last_date, :]
     # inlet_levels = inlet_levels[first_date .<= inlet_levels.Date .<= last_date, :]
-    inlet_flows = inlet_flows[first_date .<= inlet_flows.Date .<= last_date, :]
+    # inlet_flows = inlet_flows[first_date .<= inlet_flows.Date .<= last_date, :]
 
     hist_data = Dict(
         "406000" => hist_dam_levels[:, "Dam Level [mAHD]"],
-        "406219" => inlet_flows[:, "406219_outflow_[ML]"]
+        # "406219" => inlet_flows[:, "406219_outflow_[ML]"]
     )
 
     climate = Climate(climate_data, "_rain", "_evap")
 
 
-    function obj_func(params, climate, mg, g, v_id, obs_data)
+    function obj_func(params, climate, mg, g, v_id, next_vid, obs_data)
 
-        node = get_prop(mg, v_id, :node)
-        update_params!(node, params...)
+        this_node = get_prop(mg, v_id, :node)
+        update_params!(this_node, params...)
+
+        next_node = get_prop(mg, next_vid, :node)
     
         timesteps = sim_length(climate)
         for ts in (1:timesteps)
-            run_node!(mg, g, v_id, climate, ts; water_order=hist_dam_releases)
+            run_node!(mg, g, next_vid, climate, ts; water_order=hist_dam_releases)
         end
 
-        if node.node_id == "406000"
-            node_data = node.level[10:end]
+        if next_node.node_id == "406000"
+            node_data = next_node.level[10:end]
         else
-            node_data = node.outflow[10:end]
+            node_data = next_node.outflow[10:end]
         end
 
         h_data = obs_data[10:end]
@@ -83,8 +85,7 @@ using BlackBoxOptim
         # score = RMSE
     
         # reset to clear stored values
-        # set_prop!(mg, v_id, :node, orig_node)
-        reset!(node)
+        reset!(this_node)
     
         # Borg method expects tuple to be returned
         # return (score, )
@@ -102,16 +103,21 @@ function calibrate(g, mg, v_id, climate, calib_data)
         end
     end
 
-    node = get_prop(mg, v_id, :node)
-    node_id = node.node_id
+    outs = outneighbors(g, v_id)
+    @assert length(outs) == 1 || throw("Streamfall currently only supports a single outlet.")
+    outs = outs[1]
 
-    obs_data = calib_data[node_id]
+    this_node = get_prop(mg, v_id, :node)
+    next_node = get_prop(mg, outs, :node)
+    next_id = next_node.node_id
+
+    obs_data = calib_data[next_id]
 
     # Create new optimization function
-    opt_func = x -> obj_func(x, climate, mg, g, v_id, obs_data)
+    opt_func = x -> obj_func(x, climate, mg, g, v_id, outs, obs_data)
 
     # Get node parameters
-    x0, param_bounds = param_info(node; with_level=false)
+    x0, param_bounds = param_info(this_node; with_level=false)
 
     # opt = bbsetup(opt_func; SearchRange=param_bounds,
     #               Method=:borg_moea,
@@ -142,7 +148,6 @@ end
 
 match = collect(filter_vertices(mg, :name, "406219"))
 v_id = match[1]
-# target_node = Model(get_prop(mg, v_id, :node))
 
 @info "Starting calibration..."
 res = calibrate(g, mg, v_id, climate, hist_data)
@@ -156,17 +161,18 @@ node = get_prop(mg, v_id, :node)
 
 using Plots
 
+
+match = collect(filter_vertices(mg, :name, "406000"))
+dam_id = match[1]
+
 timesteps = sim_length(climate)
 for ts in (1:timesteps)
-    run_node!(mg, g, 2, climate, ts; water_order=hist_dam_releases)
+    run_node!(mg, g, dam_id, climate, ts; water_order=hist_dam_releases)
 end
 
-match = collect(filter_vertices(mg, :name, "406219"))
-inlet_id = match[1]
-
-node = get_prop(mg, inlet_id, :node)
-h_data = inlet_flows[:, "406219_outflow_[ML]"]
-n_data = node.outflow
+dam_node = get_prop(mg, dam_id, :node)
+h_data = hist_dam_levels[:, "Dam Level [mAHD]"]
+n_data = dam_node.level
 
 plot(n_data)
 plot!(h_data)
@@ -178,25 +184,6 @@ NNSE = 1.0 / (2.0 - NSE)
 RMSE = (sum((n_data .- h_data).^2)/length(n_data))^0.5
 @info "RMSE:" RMSE
 
-
-# Dam node
-match = collect(filter_vertices(mg, :name, "406000"))
-dam_node_id = match[1]
-dam_node = get_prop(mg, dam_node_id, :node)
-
-h_levels = hist_dam_levels[:, "Dam Level [mAHD]"]
-n_levels = dam_node.level
-
-
-# Calculate score (NSE)
-NSE = 1 - sum((h_levels .- n_levels).^2) / sum((h_levels .- mean(h_levels)).^2)
-
-# Normalized NSE so that score ranges from 0 to 1. NNSE of 0.5 is equivalent to NSE = 0.
-NNSE = 1 / (2 - NSE)
-@info "NNSE:" NNSE
-
-RMSE = (sum((n_levels .- h_levels).^2)/length(n_levels))^0.5
-@info "RMSE:" RMSE
 
 # timesteps = sim_length(climate)
 # for ts in (1:timesteps)
