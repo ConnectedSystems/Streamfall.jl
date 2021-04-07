@@ -238,6 +238,22 @@ end
 
 
 """
+Extract node parameter values and bounds
+"""
+function param_info(node::IHACRESNode)::Tuple
+    tmp = Model(node)
+    values = collect(tmp.val)
+    level_param_vals = map(x->x.val, node.level_params)
+    append!(values, level_param_vals)
+
+    bounds = collect(tmp.bounds)
+    level_param_bounds = map(x->x.bounds, node.level_params)
+    append!(bounds, level_param_bounds)
+    
+    return values, bounds
+end
+
+"""
 """
 function update_params!(node::IHACRESNode, d::Float64, d2::Float64, e::Float64, f::Float64,
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64)::Nothing
@@ -256,10 +272,9 @@ end
 
 """
 """
-function update_params!(node::IHACRESNode, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
+function update_params!(node::IHACRESNode{Param}, d::Float64, d2::Float64, e::Float64, f::Float64,
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
                         p1::Float64, p2::Float64, p3::Float64, p4::Float64, p5::Float64, p6::Float64, p7::Float64, p8::Float64, CTF::Float64)::Nothing
-    node.area = area
     node.d = Param(d, bounds=node.d.bounds)
     node.d2 = Param(d2, bounds=node.d2.bounds)
     node.e = Param(e, bounds=node.e.bounds)

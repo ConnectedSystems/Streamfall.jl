@@ -212,6 +212,18 @@ end
 
 
 """
+Extract node parameter values and bounds
+"""
+function param_info(node::DamNode)::Tuple
+    tmp = Model(node)
+    values = collect(tmp.val)
+    bounds = collect(tmp.bounds)
+    
+    return values, bounds
+end
+
+
+"""
 """
 function update_params!(node::DamNode, storage_coef::Float64)::Nothing
     node.storage_coef = Param(storage_coef, bounds=node.storage_coef.bounds)
