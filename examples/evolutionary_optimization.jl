@@ -106,8 +106,8 @@ function calibrate(g, mg, v_id, climate, calib_data)
     # Create new optimization function
     opt_func = x -> obj_func(x, climate, mg, g, v_id, obs_data)
 
-    # Get all parameters
-    x0, param_bounds = param_info(node)
+    # Get node parameters
+    x0, param_bounds = param_info(node; with_level=false)
     lower, upper = collect(zip(param_bounds...))
     lower, upper = collect(lower), collect(upper)
 
@@ -119,7 +119,6 @@ function calibrate(g, mg, v_id, climate, calib_data)
     bs = Evolutionary.minimizer(res)
     @info "Calibrated $(v_id) ($(node_id)), with score: $(Evolutionary.minimum(res))"
     @info "Best Params:" bs
-    # @info converged(res)
 
     # Update node with calibrated parameters
     update_params!(get_prop(mg, v_id, :node), bs...)
@@ -160,8 +159,10 @@ plot!(h_data)
 
 NSE = 1.0 - sum((h_data .- n_data).^2) / sum((h_data .- mean(h_data)).^2)
 NNSE = 1.0 / (2.0 - NSE)
-
 @info "NNSE:" NNSE
+
+RMSE = (sum((n_data .- h_data).^2)/length(n_data))^0.5
+@info "RMSE:" RMSE
 
 
 # timesteps = sim_length(climate)
