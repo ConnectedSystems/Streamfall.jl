@@ -214,7 +214,7 @@ end
 """
 Extract node parameter values and bounds
 """
-function param_info(node::DamNode)::Tuple
+function param_info(node::DamNode; kwargs...)::Tuple
     tmp = Model(node)
     values = collect(tmp.val)
     bounds = collect(tmp.bounds)
