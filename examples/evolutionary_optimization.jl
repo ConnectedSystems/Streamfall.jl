@@ -139,8 +139,8 @@ v_id = match[1]
 @info "Starting calibration..."
 res = calibrate(g, mg, v_id, climate, hist_levels)
 
-@info best_fitness(res)
-@info best_candidate(res)
+@info "Score:" Evolutionary.minimum(res)
+@info "Best Params:" Evolutionary.minimizer(res)
 
 node = get_prop(mg, v_id, :node)
 @info node
