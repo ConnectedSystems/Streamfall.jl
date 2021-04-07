@@ -10,10 +10,10 @@
         d2: 1.743  # multiplier applied to `d`
         e: 1.047  # ET scaling factor, dimensionless
         f: 1.315  # multiplier applied to `d` to determine effective rainfall, dimensionless
-        alpha: 0.785  # effective rainfall scaling factor
         a: 99.134  # quickflow scaling factor
         b: 0.259   # slowflow scaling factor
         storage_coef: 2.9
+        alpha: 0.785  # effective rainfall scaling factor
         initial_storage: 0.0  # initial CMD value, CMD > 0 means there is a deficit
     level_params:
         - -3.3502  # p1
@@ -37,10 +37,10 @@
         d2: 2.0
         e: 1.0
         f: 1.675
-        alpha: 0.727
         a: 54.352
         b: 0.187
         storage_coef: 2.9
+        alpha: 0.727
         initial_storage: 100.0
     level_params:
         - -3.3502
@@ -99,10 +99,10 @@
         d2: 2.0
         e: 1.0
         f: 1.4
-        alpha: 0.95
         a: 0.9
         b: 0.1
         storage_coef: 2.9
+        alpha: 0.95
         initial_storage: 0.0
     level_params:
         - -4.6175
@@ -125,10 +125,10 @@
         d2: 2.16
         e: 0.995
         f: 1.226
-        alpha: 0.722
         a: 68.585
         b: 0.388
         storage_coef: 2.9
+        alpha: 0.722
         initial_storage: 0.0
     level_params:
         - -3.8190
@@ -153,10 +153,10 @@
         d2: 2.0
         e: 1.0
         f: 0.8
-        alpha: 0.95
         a: 0.9
         b: 0.1
         storage_coef: 2.9
+        alpha: 0.95
         initial_storage: 0.0
     level_params:
         - -5.6175
@@ -179,10 +179,10 @@
         d2: 2.0
         e: 1.0
         f: 0.8
-        alpha: 0.95
         a: 0.9
         b: 0.1
         storage_coef: 2.9
+        alpha: 0.95
         initial_storage: 0.0
     level_params:
         - -2.2477
@@ -205,10 +205,10 @@
         d2: 2.0
         e: 1.0
         f: 0.8
-        alpha: 0.95
         a: 0.9
         b: 0.1
         storage_coef: 2.9
+        alpha: 0.95
         initial_storage: 0.0
     level_params:
         - -2.7704
