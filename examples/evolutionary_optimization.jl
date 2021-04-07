@@ -31,23 +31,17 @@ using Infiltrator
     hist_dam_releases = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_releases.csv", dateformat="YYYY-mm-dd"))
 
     inlet_levels = DataFrame!(CSV.File("../test/data/campaspe/gauges/406219_edited.csv", dateformat="YYYY-mm-dd"))
-    inlet_flows = DataFrame!(CSV.File("../test/data/campaspe/gauges/406219_outflow_edited.csv", dateformat="YYYY-mm-dd"))
 
     # Subset to same range
-    first_date = max(hist_dam_levels.Date[1], hist_dam_releases.Date[1], inlet_flows.Date[1])
-    last_date = min(hist_dam_levels.Date[end], hist_dam_releases.Date[end], inlet_flows.Date[end])
-
-    # @info "Date ranges:" first_date last_date
+    first_date = max(hist_dam_levels.Date[1], hist_dam_releases.Date[1])
+    last_date = min(hist_dam_levels.Date[end], hist_dam_releases.Date[end])
 
     climate_data = climate_data[first_date .<= climate_data.Date .<= last_date, :]
     hist_dam_releases = hist_dam_releases[first_date .<= hist_dam_releases.Date .<= last_date, :]
     hist_dam_levels = hist_dam_levels[first_date .<= hist_dam_levels.Date .<= last_date, :]
-    # inlet_levels = inlet_levels[first_date .<= inlet_levels.Date .<= last_date, :]
-    inlet_flows = inlet_flows[first_date .<= inlet_flows.Date .<= last_date, :]
 
     hist_data = Dict(
-        "406000" => hist_dam_levels[:, "Dam Level [mAHD]"],
-        "406219" => inlet_flows[:, "406219_outflow_[ML]"]
+        "406000" => hist_dam_levels[:, "Dam Level [mAHD]"]
     )
 
     climate = Climate(climate_data, "_rain", "_evap")
@@ -123,7 +117,7 @@ function calibrate(g, mg, v_id, climate, calib_data)
 
     cnst = BoxConstraints(lower, upper)
     res = Evolutionary.optimize(opt_func, cnst, x0, 
-                                CMAES() # DE()
+                                DE() # CMAES()
     )
 
     bs = Evolutionary.minimizer(res)

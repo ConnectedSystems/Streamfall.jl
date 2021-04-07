@@ -13,45 +13,20 @@ climate_data = DataFrame!(CSV.File("../test/data/campaspe/climate/climate_histor
                           dateformat="YYYY-mm-dd"))
 
 hist_dam_levels = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_levels_for_fit.csv", dateformat="YYYY-mm-dd"))
-inlet_flows = DataFrame!(CSV.File("../test/data/campaspe/gauges/406219_outflow_edited.csv", dateformat="YYYY-mm-dd"))
+hist_dam_releases = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_releases.csv", dateformat="YYYY-mm-dd"))
 
 # Subset to same range
-first_date = max(hist_dam_levels.Date[1], inlet_flows.Date[1])
-last_date = min(hist_dam_levels.Date[end], inlet_flows.Date[end])
+first_date = max(hist_dam_levels.Date[1], hist_dam_releases.Date[1])
+last_date = min(hist_dam_levels.Date[end], hist_dam_releases.Date[end])
 
 climate_data = climate_data[first_date .<= climate_data.Date .<= last_date, :]
 hist_dam_levels = hist_dam_levels[first_date .<= hist_dam_levels.Date .<= last_date, :]
-inlet_flows = inlet_flows[first_date .<= inlet_flows.Date .<= last_date, :]
+hist_dam_releases = hist_dam_releases[first_date .<= hist_dam_releases.Date .<= last_date, :]
 
 climate = Climate(climate_data, "_rain", "_evap")
 
 @info "Running example stream..."
-run_catchment!(mg, g, climate)
-
-match = collect(filter_vertices(mg, :name, "406219"))
-inlet_id = match[1]
-in_node = get_prop(mg, inlet_id, :node)
-
-h_outflow = inlet_flows[:, "406219_outflow_[ML]"]
-n_outflow = in_node.outflow
-
-# Calculate score (NSE)
-NSE = 1 - sum((h_outflow .- n_outflow).^2) / sum((h_outflow .- mean(h_outflow)).^2)
-
-# Normalized NSE so that score ranges from 0 to 1. NNSE of 0.5 is equivalent to NSE = 0.
-NNSE = 1 / (2 - NSE)
-
-@info "NNSE:" NNSE
-
-RMSE = (sum((n_outflow .- h_outflow).^2)/length(n_outflow))^0.5
-score = RMSE
-
-@info "RMSE:" score
-
-
-plot(n_outflow)
-plot!(h_outflow)
-
+run_catchment!(mg, g, climate; water_order=hist_dam_releases)
 
 match = collect(filter_vertices(mg, :name, "406000"))
 dam_node_id = match[1]

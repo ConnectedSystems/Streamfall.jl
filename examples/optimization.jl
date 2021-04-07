@@ -45,8 +45,7 @@ using BlackBoxOptim
     # inlet_flows = inlet_flows[first_date .<= inlet_flows.Date .<= last_date, :]
 
     hist_data = Dict(
-        "406000" => hist_dam_levels[:, "Dam Level [mAHD]"],
-        # "406219" => inlet_flows[:, "406219_outflow_[ML]"]
+        "406000" => hist_dam_levels[:, "Dam Level [mAHD]"]
     )
 
     climate = Climate(climate_data, "_rain", "_evap")
