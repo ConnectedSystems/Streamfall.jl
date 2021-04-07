@@ -31,27 +31,28 @@ using Infiltrator
     hist_dam_releases = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_releases.csv", dateformat="YYYY-mm-dd"))
 
     inlet_levels = DataFrame!(CSV.File("../test/data/campaspe/gauges/406219_edited.csv", dateformat="YYYY-mm-dd"))
+    inlet_flows = DataFrame!(CSV.File("../test/data/campaspe/gauges/406219_outflow_edited.csv", dateformat="YYYY-mm-dd"))
 
     # Subset to same range
-    first_date = max(hist_dam_levels.Date[1], hist_dam_releases.Date[1], inlet_levels.Date[1])
-    last_date = min(hist_dam_levels.Date[end], hist_dam_releases.Date[end], inlet_levels.Date[end])
+    first_date = max(hist_dam_levels.Date[1], hist_dam_releases.Date[1], inlet_flows.Date[1])
+    last_date = min(hist_dam_levels.Date[end], hist_dam_releases.Date[end], inlet_flows.Date[end])
 
     # @info "Date ranges:" first_date last_date
 
     climate_data = climate_data[first_date .<= climate_data.Date .<= last_date, :]
     hist_dam_releases = hist_dam_releases[first_date .<= hist_dam_releases.Date .<= last_date, :]
     hist_dam_levels = hist_dam_levels[first_date .<= hist_dam_levels.Date .<= last_date, :]
-    inlet_levels = inlet_levels[first_date .<= inlet_levels.Date .<= last_date, :]
+    # inlet_levels = inlet_levels[first_date .<= inlet_levels.Date .<= last_date, :]
+    inlet_flows = inlet_flows[first_date .<= inlet_flows.Date .<= last_date, :]
 
-    hist_levels = Dict(
-        "406000" => hist_dam_levels,
-        "406219" => inlet_levels
+    hist_data = Dict(
+        "406000" => hist_dam_levels[:, "Dam Level [mAHD]"],
+        "406219" => inlet_flows[:, "406219_outflow_[ML]"]
     )
 
     climate = Climate(climate_data, "_rain", "_evap")
 
-
-    function obj_func(params, climate, mg, g, v_id, obs_levels)
+    function obj_func(params, climate, mg, g, v_id, obs_data)
 
         node = get_prop(mg, v_id, :node)
         update_params!(node, params...)
@@ -60,12 +61,17 @@ using Infiltrator
         for ts in (1:timesteps)
             run_node!(mg, g, v_id, climate, ts; water_order=hist_dam_releases)
         end
-    
-        node_levels = node.level[1000:end]
-        h_levels = obs_levels[1000:end]
+
+        if node.node_id == "406000"
+            node_data = node.level[10:end]
+        else
+            node_data = node.outflow[10:end]
+        end
+
+        h_data = obs_data[10:end]
     
         # Calculate score (NSE)
-        NSE = 1 - sum((h_levels .- node_levels).^2) / sum((h_levels .- mean(h_levels)).^2)
+        NSE = 1 - sum((h_data .- node_data).^2) / sum((h_data .- mean(h_data)).^2)
     
         # Normalized NSE so that score ranges from 0 to 1. NNSE of 0.5 is equivalent to NSE = 0.
         NNSE = 1 / (2 - NSE)
@@ -73,11 +79,7 @@ using Infiltrator
         # Swap signs as we want to minimize
         score = -NNSE
     
-        # RMSE = (sum((node_levels .- h_levels).^2)/length(node_levels))^0.5
-        # score = RMSE
-    
         # reset to clear stored values
-        # set_prop!(mg, v_id, :node, orig_node)
         reset!(node)
     
         # Borg method expects tuple to be returned
@@ -87,46 +89,39 @@ using Infiltrator
 end
 
 
-function calibrate(g, mg, v_id, climate, hist_levels)
+function calibrate(g, mg, v_id, climate, calib_data)
 
     inlets = inneighbors(g, v_id)
     if !isempty(inlets)
         for ins in inlets
-            calibrate(g, mg, ins, climate, hist_levels)
+            calibrate(g, mg, ins, climate, calib_data)
         end
     end
 
     node = get_prop(mg, v_id, :node)
     node_id = node.node_id
 
-    if node_id == "406000"
-        obs_levels = hist_levels[node_id][:, "Dam Level [mAHD]"]
-    else
-        obs_levels = hist_levels[node_id][:, "$(node_id)_level"]
-    end
+    obs_data = calib_data[node_id]
 
     # Create new optimization function
-    opt_func = x -> obj_func(x, climate, mg, g, v_id, obs_levels)
+    opt_func = x -> obj_func(x, climate, mg, g, v_id, obs_data)
 
-    target_node = Model(node)
-
-    # Calibrate subset only
-    param_bounds = collect(target_node.bounds)
+    # Get all parameters
+    x0, param_bounds = param_info(node)
     lower, upper = collect(zip(param_bounds...))
     lower, upper = collect(lower), collect(upper)
 
-    x0 = collect(target_node.val)
     cnst = BoxConstraints(lower, upper)
     res = Evolutionary.optimize(opt_func, cnst, x0, 
-                                DE()
+                                CMAES() # DE()
     )
-    # GA(populationSize = 100, selection = susinv,
-    # crossover = discrete, mutation = domainrange(ones(3))
 
-    @info "Calibrated $(v_id), with score: $(Evolutionary.minimum(res))"
+    bs = Evolutionary.minimizer(res)
+    @info "Calibrated $(v_id) ($(node_id)), with score: $(Evolutionary.minimum(res))"
+    @info "Best Params:" bs
+    # @info converged(res)
 
     # Update node with calibrated parameters
-    bs = Evolutionary.minimizer(res)
     update_params!(get_prop(mg, v_id, :node), bs...)
 
     return res
@@ -137,7 +132,7 @@ match = collect(filter_vertices(mg, :name, "406000"))
 v_id = match[1]
 
 @info "Starting calibration..."
-res = calibrate(g, mg, v_id, climate, hist_levels)
+res = calibrate(g, mg, v_id, climate, hist_data)
 
 @info "Score:" Evolutionary.minimum(res)
 @info "Best Params:" Evolutionary.minimizer(res)
@@ -150,16 +145,21 @@ using Plots
 
 timesteps = sim_length(climate)
 for ts in (1:timesteps)
-    run_node!(mg, g, 1, climate, ts; water_order=hist_dam_releases)
+    run_node!(mg, g, 1, climate, ts)  # ; water_order=hist_dam_releases
 end
 
-node = get_prop(mg, 1, :node)
-h_level = inlet_levels[:, "406219_level"]
-plot(node.level)
-plot!(h_level)
+match = collect(filter_vertices(mg, :name, "406219"))
+inlet_id = match[1]
 
-NSE = 1 - sum((h_level .- node.level).^2) / sum((h_level .- mean(h_level)).^2)
-NNSE = 1 / (2 - NSE)
+node = get_prop(mg, inlet_id, :node)
+h_data = inlet_flows[:, "406219_outflow_[ML]"]
+n_data = node.outflow
+
+plot(n_data)
+plot!(h_data)
+
+NSE = 1.0 - sum((h_data .- n_data).^2) / sum((h_data .- mean(h_data)).^2)
+NNSE = 1.0 / (2.0 - NSE)
 
 @info "NNSE:" NNSE
 

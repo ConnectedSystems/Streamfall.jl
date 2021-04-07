@@ -15,11 +15,18 @@ climate = Climate(climate_data, "_rain", "_evap")
 @info "Running example stream..."
 run_catchment!(mg, g, climate)
 
-inlets, outlets = find_inlets_and_outlets(g)
+# inlets, outlets = find_inlets_and_outlets(g)
 
-in_node = get_prop(mg, inlets[1], :node)
+# in_node = get_prop(mg, inlets[1], :node)
+# plot(in_node.outflow)
 
-plot(in_node.outflow)
+dam_node = filter_vertices(g, :name, "406000")
+# dam_node = get_prop(mg, 2, :node)
+
+hist_dam_levels = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_levels_for_fit.csv", dateformat="YYYY-mm-dd"))
+
+plot(dam_node.level)
+plot!(hist_dam_levels[:, "Dam Level [mAHD]"])
 
 # outflow = in_node.outflow
 # append!(outflow, NaN)
