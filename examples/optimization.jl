@@ -29,20 +29,13 @@ using BlackBoxOptim
     hist_dam_levels = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_levels_for_fit.csv", dateformat="YYYY-mm-dd"))
     hist_dam_releases = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_releases.csv", dateformat="YYYY-mm-dd"))
 
-    inlet_levels = DataFrame!(CSV.File("../test/data/campaspe/gauges/406219_edited.csv", dateformat="YYYY-mm-dd"))
-    # inlet_flows = DataFrame!(CSV.File("../test/data/campaspe/gauges/406219_outflow_edited.csv", dateformat="YYYY-mm-dd"))
-
     # Subset to same range
     first_date = max(hist_dam_levels.Date[1], hist_dam_releases.Date[1])
     last_date = min(hist_dam_levels.Date[end], hist_dam_releases.Date[end])
 
-    # @info "Date ranges:" first_date last_date
-
     climate_data = climate_data[first_date .<= climate_data.Date .<= last_date, :]
     hist_dam_releases = hist_dam_releases[first_date .<= hist_dam_releases.Date .<= last_date, :]
     hist_dam_levels = hist_dam_levels[first_date .<= hist_dam_levels.Date .<= last_date, :]
-    # inlet_levels = inlet_levels[first_date .<= inlet_levels.Date .<= last_date, :]
-    # inlet_flows = inlet_flows[first_date .<= inlet_flows.Date .<= last_date, :]
 
     hist_data = Dict(
         "406000" => hist_dam_levels[:, "Dam Level [mAHD]"]
@@ -64,12 +57,12 @@ using BlackBoxOptim
         end
 
         if next_node.node_id == "406000"
-            node_data = next_node.level[10:end]
+            node_data = next_node.level
         else
-            node_data = next_node.outflow[10:end]
+            node_data = next_node.outflow
         end
 
-        h_data = obs_data[10:end]
+        h_data = obs_data
     
         # Calculate score (NSE)
         NSE = 1 - sum((h_data .- node_data).^2) / sum((h_data .- mean(h_data)).^2)
