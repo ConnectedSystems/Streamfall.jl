@@ -1,6 +1,7 @@
 module Streamfall
 
 using LightGraphs, MetaGraphs, Distributed, DataFrames
+using Statistics
 
 
 const MODPATH = @__DIR__
@@ -128,6 +129,7 @@ end
 
 
 include("Network.jl")
+include("metrics.jl")
 
 
 export @def
