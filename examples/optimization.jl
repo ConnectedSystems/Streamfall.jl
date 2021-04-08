@@ -86,17 +86,17 @@ using BlackBoxOptim
 end
 
 
-function calibrate(g, mg, v_id, climate, calib_data)
+function calibrate(mg, g, v_id, climate, calib_data)
 
     inlets = inneighbors(g, v_id)
     if !isempty(inlets)
         for ins in inlets
-            calibrate(g, mg, ins, climate, calib_data)
+            calibrate(mg, g, ins, climate, calib_data)
         end
     end
 
     outs = outneighbors(g, v_id)
-    @assert length(outs) == 1 || throw("Streamfall currently only supports a single outlet.")
+    @assert length(outs) == 1 || throw("Streamfall currently only supports a single outlet. ($(length(outs)))")
     outs = outs[1]
 
     this_node = get_prop(mg, v_id, :node)
@@ -142,7 +142,7 @@ match = collect(filter_vertices(mg, :name, "406219"))
 v_id = match[1]
 
 @info "Starting calibration..."
-res = calibrate(g, mg, v_id, climate, hist_data)
+res = calibrate(mg, g, v_id, climate, hist_data)
 
 @info best_fitness(res)
 @info best_candidate(res)
