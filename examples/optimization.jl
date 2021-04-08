@@ -166,15 +166,18 @@ dam_node = get_prop(mg, dam_id, :node)
 h_data = hist_dam_levels[:, "Dam Level [mAHD]"]
 n_data = dam_node.level
 
-plot(n_data)
-plot!(h_data)
+# NSE = 1.0 - sum((h_data .- n_data).^2) / sum((h_data .- mean(h_data)).^2)
+# NNSE = 1.0 / (2.0 - NSE)
+# @info "NNSE:" NNSE
+@info "NNSE:" Streamfall.NNSE(h_data, n_data)
 
-NSE = 1.0 - sum((h_data .- n_data).^2) / sum((h_data .- mean(h_data)).^2)
-NNSE = 1.0 / (2.0 - NSE)
-@info "NNSE:" NNSE
+# RMSE = (sum((n_data .- h_data).^2)/length(n_data))^0.5
+@info "RMSE:" Streamfall.RMSE(h_data, n_data)
 
-RMSE = (sum((n_data .- h_data).^2)/length(n_data))^0.5
-@info "RMSE:" RMSE
+
+plot(h_data)
+plot!(n_data)
+
 
 
 # timesteps = sim_length(climate)
