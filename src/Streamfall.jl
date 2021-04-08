@@ -45,6 +45,21 @@ include("IHACRESNode.jl")
 include("DamNode.jl")
 include("Climate.jl")
 
+
+function timestep_value(timestep, gauge_id::String, col_partial::String, dataset=nothing)
+    amount = 0.0
+    if !isnothing(dataset)
+        target_col = filter(x -> occursin(gauge_id, string(x))
+                                & occursin(col_partial, string(x)),
+                                names(dataset))
+        if !isempty(target_col)
+            amount = checkbounds(Bool, dataset.Date, timestep) ? dataset[timestep, target_col][1] : 0.0
+        end
+    end
+
+    return amount
+end
+
 """Run a model attached to a node.
 
 water_order: Volume of water to be extracted (in ML/timestep)
@@ -76,33 +91,15 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
         end
     end
 
-    gauge_id = get_prop(mg, node_id, :name)
+    gauge_id = curr_node.node_id
     rain, et = climate_values(curr_node, climate, timestep)
     if ismissing(rain) | ismissing(et)
         @warn "No climate data found for node $(node_id) ($(gauge_id)) using column markers $(climate.rainfall_id) and $(climate.et_id)"
         return 0.0
     end
 
-    wo = 0.0
-    if !isnothing(water_order)
-        release_col = filter(x -> occursin(gauge_id, string(x))
-                                  & occursin("releases", string(x)),
-                                  names(water_order))
-        if !isempty(release_col)
-            wo = checkbounds(Bool, water_order.Date, timestep) ? water_order[timestep, release_col][1] : 0.0
-        end
-    end
-
-    ex = 0.0
-    if !isnothing(exchange)
-        exchange_col = filter(x -> occursin(gauge_id, x)
-                                  & occursin("exchange", x),
-                                  names(exchange))
-        
-        if !isempty(exchange_col)
-            ex = checkbounds(Bool, exchange.Date, timestep) ? exchange[timestep, exchange_col][1] : 0.0
-        end
-    end
+    wo = timestep_value(timestep, gauge_id, "releases", water_order)
+    ex = timestep_value(timestep, gauge_id, "exchange", exchange)
 
     # Calculate outflow for this node
     func = get_prop(mg, node_id, :nfunc)
