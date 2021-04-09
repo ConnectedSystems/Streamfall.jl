@@ -16,7 +16,7 @@ end
     # Ensure specified parameter values are being assigned on node creation
     # Load and generate stream network
     network = YAML.load_file("data/campaspe/campaspe_network.yml")
-    g, mg = create_network("Example Network", network)
+    mg, g = create_network("Example Network", network)
 
     target_node = get_prop(mg, 1, :node)
 

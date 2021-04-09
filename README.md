@@ -35,7 +35,7 @@ using MetaGraphs, Streamfall
 # g = graph network
 # mg = meta-graph
 network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
-g, mg = create_network("Example Network", network)
+mg, g = create_network("Example Network", network)
 
 # Load climate data
 climate_data = DataFrame!(CSV.File("../test/data/campaspe/climate/climate_historic.csv", 

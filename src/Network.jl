@@ -78,7 +78,7 @@ end
 """Create a network from a YAML-derived spec
 
     network = YAML.load_file("example_network.yml")
-    g, mg = create_network("Example Network", network)
+    mg, g = create_network("Example Network", network)
 
 """
 function create_network(name::String, network::Dict)
@@ -115,5 +115,17 @@ function create_network(name::String, network::Dict)
         end
     end
 
-    return g, mg
+    return mg, g
+end
+
+
+"""
+Reset a network.
+"""
+function reset!(mg, g)
+    v_ids = vertices(g)
+    for i in v_ids
+        curr_node = get_prop(mg, i, :node)
+        reset!(curr_node)
+    end
 end
