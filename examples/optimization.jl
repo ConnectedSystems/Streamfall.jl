@@ -1,7 +1,9 @@
 using Distributed
 using BlackBoxOptim
 
-# addprocs(2, exeflags="--project=../")
+# if nworkers() < 3
+#     addprocs(2, exeflags="--project=../")
+# end
 
 @everywhere begin
     # Ensure dependent data and packages are available
@@ -16,7 +18,7 @@ using BlackBoxOptim
 
 
     network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
-    g, mg = create_network("Example Network", network)
+    mg, g = create_network("Example Network", network)
     inlets, outlets = find_inlets_and_outlets(g)
 
     # @info "Network has the following inlets and outlets:" inlets outlets
@@ -42,7 +44,6 @@ using BlackBoxOptim
 
     climate = Climate(climate_data, "_rain", "_evap")
 
-
     function obj_func(params, climate, mg, g, v_id, next_vid, calib_data)
 
         this_node = get_prop(mg, v_id, :node)
@@ -59,21 +60,21 @@ using BlackBoxOptim
             node_data = next_node.level
             h_data = calib_data[next_node.node_id]
         else
-            node_data = next_node.outflow
+            node_data = this_node.outflow
             h_data = calib_data[this_node.node_id]
         end
     
-        # Calculate score (NSE)
+        # Calculate score (NNSE; 0 to 1)
         NNSE = Streamfall.NNSE(h_data, node_data)
     
-        # Swap signs as we want to minimize
-        score = -NNSE
-    
-        # RMSE = (sum((node_levels .- h_levels).^2)/length(node_levels))^0.5
+        # Switch fitness direction as we want to minimize
+        score = 1.0 - NNSE
+
+        # RMSE = Streamfall.RMSE(h_data, node_data)
         # score = RMSE
     
         # reset to clear stored values
-        reset!(this_node)
+        reset!(mg, g)
     
         # Borg method expects tuple to be returned
         # return (score, )
@@ -117,8 +118,10 @@ function calibrate(mg, g, v_id, climate, calib_data)
                   Method=:adaptive_de_rand_1_bin_radiuslimited,
                   # MaxTime=600.0,  #spend 10 minutes calibrating each node
                   TraceMode=:silent,
-                  PopulationSize=100,
-                  ftol=-1e-10,
+                  PopulationSize=200,
+                  FitnessTolerance=1e-3,
+                  TargetFitness=0.25,
+                  MaxSteps=1e3,
                   Workers=workers())
     
     res = bboptimize(opt)

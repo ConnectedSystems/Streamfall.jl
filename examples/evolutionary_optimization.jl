@@ -18,7 +18,7 @@ using Infiltrator
 
 
     network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
-    g, mg = create_network("Example Network", network)
+    mg, g = create_network("Example Network", network)
     inlets, outlets = find_inlets_and_outlets(g)
 
     # @info "Network has the following inlets and outlets:" inlets outlets
@@ -46,7 +46,7 @@ using Infiltrator
 
     climate = Climate(climate_data, "_rain", "_evap")
 
-    function obj_func(params, climate, mg, g, v_id, next_vid, obs_data)
+    function obj_func(params, climate, mg, g, v_id, next_vid, calib_data)
 
         this_node = get_prop(mg, v_id, :node)
         update_params!(this_node, params...)
@@ -59,27 +59,24 @@ using Infiltrator
         end
 
         if next_node.node_id == "406000"
-            node_data = next_node.level[10:end]
+            node_data = next_node.level
+            h_data = calib_data[next_node.node_id]
         else
-            node_data = next_node.outflow[10:end]
+            node_data = this_node.outflow
+            h_data = calib_data[this_node.node_id]
         end
+    
+        # Calculate score (NNSE; 0 to 1)
+        NNSE = Streamfall.NNSE(h_data, node_data)
+    
+        # Switch fitness direction as we want to minimize
+        score = 1.0 - NNSE
 
-        h_data = obs_data[10:end]
-    
-        # Calculate score (NSE)
-        NSE = 1 - sum((h_data .- node_data).^2) / sum((h_data .- mean(h_data)).^2)
-    
-        # Normalized NSE so that score ranges from 0 to 1. NNSE of 0.5 is equivalent to NSE = 0.
-        NNSE = 1 / (2 - NSE)
-    
-        # Swap signs as we want to minimize
-        score = -NNSE
-    
-        # RMSE = (sum((node_levels .- h_levels).^2)/length(node_levels))^0.5
+        # RMSE = Streamfall.RMSE(h_data, node_data)
         # score = RMSE
     
         # reset to clear stored values
-        reset!(this_node)
+        reset!(mg, g)
     
         # Borg method expects tuple to be returned
         # return (score, )
@@ -88,7 +85,7 @@ using Infiltrator
 end
 
 
-function calibrate(g, mg, v_id, climate, calib_data)
+function calibrate(mg, g, v_id, climate, calib_data)
 
     inlets = inneighbors(g, v_id)
     if !isempty(inlets)
@@ -105,10 +102,8 @@ function calibrate(g, mg, v_id, climate, calib_data)
     next_node = get_prop(mg, outs, :node)
     next_id = next_node.node_id
 
-    obs_data = calib_data[next_id]
-
     # Create new optimization function
-    opt_func = x -> obj_func(x, climate, mg, g, v_id, outs, obs_data)
+    opt_func = x -> obj_func(x, climate, mg, g, v_id, outs, calib_data)
 
     # Get node parameters
     x0, param_bounds = param_info(this_node; with_level=false)
@@ -117,7 +112,8 @@ function calibrate(g, mg, v_id, climate, calib_data)
 
     cnst = BoxConstraints(lower, upper)
     res = Evolutionary.optimize(opt_func, cnst, x0, 
-                                DE() # CMAES()
+                                DE(), # CMAES()
+                                Evolutionary.Options(iterations=Int(1e5), abstol=1e-32)
     )
 
     bs = Evolutionary.minimizer(res)
@@ -135,10 +131,10 @@ match = collect(filter_vertices(mg, :name, "406219"))
 v_id = match[1]
 
 @info "Starting calibration..."
-res = calibrate(g, mg, v_id, climate, hist_data)
+res = calibrate(mg, g, v_id, climate, hist_data)
 
-@info "Score:" Evolutionary.minimum(res)
-@info "Best Params:" Evolutionary.minimizer(res)
+@info best_fitness(res)
+@info best_candidate(res)
 
 node = get_prop(mg, v_id, :node)
 @info node
@@ -158,16 +154,11 @@ dam_node = get_prop(mg, dam_id, :node)
 h_data = hist_dam_levels[:, "Dam Level [mAHD]"]
 n_data = dam_node.level
 
-plot(n_data)
-plot!(h_data)
+@info "NNSE:" Streamfall.NNSE(h_data, n_data)
+@info "RMSE:" Streamfall.RMSE(h_data, n_data)
 
-NSE = 1.0 - sum((h_data .- n_data).^2) / sum((h_data .- mean(h_data)).^2)
-NNSE = 1.0 / (2.0 - NSE)
-@info "NNSE:" NNSE
-
-RMSE = (sum((n_data .- h_data).^2)/length(n_data))^0.5
-@info "RMSE:" RMSE
-
+plot(h_data)
+plot!(n_data)
 
 
 # timesteps = sim_length(climate)

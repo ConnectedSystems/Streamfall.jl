@@ -87,7 +87,7 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
         for i in ins
             src_name = get_prop(mg, i, :name)
             # Get inflow from previous node
-            upstream_flow, upstream_level = run_node!(mg, g, i, climate, timestep)
+            upstream_flow, upstream_level = run_node!(mg, g, i, climate, timestep; water_order=water_order, exchange=exchange)
             inflow += upstream_flow
         end
     end
@@ -116,14 +116,18 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
 end
 
 
-function run_catchment!(mg, g, climate; water_order=nothing)
+function run_catchment!(mg, g, climate; water_order=nothing, exchange=nothing)
     inlets, outlets = find_inlets_and_outlets(g)
+    for outlet in outlets
+        run_node!(mg, g, outlet, climate; water_order=water_order, exchange=exchange)
+    end
+end
 
+
+function run_node!(mg, g, target_node, climate; water_order=nothing, exchange=nothing)
     timesteps = sim_length(climate)
     for ts in (1:timesteps)
-        for outlet in outlets
-            run_node!(mg, g, outlet, climate, ts; water_order=water_order)
-        end
+        run_node!(mg, g, target_node, climate, ts; water_order=water_order, exchange=exchange)
     end
 end
 

@@ -5,7 +5,7 @@ using MetaGraphs, Streamfall
 
 # Load and generate stream network
 network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
-g, mg = create_network("Example Network", network)
+mg, g = create_network("Example Network", network)
 
 # Load climate data
 climate_data = DataFrame!(CSV.File("../test/data/campaspe/climate/climate_historic.csv", 
@@ -29,25 +29,18 @@ climate = Climate(climate_data, "_rain", "_evap")
 run_catchment!(mg, g, climate; water_order=hist_dam_releases)
 
 match = collect(filter_vertices(mg, :name, "406000"))
-dam_node_id = match[1]
-dam_node = get_prop(mg, dam_node_id, :node)
+dam_id = match[1]
+dam_node = get_prop(mg, dam_id, :node)
 
 h_levels = hist_dam_levels[:, "Dam Level [mAHD]"]
 n_levels = dam_node.level
 
-plot(n_levels)
-plot!(h_levels)
+@info "NNSE:" Streamfall.NNSE(h_levels, n_levels)
+@info "RMSE:" Streamfall.RMSE(h_levels, n_levels)
 
 
-# Calculate score (NSE)
-NSE = 1 - sum((h_levels .- n_levels).^2) / sum((h_levels .- mean(h_levels)).^2)
-
-# Normalized NSE so that score ranges from 0 to 1. NNSE of 0.5 is equivalent to NSE = 0.
-NNSE = 1 / (2 - NSE)
-@info "NNSE:" NNSE
-
-RMSE = (sum((n_levels .- h_levels).^2)/length(n_levels))^0.5
-@info "RMSE:" RMSE
+plot(h_levels)
+display(plot!(n_levels))
 
 # outflow = in_node.outflow
 # append!(outflow, NaN)
