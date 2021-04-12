@@ -140,6 +140,6 @@ export @def
 export IHACRES, IHACRESNode, DamNode, Climate
 export find_inlets_and_outlets, create_network, create_node
 export param_info, update_params!, run_node!, reset!, sim_length, run_catchment!
-export climate_values
+export climate_values, get_node, get_gauge, get_node_id
 
 end  # end module
