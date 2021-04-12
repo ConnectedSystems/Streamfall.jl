@@ -58,13 +58,13 @@ function calibrate(mg, g, v_id, climate, calib_data)
     # Update node with calibrated parameters
     update_params!(this_node, bs...)
 
-    return res
+    return res, opt
 end
 
 
-v_id, node = get_gauge(mg, "406000")
+v_id, node = get_gauge(mg, "406219")
 @info "Starting calibration..."
-res = calibrate(mg, g, v_id, climate, hist_data)
+res, opt = calibrate(mg, g, v_id, climate, hist_data)
 
 @info best_fitness(res)
 @info best_candidate(res)
