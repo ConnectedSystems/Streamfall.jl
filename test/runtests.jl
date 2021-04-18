@@ -94,7 +94,6 @@ end
     e_rain = 0.0
     recharge = 0.0
 
-    cmd = 72.47431523846738
     prev_quick = 3.3317177943791187
     prev_slow = 144.32012122323678
 
