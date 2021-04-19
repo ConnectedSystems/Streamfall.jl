@@ -28,19 +28,15 @@ climate = Climate(climate_data, "_rain", "_evap")
 @info "Running example stream..."
 run_catchment!(mg, g, climate; water_order=hist_dam_releases)
 
-match = collect(filter_vertices(mg, :name, "406000"))
-dam_id = match[1]
-dam_node = get_prop(mg, dam_id, :node)
-
+dam_id, dam_node = get_gauge(mg, "406000")
 h_levels = hist_dam_levels[:, "Dam Level [mAHD]"]
 n_levels = dam_node.level
 
 @info "NNSE:" Streamfall.NNSE(h_levels, n_levels)
 @info "RMSE:" Streamfall.RMSE(h_levels, n_levels)
 
-
-plot(h_levels)
-display(plot!(n_levels))
+plot(h_levels, legend=:bottomleft, label="Historic")
+display(plot!(n_levels, label="IHACRES"))
 
 # outflow = in_node.outflow
 # append!(outflow, NaN)
