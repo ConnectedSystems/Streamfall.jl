@@ -1,6 +1,6 @@
-DATA_PATH = "../../test/data/campaspe/"
-
 @everywhere begin
+    const DATA_PATH = "../../test/data/campaspe/"
+
     # Ensure dependent data and packages are available
     using DataFrames, CSV
     using Statistics
