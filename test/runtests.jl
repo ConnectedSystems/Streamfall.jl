@@ -2,14 +2,52 @@ using YAML
 using Test
 using Streamfall, MetaGraphs
 
+
 @testset "Bare node creation" begin
     test_node = IHACRESNode{Float64}(;
         node_id="Test",
-        area=100.0
+        area=100.0,
+        route=false
     )
 
     @info "Outflow:" run_node!(test_node, 6.0, 3.0, 50.0, 10.0)
 end
+
+
+@testset "NaN outputs" begin
+    test_node = IHACRESNode(
+        "Test",  # name/id
+        1985.73,  # area
+        false,    # route
+        200.0,  # d
+        2.0,  # d2
+        1.0,  # e
+        1.675,  # f
+        54.35254,  # a
+        0.187,  # b
+        2.9,  # storage_coef
+        0.727,  # alpha
+        100.0,  # storage
+        0.0,  # quickflow
+        0.0  # slowflow
+    )
+
+    rain = 7.96848605e+01
+    evap = 3.32467909e+00
+    inflow = 9.19583373e-11
+    extraction = 1.59313987e-12
+    gw_exchange = 2.47076926e-11
+    loss = 5.51086184e-11
+    current_store = 1.03467364e+02
+    quick_store = 8.46269687e+02
+    slow_store = 3.67133471e+02
+
+    res = run_node!(test_node, rain, evap, inflow, extraction, gw_exchange, loss; 
+                    current_store=current_store, quick_store=quick_store, slow_store=slow_store)
+
+    @info res
+end
+
 
 
 @testset "Network creation" begin
