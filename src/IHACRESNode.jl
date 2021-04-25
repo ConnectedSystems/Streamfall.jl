@@ -152,26 +152,34 @@ function run_node!(s_node::IHACRESNode,
                    current_store=nothing,
                    quick_store=nothing,
                    slow_store=nothing)::Tuple{Float64, Float64}
-    if isnothing(current_store)
-        current_store = s_node.storage[end]
+    if !isnothing(current_store)
+        s_node.storage[end] = current_store
+        # current_store = s_node.storage[end]
     end
 
-    if isnothing(quick_store)
-        quick_store = s_node.quick_store[end]
+    if !isnothing(quick_store)
+        s_node.quick_store[end] = quick_store
+        # quick_store = s_node.quick_store[end]
     end
 
-    if isnothing(slow_store)
-        slow_store = s_node.slow_store[end]
+    if !isnothing(slow_store)
+        s_node.slow_store[end] = slow_store
+        # slow_store = s_node.slow_store[end]
     end
+
+    current_store = s_node.storage[end]
+    quick_store = s_node.quick_store[end]
+    slow_store = s_node.slow_store[end]
 
     interim_results = [0.0, 0.0, 0.0]
-    @ccall IHACRES.calc_ft_interim(interim_results::Ptr{Cdouble},
+    @ccall IHACRES.calc_ft_interim(interim_results::Ptr{Float64},
                                    current_store::Cdouble,
                                    rain::Cdouble,
                                    s_node.d::Cdouble,
                                    s_node.d2::Cdouble,
                                    s_node.alpha::Cdouble)::Cvoid
 
+    @assert any(isnan.(interim_results)) == false
     (mf, e_rainfall, recharge) = interim_results
 
     et::Float64 = @ccall IHACRES.calc_ET(
@@ -203,6 +211,7 @@ function run_node!(s_node::IHACRESNode,
         loss::Cdouble
     )::Cvoid
 
+    @assert any(isnan.(flow_results)) == false
     (nq_store, ns_store, outflow) = flow_results
 
     # if self.next_node:  # and ('dam' not in self.next_node.node_type):
@@ -221,6 +230,7 @@ function run_node!(s_node::IHACRESNode,
             ext::Cdouble,
             gw_exchange::Cdouble)::Cvoid
 
+        @assert any(isnan.(routing_res)) == false
         (vol, outflow) = routing_res
     end
 
