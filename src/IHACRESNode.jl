@@ -266,6 +266,132 @@ function param_info(node::IHACRESNode; with_level::Bool = true)::Tuple
     return values, bounds
 end
 
+
+"""
+Run node with temperature data to calculate outflow and update state.
+
+Parameters
+----------
+s_node
+rain: float, rainfall
+temp: float, temperature
+inflow: float, inflow from previous node
+ext: float, irrigation and other water extractions
+gw_exchange: float, flux in ML - positive is contribution to stream, negative is infiltration
+loss: float,
+current_store: replacement cmd value
+quick_store: replacement quick_store value
+slow_store: replacement slow_store value
+
+Returns
+----------
+float, outflow from node
+"""
+function run_node_with_temp!(s_node::IHACRESNode,
+                   rain::Float64,
+                   temp::Float64,
+                   inflow::Float64,
+                   ext::Float64,
+                   gw_exchange::Float64=0.0,
+                   loss::Float64=0.0;
+                   current_store=nothing,
+                   quick_store=nothing,
+                   slow_store=nothing)::Tuple{Float64, Float64}
+    if !isnothing(current_store)
+        s_node.storage[end] = current_store
+        # current_store = s_node.storage[end]
+    end
+
+    if !isnothing(quick_store)
+        s_node.quick_store[end] = quick_store
+        # quick_store = s_node.quick_store[end]
+    end
+
+    if !isnothing(slow_store)
+        s_node.slow_store[end] = slow_store
+        # slow_store = s_node.slow_store[end]
+    end
+
+    current_store = s_node.storage[end]
+    quick_store = s_node.quick_store[end]
+    slow_store = s_node.slow_store[end]
+
+    interim_results = [0.0, 0.0, 0.0]
+    @ccall IHACRES.calc_ft_interim(interim_results::Ptr{Float64},
+                                   current_store::Cdouble,
+                                   rain::Cdouble,
+                                   s_node.d::Cdouble,
+                                   s_node.d2::Cdouble,
+                                   s_node.alpha::Cdouble)::Cvoid
+
+    @assert any(isnan.(interim_results)) == false
+    (mf, e_rainfall, recharge) = interim_results
+
+    et::Float64 = @ccall IHACRES.calc_ET_from_T(
+        s_node.e::Cdouble, 
+        temp::Cdouble, 
+        mf::Cdouble,
+        s_node.f::Cdouble,
+        s_node.d::Cdouble
+    )::Cdouble
+
+    cmd::Float64 = @ccall IHACRES.calc_cmd(
+        current_store::Cdouble,
+        rain::Cdouble,
+        et::Cdouble,
+        e_rainfall::Cdouble,
+        recharge::Cdouble
+    )::Cdouble
+
+    flow_results = [0.0, 0.0, 0.0]
+    @ccall IHACRES.calc_ft_flows(
+        flow_results::Ptr{Cdouble},
+        quick_store::Cdouble,
+        slow_store::Cdouble,
+        e_rainfall::Cdouble,
+        recharge::Cdouble,
+        s_node.area::Cdouble,
+        s_node.a::Cdouble,
+        s_node.b::Cdouble,
+        loss::Cdouble
+    )::Cvoid
+
+    @assert any(isnan.(flow_results)) == false
+    (nq_store, ns_store, outflow) = flow_results
+
+    # if self.next_node:  # and ('dam' not in self.next_node.node_type):
+    #     cmd, outflow = routing(cmd, s_node.storage_coef, inflow, outflow, ext, gamma=gw_exchange)
+    # else:
+    #     outflow = calc_outflow(outflow, ext)
+    # # End if
+    if s_node.route
+        routing_res = [0.0, 0.0]
+        @ccall IHACRES.routing(
+            routing_res::Ptr{Cdouble},
+            cmd::Cdouble,
+            s_node.storage_coef::Cdouble,
+            inflow::Cdouble,
+            outflow::Cdouble,
+            ext::Cdouble,
+            gw_exchange::Cdouble)::Cvoid
+
+        @assert any(isnan.(routing_res)) == false
+        (vol, outflow) = routing_res
+    end
+
+    level_params = Array{Float64}(s_node.level_params)
+    level::Float64 = @ccall IHACRES.calc_ft_level(
+        outflow::Cdouble,
+        level_params::Ptr{Cdouble}
+    )::Cdouble
+
+    push!(s_node.inflow, inflow)
+    update_state(s_node, cmd, e_rainfall, et, nq_store, ns_store, outflow, level)
+
+    return outflow, level
+end
+
+
 """
 """
 function update_params!(node::IHACRESNode, d::Float64, d2::Float64, e::Float64, f::Float64,
@@ -284,6 +410,7 @@ end
 
 
 """
+Update all parameters
 """
 function update_params!(node::IHACRESNode{Param}, d::Float64, d2::Float64, e::Float64, f::Float64,
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
