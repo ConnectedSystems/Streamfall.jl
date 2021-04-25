@@ -123,7 +123,7 @@ end
 
 
 """
-Run node to calculate outflow and update state.
+Run node with ET data to calculate outflow and update state.
 
 Parameters
 ----------
@@ -134,9 +134,9 @@ inflow: float, inflow from previous node
 ext: float, irrigation and other water extractions
 gw_exchange: float, flux in ML - positive is contribution to stream, negative is infiltration
 loss: float,
-current_store
-quick_store
-slow_store
+current_store: replacement cmd value
+quick_store: replacement quick_store value
+slow_store: replacement slow_store value
 
 Returns
 ----------
