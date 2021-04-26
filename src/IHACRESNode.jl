@@ -317,7 +317,7 @@ function run_node_with_temp!(s_node::IHACRESNode,
     slow_store = s_node.slow_store[end]
 
     interim_results = [0.0, 0.0, 0.0]
-    @ccall IHACRES.calc_ft_interim(interim_results::Ptr{Float64},
+    @ccall IHACRES.calc_ft_interim(interim_results::Ptr{Cdouble},
                                    current_store::Cdouble,
                                    rain::Cdouble,
                                    s_node.d::Cdouble,
