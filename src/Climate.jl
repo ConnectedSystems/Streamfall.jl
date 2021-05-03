@@ -1,12 +1,13 @@
 using DataFrames
 
 
-mutable struct Climate
+struct Climate
     climate_data::DataFrame
     rainfall_id::String
     et_id::String
-    # t_id::String
+    # t_id::Union{String, Nothing} = nothing
 end
+
 
 function subcatchment_data(node::NetworkNode, climate::Climate)
     node_id = node.node_id
@@ -26,6 +27,12 @@ function climate_values(node::NetworkNode, climate::Climate, timestep::Union{Not
     et_col = filter(x -> occursin(node_id, string(x))
                       & occursin(climate.et_id, string(x)),
                       propertynames(data))
+
+    # if !isnothing(climate.t_id)
+    #     t_col = filter(x -> occursin(node_id, string(x))
+    #                   & occursin(climate.t_id, string(x)),
+    #                   propertynames(data))
+    # end
 
     if isempty(rain_col) | isempty(et_col)
         return (missing, missing)
