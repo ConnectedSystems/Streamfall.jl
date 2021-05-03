@@ -253,7 +253,7 @@ end
 """
 Extract node parameter values and bounds
 """
-function param_info(node::BilinearNode; with_level::Bool = true)::Tuple
+function param_info(node::IHACRESNode; with_level::Bool = true)::Tuple
     tmp = Model(node)
     values = collect(tmp.val)
     bounds = collect(tmp.bounds)
