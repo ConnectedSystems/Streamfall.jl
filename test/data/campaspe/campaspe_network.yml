@@ -1,7 +1,7 @@
 # Not related to AWRA - previous created file.
 
 406214:
-    node_type: IHACRESNode
+    node_type: BilinearNode
     inlets:
     outlets: 406201
     area: 268.77  # subcatchment area in km^2
@@ -28,7 +28,7 @@
 
 
 406219:
-    node_type: IHACRESNode
+    node_type: BilinearNode
     inlets:
     outlets: 406000
     area: 1985.73
@@ -88,7 +88,7 @@
         initial_storage: 304398.6
 
 406201:
-    node_type: IHACRESNode
+    node_type: BilinearNode
     inlets:
         - 406214
         - 406000
@@ -116,7 +116,7 @@
         - 133.718
 
 406224:
-    node_type: IHACRESNode
+    node_type: BilinearNode
     inlets:
     outlets: 406218
     area: 220.71
@@ -142,7 +142,7 @@
         - 130.984
 
 406218:
-    node_type: IHACRESNode
+    node_type: BilinearNode
     inlets:
         - 406201
         - 406224
@@ -170,7 +170,7 @@
         - 120.380
 
 406202:
-    node_type: IHACRESNode
+    node_type: BilinearNode
     inlets: 406218
     outlets: 406265
     area: 62.78
@@ -196,7 +196,7 @@
         - 104.981
 
 406265:
-    node_type: IHACRESNode
+    node_type: BilinearNode
     inlets: 406202
     outlets:
     area: 162.84
