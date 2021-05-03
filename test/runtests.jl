@@ -45,6 +45,7 @@ end
     res = run_node!(test_node, rain, evap, inflow, extraction, gw_exchange, loss; 
                     current_store=current_store, quick_store=quick_store, slow_store=slow_store)
 
+    @test !isnan(res)
     @info res
 end
 
