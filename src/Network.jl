@@ -3,6 +3,12 @@ using ModelParameters
 using Streamfall
 
 
+struct StreamfallNetwork
+    mg::MetaGraph
+    g::SimpleDiGraph
+end
+
+
 """Determine a node's connection"""
 function in_or_out(G, v)
     ins = length(inneighbors(G, v))
@@ -21,6 +27,7 @@ end
 
 
 """Find all inlets and outlets in a network."""
+find_inlets_and_outlets(sn::StreamfallNetwork) = find_inlets_and_outlets(sn.g)
 function find_inlets_and_outlets(G)
     vs = vertices(G)
     num_vs::Int64 = length(vs)
@@ -57,6 +64,8 @@ function create_node(mg, node_id, details, nid)
             n = IHACRESNode(node_id, details)
         elseif node_type == "DamNode"
             n = DamNode(node_id, details)
+        elseif node_type == "ExpuhNode"
+            n = ExpuhNode(node_id, details)
         else
             throw(ArgumentError("Unsupported node type: $(node_type)"))
         end
@@ -86,6 +95,8 @@ function create_network(name::String, network::Dict)
     g = SimpleDiGraph(num_nodes)
     mg = MetaGraph(g)
     set_prop!(mg, :description, name)
+    
+    # sn = StreamfallNetwork(mg, g)
     
     nid = 1
     for (node, details) in network

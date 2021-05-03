@@ -2,7 +2,7 @@ using DataFrames
 using MetaGraphs
 
 
-abstract type NetworkNode{A} end
+abstract type NetworkNode end
 
 @def network_node begin
     node_id::String

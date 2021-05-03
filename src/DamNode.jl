@@ -26,7 +26,7 @@ function c_dam_outflow(discharge, irrigation_extraction)
 end
 
 
-Base.@kwdef mutable struct DamNode{A} <: NetworkNode{A}
+Base.@kwdef mutable struct DamNode{A <: Union{Param, Real}} <: NetworkNode
     @network_node
 
     max_storage::Float64

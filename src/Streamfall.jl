@@ -43,6 +43,7 @@ end
 
 include("Node.jl")
 include("IHACRESNode.jl")
+include("IHACRESExpuhNode.jl")
 include("DamNode.jl")
 include("Climate.jl")
 
@@ -105,7 +106,9 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
     # Calculate outflow for this node
     func = get_prop(mg, node_id, :nfunc)
     if curr_node isa IHACRESNode
-        outflow, level = func(curr_node, rain, et, inflow, 0.0)
+        outflow, level = func(curr_node, rain, et, inflow, wo)
+    elseif curr_node isa ExpuhNode
+        outflow, level = func(curr_node, rain, et, inflow, wo)
     elseif curr_node isa DamNode
         outflow, level = func(curr_node, rain, et, inflow, wo, ex)
     else

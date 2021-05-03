@@ -2,7 +2,10 @@ using Parameters
 using ModelParameters
 
 
-Base.@kwdef mutable struct IHACRESNode{A <: Union{Param, Real}} <: NetworkNode{A}
+abstract type IHACRESNode <: NetworkNode end
+
+
+Base.@kwdef mutable struct BilinearNode{A <: Union{Param, Real}} <: IHACRESNode
     @network_node
 
     # https://wiki.ewater.org.au/display/SD41/IHACRES-CMD+-+SRG
@@ -38,13 +41,13 @@ Base.@kwdef mutable struct IHACRESNode{A <: Union{Param, Real}} <: NetworkNode{A
 end
 
 
-function IHACRESNode(node_id::String, spec::Dict)
+function BilinearNode(node_id::String, spec::Dict)
     route = true
     if isnothing(spec["inlets"]) || isempty(spec["inlets"])
         route = false
     end
         
-    n = IHACRESNode{Param}(; node_id=node_id, area=spec["area"], 
+    n = BilinearNode{Param}(; node_id=node_id, area=spec["area"], 
                            route=route)
 
     node_params = spec["parameters"]
@@ -88,10 +91,10 @@ function IHACRESNode(node_id::String, spec::Dict)
 end
 
 
-function IHACRESNode(node_id::String, area::Float64, route::Bool, d::Float64, d2::Float64, e::Float64, f::Float64, 
+function BilinearNode(node_id::String, area::Float64, route::Bool, d::Float64, d2::Float64, e::Float64, f::Float64, 
                     a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
                     store::Float64, quick::Float64, slow::Float64)
-    return IHACRESNode{Float64}(
+    return BilinearNode{Float64}(
         node_id=node_id,
         area=area,
         route=route,
@@ -142,7 +145,7 @@ Returns
 ----------
 float, outflow from node
 """
-function run_node!(s_node::IHACRESNode,
+function run_node!(s_node::BilinearNode,
                    rain::Float64,
                    evap::Float64,
                    inflow::Float64,
@@ -172,14 +175,14 @@ function run_node!(s_node::IHACRESNode,
     slow_store = s_node.slow_store[end]
 
     interim_results = [0.0, 0.0, 0.0]
-    @ccall IHACRES.calc_ft_interim(interim_results::Ptr{Float64},
+    @ccall IHACRES.calc_ft_interim(interim_results::Ptr{Cdouble},
                                    current_store::Cdouble,
                                    rain::Cdouble,
                                    s_node.d::Cdouble,
                                    s_node.d2::Cdouble,
                                    s_node.alpha::Cdouble)::Cvoid
 
-    @assert any(isnan.(interim_results)) == false
+    # @assert any(isnan.(interim_results)) == false
     (mf, e_rainfall, recharge) = interim_results
 
     et::Float64 = @ccall IHACRES.calc_ET(
@@ -211,7 +214,7 @@ function run_node!(s_node::IHACRESNode,
         loss::Cdouble
     )::Cvoid
 
-    @assert any(isnan.(flow_results)) == false
+    # @assert any(isnan.(flow_results)) == false
     (nq_store, ns_store, outflow) = flow_results
 
     # if self.next_node:  # and ('dam' not in self.next_node.node_type):
@@ -230,7 +233,7 @@ function run_node!(s_node::IHACRESNode,
             ext::Cdouble,
             gw_exchange::Cdouble)::Cvoid
 
-        @assert any(isnan.(routing_res)) == false
+        # @assert any(isnan.(routing_res)) == false
         (vol, outflow) = routing_res
     end
 
@@ -250,7 +253,7 @@ end
 """
 Extract node parameter values and bounds
 """
-function param_info(node::IHACRESNode; with_level::Bool = true)::Tuple
+function param_info(node::BilinearNode; with_level::Bool = true)::Tuple
     tmp = Model(node)
     values = collect(tmp.val)
     bounds = collect(tmp.bounds)
@@ -287,7 +290,7 @@ Returns
 ----------
 float, outflow from node
 """
-function run_node_with_temp!(s_node::IHACRESNode,
+function run_node_with_temp!(s_node::BilinearNode,
                    rain::Float64,
                    temp::Float64,
                    inflow::Float64,
@@ -335,6 +338,9 @@ function run_node_with_temp!(s_node::IHACRESNode,
         s_node.d::Cdouble
     )::Cdouble
 
+    # convert to areal average
+    # et = et / s_node.area
+
     cmd::Float64 = @ccall IHACRES.calc_cmd(
         current_store::Cdouble,
         rain::Cdouble,
@@ -394,7 +400,7 @@ end
 
 """
 """
-function update_params!(node::IHACRESNode, d::Float64, d2::Float64, e::Float64, f::Float64,
+function update_params!(node::BilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64)::Nothing
     node.d = Param(d, bounds=node.d.bounds)
     node.d2 = Param(d2, bounds=node.d2.bounds)
@@ -412,7 +418,7 @@ end
 """
 Update all parameters
 """
-function update_params!(node::IHACRESNode{Param}, d::Float64, d2::Float64, e::Float64, f::Float64,
+function update_params!(node::BilinearNode{Param}, d::Float64, d2::Float64, e::Float64, f::Float64,
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
                         p1::Float64, p2::Float64, p3::Float64, p4::Float64, p5::Float64, p6::Float64, p7::Float64, p8::Float64, CTF::Float64)::Nothing
     node.d = Param(d, bounds=node.d.bounds)
@@ -442,7 +448,7 @@ end
 
 
 
-function reset!(s_node::IHACRESNode)::Nothing
+function reset!(s_node::BilinearNode)::Nothing
     s_node.storage = [s_node.storage[1]]
     s_node.quick_store = [s_node.quick_store[1]]
     s_node.slow_store = [s_node.slow_store[1]]
