@@ -4,7 +4,7 @@ using Streamfall, MetaGraphs
 
 
 @testset "Bare node creation" begin
-    test_node = IHACRESNode{Float64}(;
+    test_node = BilinearNode{Float64}(;
         node_id="Test",
         area=100.0,
         route=false
@@ -15,7 +15,7 @@ end
 
 
 @testset "NaN outputs" begin
-    test_node = IHACRESNode(
+    test_node = BilinearNode(
         "Test",  # name/id
         1985.73,  # area
         false,    # route
@@ -45,7 +45,7 @@ end
     res = run_node!(test_node, rain, evap, inflow, extraction, gw_exchange, loss; 
                     current_store=current_store, quick_store=quick_store, slow_store=slow_store)
 
-    @test !isnan(res)
+    @test !any(isnan, res)
     @info res
 end
 
@@ -59,8 +59,7 @@ end
 
     target_node = get_prop(mg, 1, :node)
 
-    @test target_node.a == 54.352
-
+    @test target_node.area == 1985.73
     @test target_node.level_params[1] == -3.3502
 end
 
