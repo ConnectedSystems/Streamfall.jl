@@ -448,7 +448,7 @@ end
 
 
 
-function reset!(s_node::BilinearNode)::Nothing
+function reset!(s_node::IHACRESNode)::Nothing
     s_node.storage = [s_node.storage[1]]
     s_node.quick_store = [s_node.quick_store[1]]
     s_node.slow_store = [s_node.slow_store[1]]
