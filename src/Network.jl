@@ -58,15 +58,11 @@ function create_node(mg, node_id, details, nid)
     if isempty(match)
         node_type = details["node_type"]
 
-        # TODO: Clean this up...
-        # Needs to just dispatch on node_type and specification
-        if node_type == "IHACRESNode"
-            n = IHACRESNode(node_id, details)
-        elseif node_type == "DamNode"
-            n = DamNode(node_id, details)
-        elseif node_type == "ExpuhNode"
-            n = ExpuhNode(node_id, details)
-        else
+        dtype = eval(Symbol(node_type))
+        n = nothing
+        try
+            n = dtype(node_id, details)
+        catch
             throw(ArgumentError("Unsupported node type: $(node_type)"))
         end
 
