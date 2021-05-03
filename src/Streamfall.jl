@@ -140,7 +140,7 @@ include("metrics.jl")
 
 
 export @def
-export IHACRES, IHACRESNode, DamNode, Climate
+export IHACRES, IHACRESNode, BilinearNode, ExpuhNode, DamNode, Climate
 export find_inlets_and_outlets, create_network, create_node
 export param_info, update_params!, run_node!, reset!, sim_length, run_catchment!
 export run_node_with_temp!
