@@ -1,11 +1,23 @@
 using LightGraphs, MetaGraphs
 using ModelParameters
-using Streamfall
+# using Streamfall
 
 
 struct StreamfallNetwork
     mg::MetaGraph
     g::SimpleDiGraph
+end
+
+
+function set_prop!(sn::StreamfallNetwork, nid::Int64, prop::Symbol, var::Any)::Nothing
+    MetaGraphs.set_prop!(sn.mg, nid, prop, var)
+
+    return nothing
+end
+
+
+function get_prop(sn::StreamfallNetwork, nid::Int64, prop::Symbol)::Any
+    return MetaGraphs.get_prop(sn.mg, nid, prop)
 end
 
 
@@ -54,7 +66,7 @@ end
 """Create a node if needed"""
 function create_node(mg, node_id, details, nid)
     details = copy(details)
-    match = collect(filter_vertices(mg, :name, node_id))
+    match = collect(MetaGraphs.filter_vertices(mg, :name, node_id))
     if isempty(match)
         node_type = details["node_type"]
 
@@ -90,8 +102,7 @@ function create_network(name::String, network::Dict)
     num_nodes = length(network)
     g = SimpleDiGraph(num_nodes)
     mg = MetaGraph(g)
-    set_prop!(mg, :description, name)
-    
+    MetaGraphs.set_prop!(mg, :description, name)
     # sn = StreamfallNetwork(mg, g)
     
     nid = 1
@@ -129,10 +140,11 @@ end
 """
 Reset a network.
 """
-function reset!(mg, g)
+reset!(sn::StreamfallNetwork) = reset!(sn.mg, sn.g)
+function reset!(mg, g)::Nothing
     v_ids = vertices(g)
     for i in v_ids
-        curr_node = get_prop(mg, i, :node)
+        curr_node = MetaGraphs.get_prop(mg, i, :node)
         reset!(curr_node)
     end
 end

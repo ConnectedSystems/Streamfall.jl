@@ -41,11 +41,13 @@ end
 end
 
 
+include("Network.jl")
 include("Node.jl")
 include("IHACRESNode.jl")
 include("IHACRESExpuhNode.jl")
 include("DamNode.jl")
 include("Climate.jl")
+
 
 
 function timestep_value(timestep, gauge_id::String, col_partial::String, dataset=nothing)
@@ -67,10 +69,12 @@ end
 water_order: Volume of water to be extracted (in ML/timestep)
 exchange: Volume of flux (in ML/timestep), where negative values are losses to the groundwater system.
 """
+run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int; water_order=nothing, exchange=nothing) =
+    run_node!(sn.mg, sn.g, node_id, climate, timestep; water_order=water_order, exchange=exchange)
 function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Climate, timestep::Int; 
                    water_order=nothing, exchange=nothing)
 
-    curr_node = get_prop(mg, node_id, :node)
+    curr_node = MetaGraphs.get_prop(mg, node_id, :node)
     if checkbounds(Bool, curr_node.outflow, timestep)
         # already ran for this time step so no need to recurse further
         return curr_node.outflow[timestep], curr_node.level[timestep]
@@ -104,7 +108,7 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
     ex = timestep_value(timestep, gauge_id, "exchange", exchange)
 
     # Calculate outflow for this node
-    func = get_prop(mg, node_id, :nfunc)
+    func = MetaGraphs.get_prop(mg, node_id, :nfunc)
     if curr_node isa IHACRESNode
         outflow, level = func(curr_node, rain, et, inflow, wo)
     elseif curr_node isa ExpuhNode
@@ -119,10 +123,22 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
 end
 
 
+function run_catchment!(sn::StreamfallNetwork, climate; water_order=nothing, exchange=nothing) 
+    run_catchment!(sn.mg, sn.g, climate; water_order=water_order, exchange=exchange)
+end
 function run_catchment!(mg, g, climate; water_order=nothing, exchange=nothing)
     inlets, outlets = find_inlets_and_outlets(g)
     for outlet in outlets
         run_node!(mg, g, outlet, climate; water_order=water_order, exchange=exchange)
+    end
+end
+
+function run_node!(sn::StreamfallNetwork, target_node, climate; water_order=nothing, exchange=nothing)::Nothing
+    timesteps = sim_length(climate)
+    mg = sn.mg
+    g = sn.g
+    for ts in (1:timesteps)
+        run_node!(mg, g, target_node, climate, ts; water_order=water_order, exchange=exchange)
     end
 end
 
@@ -135,7 +151,6 @@ function run_node!(mg, g, target_node, climate; water_order=nothing, exchange=no
 end
 
 
-include("Network.jl")
 include("metrics.jl")
 
 
