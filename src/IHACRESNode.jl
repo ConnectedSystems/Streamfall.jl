@@ -194,7 +194,7 @@ function run_node!(s_node::BilinearNode,
     )::Cdouble
 
     cmd::Float64 = @ccall IHACRES.calc_cmd(
-        current_store::Cdouble,
+        mf::Cdouble,
         rain::Cdouble,
         et::Cdouble,
         e_rainfall::Cdouble,
@@ -342,7 +342,7 @@ function run_node_with_temp!(s_node::BilinearNode,
     # et = et / s_node.area
 
     cmd::Float64 = @ccall IHACRES.calc_cmd(
-        current_store::Cdouble,
+        mf::Cdouble,
         rain::Cdouble,
         et::Cdouble,
         e_rainfall::Cdouble,
