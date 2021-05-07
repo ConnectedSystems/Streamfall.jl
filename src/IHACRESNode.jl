@@ -194,7 +194,7 @@ function run_node!(s_node::BilinearNode,
     )::Cdouble
 
     cmd::Float64 = @ccall IHACRES.calc_cmd(
-        mf::Cdouble,
+        current_store::Cdouble,
         rain::Cdouble,
         et::Cdouble,
         e_rainfall::Cdouble,

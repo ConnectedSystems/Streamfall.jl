@@ -190,7 +190,7 @@ function run_node_with_temp!(s_node::ExpuhNode, rain::Float64, temp::Float64, in
         s_node.d::Cdouble
     )::Cdouble
 
-    cmd = @ccall IHACRES.calc_cmd(mf::Cdouble, rain::Cdouble, et::Cdouble, e_rainfall::Cdouble, loss::Cdouble)::Cdouble
+    cmd = @ccall IHACRES.calc_cmd(current_store::Cdouble, rain::Cdouble, et::Cdouble, e_rainfall::Cdouble, loss::Cdouble)::Cdouble
 
     (prev_q, prev_s) = (s_node.quick_store[end], s_node.slow_store[end])
 
