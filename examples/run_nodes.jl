@@ -16,8 +16,8 @@ hist_dam_levels = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_levels
 hist_dam_releases = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_releases.csv", dateformat="YYYY-mm-dd"))
 
 # Subset to same range
-first_date = max(hist_dam_levels.Date[1], hist_dam_releases.Date[1])
-last_date = min(hist_dam_levels.Date[end], hist_dam_releases.Date[end])
+first_date = max(hist_dam_levels.Date[1], hist_dam_releases.Date[1], climate_data.Date[1])
+last_date = min(hist_dam_levels.Date[end], hist_dam_releases.Date[end], climate_data.Date[end])
 
 climate_data = climate_data[first_date .<= climate_data.Date .<= last_date, :]
 hist_dam_levels = hist_dam_levels[first_date .<= hist_dam_levels.Date .<= last_date, :]
@@ -26,17 +26,17 @@ hist_dam_releases = hist_dam_releases[first_date .<= hist_dam_releases.Date .<= 
 climate = Climate(climate_data, "_rain", "_evap")
 
 @info "Running example stream..."
-run_catchment!(mg, g, climate; water_order=hist_dam_releases)
+# run_catchment!(mg, g, climate; water_order=hist_dam_releases)
 
-dam_id, dam_node = get_gauge(mg, "406000")
-h_levels = hist_dam_levels[:, "Dam Level [mAHD]"]
-n_levels = dam_node.level
+# dam_id, dam_node = get_gauge(mg, "406000")
+# h_levels = hist_dam_levels[:, "Dam Level [mAHD]"]
+# n_levels = dam_node.level
 
-@info "NNSE:" Streamfall.NNSE(h_levels, n_levels)
-@info "RMSE:" Streamfall.RMSE(h_levels, n_levels)
+# @info "NNSE:" Streamfall.NNSE(h_levels, n_levels)
+# @info "RMSE:" Streamfall.RMSE(h_levels, n_levels)
 
-plot(h_levels, legend=:bottomleft, label="Historic")
-display(plot!(n_levels, label="IHACRES"))
+# plot(h_levels, legend=:bottomleft, label="Historic")
+# display(plot!(n_levels, label="IHACRES"))
 
 # outflow = in_node.outflow
 # append!(outflow, NaN)
@@ -52,3 +52,20 @@ display(plot!(n_levels, label="IHACRES"))
 # )
 
 # CSV.write("outflow.csv", DataFrame(res))
+
+reset!(mg, g)
+
+dam_id, dam_node = get_gauge(mg, "406000")
+timesteps = sim_length(climate)
+for ts in (1:timesteps)
+    run_node!(mg, g, dam_id, climate, ts; water_order=hist_dam_releases)
+end
+
+h_data = hist_dam_levels[:, "Dam Level [mAHD]"]
+n_data = dam_node.level
+
+@info "NNSE:" Streamfall.NNSE(h_data, n_data)
+@info "RMSE:" Streamfall.RMSE(h_data, n_data)
+
+plot(h_data, legend=:bottomleft, label="Historic")
+display(plot!(n_data, label="IHACRES"))
