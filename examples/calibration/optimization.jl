@@ -28,26 +28,13 @@ function calibrate(mg, g, v_id, climate, calib_data)
 
     # Get node parameters
     x0, param_bounds = param_info(this_node; with_level=false)
-
-    # opt = bbsetup(opt_func; SearchRange=param_bounds,
-    #               Method=:borg_moea,
-    #               ϵ=0.05,
-    #               FitnessScheme=ParetoFitnessScheme{1}(is_minimizing=true),
-    #               MaxTime=600.0,  #spend 10 minutes calibrating each node
-    #               TraceMode=:silent,
-    #               Workers=workers())
-    # NThreads=Threads.nthreads()-1
     opt = bbsetup(opt_func; SearchRange=param_bounds,
                   Method=:adaptive_de_rand_1_bin_radiuslimited,
-                  MaxTime=660.0,  #spend 11 minutes calibrating each node
-                  # TraceMode=:silent,
+                  MaxTime=3600.0,  # time in seconds to spend
                   TraceInterval=10.0,
                   PopulationSize=100,
-                  # FitnessTolerance=0.025,
-                  # TargetFitness=0.25,
-                  # MaxSteps=1e2,
-                  NThreads=Threads.nthreads()-1,
-                  Workers=workers())
+                  # Workers=workers()
+                  )
     
     res = bboptimize(opt)
 

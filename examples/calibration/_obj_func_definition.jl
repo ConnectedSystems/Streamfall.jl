@@ -48,7 +48,7 @@ function obj_func(params, climate, mg, g, v_id, next_vid, calib_data)
 
     timesteps = sim_length(climate)
     for ts in (1:timesteps)
-        run_node!(mg, g, next_vid, climate, ts; water_order=hist_dam_releases)
+        Streamfall.run_node!(mg, g, next_vid, climate, ts; water_order=hist_dam_releases)
     end
 
     if next_node.node_id == "406000"

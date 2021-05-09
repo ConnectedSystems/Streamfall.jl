@@ -90,7 +90,7 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
     else
         inflow = 0.0
         for i in ins
-            src_name = get_prop(mg, i, :name)
+            src_name = MetaGraphs.get_prop(mg, i, :name)
             # Get inflow from previous node
             upstream_flow, upstream_level = run_node!(mg, g, i, climate, timestep; water_order=water_order, exchange=exchange)
             inflow += upstream_flow
