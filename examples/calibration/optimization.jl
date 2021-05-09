@@ -18,7 +18,7 @@ function calibrate(mg, g, v_id, climate, calib_data)
     end
 
     outs = outneighbors(g, v_id)
-    @assert length(outs) == 1 || throw("Streamfall currently only supports a single outlet. ($(length(outs)))")
+    @assert length(outs) <= 1 || throw("Streamfall currently only supports a single outlet. ($(length(outs)))")
     outs = outs[1]
 
     this_node = get_node(mg, v_id)
