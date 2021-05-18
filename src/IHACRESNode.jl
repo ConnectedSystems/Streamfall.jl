@@ -175,12 +175,12 @@ function run_node!(s_node::BilinearNode,
     slow_store = s_node.slow_store[end]
 
     interim_results = [0.0, 0.0, 0.0]
-    @ccall IHACRES.calc_ft_interim(interim_results::Ptr{Cdouble},
-                                   current_store::Cdouble,
-                                   rain::Cdouble,
-                                   s_node.d::Cdouble,
-                                   s_node.d2::Cdouble,
-                                   s_node.alpha::Cdouble)::Cvoid
+    @ccall IHACRES.calc_ft_interim_cmd(interim_results::Ptr{Cdouble},
+                                       current_store::Cdouble,
+                                       rain::Cdouble,
+                                       s_node.d::Cdouble,
+                                       s_node.d2::Cdouble,
+                                       s_node.alpha::Cdouble)::Cvoid
 
     # @assert any(isnan.(interim_results)) == false
     (mf, e_rainfall, recharge) = interim_results
@@ -320,12 +320,12 @@ function run_node_with_temp!(s_node::BilinearNode,
     slow_store = s_node.slow_store[end]
 
     interim_results = [0.0, 0.0, 0.0]
-    @ccall IHACRES.calc_ft_interim(interim_results::Ptr{Cdouble},
-                                   current_store::Cdouble,
-                                   rain::Cdouble,
-                                   s_node.d::Cdouble,
-                                   s_node.d2::Cdouble,
-                                   s_node.alpha::Cdouble)::Cvoid
+    @ccall IHACRES.calc_ft_interim_cmd(interim_results::Ptr{Cdouble},
+                                       current_store::Cdouble,
+                                       rain::Cdouble,
+                                       s_node.d::Cdouble,
+                                       s_node.d2::Cdouble,
+                                       s_node.alpha::Cdouble)::Cvoid
 
     @assert any(isnan.(interim_results)) == false
     (mf, e_rainfall, recharge) = interim_results
@@ -337,9 +337,6 @@ function run_node_with_temp!(s_node::BilinearNode,
         s_node.f::Cdouble,
         s_node.d::Cdouble
     )::Cdouble
-
-    # convert to areal average
-    # et = et / s_node.area
 
     cmd::Float64 = @ccall IHACRES.calc_cmd(
         mf::Cdouble,

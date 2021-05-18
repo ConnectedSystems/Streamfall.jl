@@ -69,12 +69,12 @@ end
     current_store, rain, d, d2, alpha = params
 
     interim_results = [0.0, 0.0, 0.0]
-    @ccall IHACRES.calc_ft_interim(interim_results::Ptr{Cdouble},
-                                   current_store::Cdouble,
-                                   rain::Cdouble,
-                                   d::Cdouble,
-                                   d2::Cdouble,
-                                   alpha::Cdouble)::Cvoid
+    @ccall IHACRES.calc_ft_interim_cmd(interim_results::Ptr{Cdouble},
+                                       current_store::Cdouble,
+                                       rain::Cdouble,
+                                       d::Cdouble,
+                                       d2::Cdouble,
+                                       alpha::Cdouble)::Cvoid
     
     (mf, e_rainfall, recharge) = interim_results
 
