@@ -30,8 +30,8 @@ function calibrate(mg, g, v_id, climate, calib_data)
     x0, param_bounds = param_info(this_node; with_level=false)
     opt = bbsetup(opt_func; SearchRange=param_bounds,
                   Method=:adaptive_de_rand_1_bin_radiuslimited,
-                  MaxTime=3600.0,  # time in seconds to spend
-                  TraceInterval=10.0,
+                  MaxTime=3000.0,  # time in seconds to spend
+                  TraceInterval=60.0,
                   PopulationSize=100,
                   # Workers=workers()
                   )
@@ -56,7 +56,7 @@ res, opt = calibrate(mg, g, v_id, climate, hist_data)
 @info best_fitness(res)
 @info best_candidate(res)
 
-@info node
+# @info node
 
 
 using Plots
@@ -74,10 +74,8 @@ n_data = dam_node.level
 @info "RMSE:" Streamfall.RMSE(h_data, n_data)
 
 
-plot(h_data)
-plot!(n_data)
-
-
+# plot(h_data)
+# plot!(n_data)
 
 # timesteps = sim_length(climate)
 # for ts in (1:timesteps)

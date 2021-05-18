@@ -15,6 +15,11 @@ Base.@kwdef mutable struct BilinearNode{A <: Union{Param, Real}} <: IHACRESNode
     f::A = Param(0.8, bounds=(0.01, 3.0))  # plant stress threshold factor (multiplicative factor of d)
     a::A = Param(0.9, bounds=(0.1, 10.0))  # quickflow storage coefficient == (1/tau_q)
     b::A = Param(0.1, bounds=(1e-3, 0.1))  # slowflow storage coefficent == (1/tau_s)
+
+    # These changes require ihacres_nim to be changed as well...
+    # a::A = Param(0.9, bounds=(0.1, 10.0))  # quickflow storage coefficient == exp(-1/tau_q)
+    # b::A = Param(0.1, bounds=(10.0, 1000.0))  # slowflow storage coefficent == exp(-1/tau_s)
+    # storage_threshold::A = Param(10.0, ...)  # optional threshold controlling bounds between `a` and `b`
     storage_coef::A = Param(2.9, bounds=(0.1, 10.0))
     alpha::A = Param(0.1, bounds=(1e-5, 1 - 1/10^9))
 
