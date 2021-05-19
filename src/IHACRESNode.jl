@@ -43,12 +43,15 @@ end
 
 function BilinearNode(node_id::String, spec::Dict)
     route = true
-    if isnothing(spec["inlets"]) || isempty(spec["inlets"])
-        route = false
+    if haskey(spec, "route")
+        route = spec["route"]
     end
+    # if isnothing(spec["inlets"]) || isempty(spec["inlets"])
+    #     route = false
+    # end
         
     n = BilinearNode{Param}(; node_id=node_id, area=spec["area"], 
-                           route=route)
+                            route=route)
 
     node_params = spec["parameters"]
     n_lparams = n.level_params
