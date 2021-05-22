@@ -42,8 +42,8 @@ Base.@kwdef mutable struct BilinearNode{A <: Union{Param, Real}} <: IHACRESNode
     effective_rainfall::Array{Float64} = []
     et::Array{Float64} = []
     inflow::Array{Float64} = []
-    gw_store::Array{Float64} = []
     level::Array{Float64} = []
+    gw_store::Array{Float64} = [0.0]
 end
 
 

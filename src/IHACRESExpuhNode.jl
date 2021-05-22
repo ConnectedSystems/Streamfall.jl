@@ -36,7 +36,7 @@ Base.@kwdef mutable struct ExpuhNode{A <: Union{Param, Real}} <: IHACRESNode
     et::Array{Float64} = []
     inflow::Array{Float64} = []
     level::Array{Float64} = []
-    gw_store::Array{Float64} = []
+    gw_store::Array{Float64} = [0.0]
 end
 
 
