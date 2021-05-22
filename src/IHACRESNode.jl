@@ -42,6 +42,7 @@ Base.@kwdef mutable struct BilinearNode{A <: Union{Param, Real}} <: IHACRESNode
     effective_rainfall::Array{Float64} = []
     et::Array{Float64} = []
     inflow::Array{Float64} = []
+    gw_store::Array{Float64} = []
     level::Array{Float64} = []
 end
 
@@ -121,7 +122,9 @@ function BilinearNode(node_id::String, area::Float64, route::Bool, d::Float64, d
 end
 
 
-function update_state(s_node::IHACRESNode, storage::Float64, e_rainfall::Float64, et::Float64, qflow_store::Float64, sflow_store::Float64, outflow::Float64, level::Float64)
+function update_state(s_node::IHACRESNode, storage::Float64, e_rainfall::Float64, et::Float64, 
+                      qflow_store::Float64, sflow_store::Float64, outflow::Float64, 
+                      level::Float64, gw_store::Float64)
     push!(s_node.storage, storage)
     push!(s_node.effective_rainfall, e_rainfall)
     push!(s_node.et, et)
@@ -130,6 +133,7 @@ function update_state(s_node::IHACRESNode, storage::Float64, e_rainfall::Float64
     push!(s_node.quick_store, qflow_store)
     push!(s_node.slow_store, sflow_store)
     push!(s_node.level, level)
+    push!(s_node.gw_store, gw_store)
 end
 
 
@@ -231,10 +235,11 @@ function run_node!(s_node::BilinearNode,
     #     outflow = calc_outflow(outflow, ext)
     # # End if
     if s_node.route
+        gw_store = s_node.gw_store[end]
         routing_res = [0.0, 0.0]
         @ccall IHACRES.routing(
             routing_res::Ptr{Cdouble},
-            cmd::Cdouble,
+            gw_store::Cdouble,
             s_node.storage_coef::Cdouble,
             inflow::Cdouble,
             outflow::Cdouble,
@@ -242,7 +247,7 @@ function run_node!(s_node::BilinearNode,
             gw_exchange::Cdouble)::Cvoid
 
         # @assert any(isnan.(routing_res)) == false
-        (vol, outflow) = routing_res
+        (gw_store, outflow) = routing_res
     end
 
     level_params = Array{Float64}(s_node.level_params)
@@ -252,7 +257,7 @@ function run_node!(s_node::BilinearNode,
     )::Cdouble
 
     push!(s_node.inflow, inflow)
-    update_state(s_node, cmd, e_rainfall, et, nq_store, ns_store, outflow, level)
+    update_state(s_node, cmd, e_rainfall, et, nq_store, ns_store, outflow, level, gw_store)
 
     return outflow, level
 end
@@ -376,10 +381,11 @@ function run_node_with_temp!(s_node::BilinearNode,
     #     outflow = calc_outflow(outflow, ext)
     # # End if
     if s_node.route
+        gw_store = s_node.gw_store[end]
         routing_res = [0.0, 0.0]
         @ccall IHACRES.routing(
             routing_res::Ptr{Cdouble},
-            cmd::Cdouble,
+            gw_store::Cdouble,
             s_node.storage_coef::Cdouble,
             inflow::Cdouble,
             outflow::Cdouble,
@@ -387,7 +393,7 @@ function run_node_with_temp!(s_node::BilinearNode,
             gw_exchange::Cdouble)::Cvoid
 
         @assert any(isnan.(routing_res)) == false
-        (vol, outflow) = routing_res
+        (gw_store, outflow) = routing_res
     end
 
     level_params = Array{Float64}(s_node.level_params)
@@ -397,7 +403,7 @@ function run_node_with_temp!(s_node::BilinearNode,
     )::Cdouble
 
     push!(s_node.inflow, inflow)
-    update_state(s_node, cmd, e_rainfall, et, nq_store, ns_store, outflow, level)
+    update_state(s_node, cmd, e_rainfall, et, nq_store, ns_store, outflow, level, gw_store)
 
     return outflow, level
 end

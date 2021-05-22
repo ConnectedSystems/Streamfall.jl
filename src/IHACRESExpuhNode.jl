@@ -36,6 +36,7 @@ Base.@kwdef mutable struct ExpuhNode{A <: Union{Param, Real}} <: IHACRESNode
     et::Array{Float64} = []
     inflow::Array{Float64} = []
     level::Array{Float64} = []
+    gw_store::Array{Float64} = []
 end
 
 
@@ -153,21 +154,22 @@ function run_node!(s_node::ExpuhNode,
     (quick_store, slow_store, outflow) = flow_res
 
     if s_node.route
+        gw_store = s_node.gw_store[end]
         routing_res = [0.0, 0.0]
         @ccall IHACRES.routing(
                 routing_res::Ptr{Cdouble},
-                cmd::Cdouble,
+                gw_store::Cdouble,
                 s_node.storage_coef::Cdouble,
                 inflow::Cdouble,
                 outflow::Cdouble,
                 ext::Cdouble,
                 gw_exchange::Cdouble)::Cvoid
-        (cmd, outflow) = routing_res
+        (gw_store, outflow) = routing_res
     end
 
     level::Float64 = @ccall IHACRES.calc_ft_level(outflow::Cdouble, s_node.level_params::Ptr{Cdouble})::Cdouble
 
-    update_state(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, level)
+    update_state(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, level, gw_store)
 
     return (outflow, level)
 end
@@ -200,21 +202,22 @@ function run_node_with_temp!(s_node::ExpuhNode, rain::Float64, temp::Float64, in
     (quick_store, slow_store, outflow) = flow_res
 
     if s_node.route
+        gw_store = s_node.gw_store[end]
         routing_res = [0.0, 0.0]
         @ccall IHACRES.routing(
                 routing_res::Ptr{Cdouble},
-                cmd::Cdouble,
+                gw_store::Cdouble,
                 s_node.storage_coef::Cdouble,
                 inflow::Cdouble,
                 outflow::Cdouble,
                 ext::Cdouble,
                 gw_exchange::Cdouble)::Cvoid
-        (cmd, outflow) = routing_res
+        (gw_store, outflow) = routing_res
     end
 
     level::Float64 = @ccall IHACRES.calc_ft_level(outflow::Cdouble, s_node.level_params::Ptr{Cdouble})::Cdouble
 
-    update_state(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, level)
+    update_state(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, level, gw_store)
 
     return (outflow, level)
 end
