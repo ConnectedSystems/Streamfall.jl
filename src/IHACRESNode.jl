@@ -169,17 +169,14 @@ function run_node!(s_node::BilinearNode,
                    slow_store=nothing)::Tuple{Float64, Float64}
     if !isnothing(current_store)
         s_node.storage[end] = current_store
-        # current_store = s_node.storage[end]
     end
 
     if !isnothing(quick_store)
         s_node.quick_store[end] = quick_store
-        # quick_store = s_node.quick_store[end]
     end
 
     if !isnothing(slow_store)
         s_node.slow_store[end] = slow_store
-        # slow_store = s_node.slow_store[end]
     end
 
     current_store = s_node.storage[end]
