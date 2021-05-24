@@ -102,7 +102,7 @@ end
 
 function BilinearNode(node_id::String, area::Float64, route::Bool, d::Float64, d2::Float64, e::Float64, f::Float64, 
                     a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
-                    store::Float64, quick::Float64, slow::Float64)
+                    store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
     return BilinearNode{Float64}(
         node_id=node_id,
         area=area,
@@ -117,7 +117,8 @@ function BilinearNode(node_id::String, area::Float64, route::Bool, d::Float64, d
         alpha=alpha,
         storage=[store],
         quick_store=[quick],
-        slow_store=[slow]
+        slow_store=[slow],
+        gw_store=[gw_store]
     )
 end
 
@@ -245,6 +246,8 @@ function run_node!(s_node::BilinearNode,
 
         # @assert any(isnan.(routing_res)) == false
         (gw_store, outflow) = routing_res
+    else
+        gw_store = 0.0
     end
 
     level_params = Array{Float64}(s_node.level_params)
