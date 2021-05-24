@@ -20,7 +20,7 @@ Base.@kwdef mutable struct BilinearNode{A <: Union{Param, Real}} <: IHACRESNode
     # a::A = Param(0.9, bounds=(0.1, 10.0))  # quickflow storage coefficient == exp(-1/tau_q)
     # b::A = Param(0.1, bounds=(10.0, 1000.0))  # slowflow storage coefficent == exp(-1/tau_s)
     # storage_threshold::A = Param(10.0, ...)  # optional threshold controlling bounds between `a` and `b`
-    storage_coef::A = Param(2.9, bounds=(1e-5, 10.0))
+    storage_coef::A = Param(2.9, bounds=(1e-10, 10.0))
     alpha::A = Param(0.1, bounds=(1e-5, 1 - 1/10^9))
 
     level_params::Array{A, 1} = [
