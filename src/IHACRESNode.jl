@@ -463,6 +463,7 @@ function reset!(s_node::IHACRESNode)::Nothing
     s_node.storage = [s_node.storage[1]]
     s_node.quick_store = [s_node.quick_store[1]]
     s_node.slow_store = [s_node.slow_store[1]]
+    s_node.gw_store = [s_node.gw_store[1]]
     s_node.outflow = []
     s_node.level = []
     s_node.effective_rainfall = []
