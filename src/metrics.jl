@@ -68,7 +68,7 @@ function KGE(obs::Array{Float64}, modeled::Array{Float64})::Float64
 end
 
 
-"""Normalized KGE bounded between 0 and 1.
+"""Normalized KGE, bounded between 0 and 1.
 """
 function NKGE(obs::Array{Float64}, sim::Array{Float64}) 
     kge = KGE(obs, sim)
@@ -93,8 +93,8 @@ function mKGE(obs::Array{Float64}, sim::Array{Float64})::Float64
     return mod_kge
 end
 
-"""Normalized modified KGE bounded between 0 and 1.
-"""
+
+"""Normalized modified KGE, bounded between 0 and 1."""
 function NmKGE(obs::Array{Float64}, sim::Array{Float64}) 
     mkge = mKGE(obs, sim)
     return mkge / (2 - mkge)
@@ -111,7 +111,7 @@ References
     https://doi.org/10.1080/02626667.2018.1552002
 
 """
-function pool_KGE(obs::Array{Float64}, sim::Array{Float64})::Float64
+function npKGE(obs::Array{Float64}, sim::Array{Float64})::Float64
     r = StatsBase.corspearman(obs, sim)
 
     x = length(sim) * mean(sim)
@@ -126,4 +126,11 @@ function pool_KGE(obs::Array{Float64}, sim::Array{Float64})::Float64
     kge = 1 - sqrt((r - 1)^2 + (α - 1)^2 + (β - 1)^2)
 
     return kge
+end
+
+
+"""Normalized non-parametric KGE, bounded between 0 and 1."""
+function NnpKGE(obs::Array{Float64}, sim::Array{Float64})::Float64
+    npkge = npKGE(obs, sim)
+    return npkge / (2 - npkge)
 end
