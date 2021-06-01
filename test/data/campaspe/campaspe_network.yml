@@ -12,7 +12,7 @@
         f: 1.315  # multiplier applied to `d` to determine effective rainfall, dimensionless
         a: 99.134  # quickflow scaling factor
         b: 0.259   # slowflow scaling factor
-        storage_coef: 2.9
+        storage_coef: 2.9  # groundwater store factor
         alpha: 0.785  # effective rainfall scaling factor
         initial_storage: 0.0  # initial CMD value, CMD > 0 means there is a deficit
     level_params:
@@ -32,16 +32,20 @@
     inlets:
     outlets: 406000
     area: 1985.73
+    route: true
     parameters:
-        d: 200.0
-        d2: 2.0
-        e: 1.0
-        f: 1.675
-        a: 54.352
-        b: 0.187
-        storage_coef: 2.9
-        alpha: 0.727
+        # NNSE: 0.96555; RMSE: 1.43553
+        d: 84.28015146853407
+        d2: 2.4224106535469145
+        e: 0.8129590022893607
+        f: 2.579276454391652
+        a: 5.923379062122229
+        b: 0.0989925603647026
+        storage_coef: 1.8613364808233752  # gw storage factor
+        alpha: 0.7279050097363565
+
         initial_storage: 100.0
+
     level_params:
         - -3.3502
         - 0.68340
