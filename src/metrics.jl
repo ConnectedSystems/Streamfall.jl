@@ -68,6 +68,14 @@ function KGE(obs::Array{Float64}, modeled::Array{Float64})::Float64
 end
 
 
+"""Normalized KGE bounded between 0 and 1.
+"""
+function NKGE(obs::Array{Float64}, sim::Array{Float64}) 
+    kge = KGE(obs, sim)
+    return kge / (2 - kge)
+end
+
+
 """Calculate the modified KGE metric (2012).
 
 1. Kling, H., Fuchs, M., Paulin, M., 2012. 
@@ -75,7 +83,7 @@ end
     Journal of Hydrology 424–425, 264–277. 
     https://doi.org/10.1016/j.jhydrol.2012.01.011
 """
-function modified_KGE(obs::Array{Float64}, sim::Array{Float64})::Float64
+function mKGE(obs::Array{Float64}, sim::Array{Float64})::Float64
     r = Statistics.cor(obs, sim)
     γ = StatsBase.variation(sim) / StatsBase.variation(obs)
     β = (mean(sim) - mean(obs)) / std(obs)    
@@ -83,6 +91,13 @@ function modified_KGE(obs::Array{Float64}, sim::Array{Float64})::Float64
     mod_kge = 1 - sqrt((r - 1)^2 + (β - 1)^2 + (γ - 1)^2)
 
     return mod_kge
+end
+
+"""Normalized modified KGE bounded between 0 and 1.
+"""
+function NmKGE(obs::Array{Float64}, sim::Array{Float64}) 
+    mkge = mKGE(obs, sim)
+    return mkge / (2 - mkge)
 end
 
 
