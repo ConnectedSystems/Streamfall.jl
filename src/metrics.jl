@@ -2,20 +2,16 @@ using Statistics
 using StatsBase
 
 
-NSE(obs, modeled) = 1.0 - sum((obs .- modeled).^2) / sum((obs .- mean(obs)).^2)
+NSE(obs, sim) = 1.0 - sum((obs .- sim).^2) / sum((obs .- mean(obs)).^2)
 
-NNSE(obs, modeled) = 1.0 / (2.0 - NSE(obs, modeled))
+NNSE(obs, sim) = 1.0 / (2.0 - NSE(obs, sim))
 
-RMSE(obs, modeled) = (sum((modeled .- obs).^2)/length(modeled))^0.5
+RMSE(obs, sim) = (sum((sim .- obs).^2)/length(sim))^0.5
 
 
 """Coefficient of determination (R^2)"""
-function R2(obs::Array, modeled::Array)::Float64
-    ss_tot = sum((obs .- mean(obs)).^2)
-    ss_res = sum((obs .- modeled).^2)
-
-    local r2 = 1 - (ss_res / ss_tot)
-    return r2
+function R2(obs::Array, sim::Array)::Float64
+    return NSE(obs, sim)
 end
 
 
@@ -27,9 +23,9 @@ obs : observations
 modeled : modeled results
 p : number of explanatory variables
 """
-function ADJ_R2(obs::Array, modeled::Array, p::Int64)::Float64
+function ADJ_R2(obs::Array, sim::Array, p::Int64)::Float64
     n = length(obs)
-    adj_r2 = 1 - (1 - R2(obs, modeled)) * ((n - 1) / (n - p - 1))
+    adj_r2 = 1 - (1 - R2(obs, sim)) * ((n - 1) / (n - p - 1))
 
     return adj_r2
 end
@@ -57,10 +53,10 @@ References
     https://doi.org/10.5194/hess-2019-327
 
 """
-function KGE(obs::Array, modeled::Array)::Float64
-    r = Statistics.cor(obs, modeled)
-    α = std(modeled) / std(obs)
-    β = (mean(modeled) - mean(obs)) / std(obs)
+function KGE(obs::Array, sim::Array)::Float64
+    r = Statistics.cor(obs, sim)
+    α = std(sim) / std(obs)
+    β = (mean(sim) - mean(obs)) / std(obs)
 
     kge = 1 - sqrt((r - 1)^2 + (α - 1)^2 + (β - 1)^2)
 
@@ -90,8 +86,13 @@ end
     https://doi.org/10.1016/j.jhydrol.2012.01.011
 """
 function mKGE(obs::Array, sim::Array)::Float64
+    # Timing
     r = Statistics.cor(obs, sim)
+
+    # Variability
     γ = StatsBase.variation(sim) / StatsBase.variation(obs)
+
+    # Magnitude
     β = (mean(sim) - mean(obs)) / std(obs)
 
     mod_kge = 1 - sqrt((r - 1)^2 + (β - 1)^2 + (γ - 1)^2)
