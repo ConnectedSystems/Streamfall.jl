@@ -10,7 +10,7 @@ RMSE(obs, sim) = (sum((sim .- obs).^2)/length(sim))^0.5
 
 
 """Coefficient of determination (R^2)"""
-function R2(obs::Array, sim::Array)::Float64
+function R2(obs, sim)::Float64
     return NSE(obs, sim)
 end
 
@@ -23,7 +23,7 @@ obs : observations
 modeled : modeled results
 p : number of explanatory variables
 """
-function ADJ_R2(obs::Array, sim::Array, p::Int64)::Float64
+function ADJ_R2(obs, sim, p::Int64)::Float64
     n = length(obs)
     adj_r2 = 1 - (1 - R2(obs, sim)) * ((n - 1) / (n - p - 1))
 
@@ -53,7 +53,7 @@ References
     https://doi.org/10.5194/hess-2019-327
 
 """
-function KGE(obs::Array, sim::Array)::Float64
+function KGE(obs, sim)::Float64
     r = Statistics.cor(obs, sim)
     α = std(sim) / std(obs)
     β = (mean(sim) - mean(obs)) / std(obs)
@@ -66,26 +66,28 @@ end
 
 """Bounded KGE, bounded between -1 and 1.
 """
-function BKGE(obs::Array, sim::Array)::Float64
+function BKGE(obs, sim)::Float64
     kge = KGE(obs, sim)
     return kge / (2 - kge)
 end
 
 
 """Normalized KGE between 0 and 1"""
-function NKGE(obs::Array, sim::Array)::Float64
+function NKGE(obs, sim)::Float64
     return 1 / (2 - KGE(obs, sim))
 end
 
 
 """Calculate the modified KGE metric (2012).
 
+Also known as KGE prime (KGE').
+
 1. Kling, H., Fuchs, M., Paulin, M., 2012.
     Runoff conditions in the upper Danube basin under an ensemble of climate change scenarios.
     Journal of Hydrology 424–425, 264–277.
     https://doi.org/10.1016/j.jhydrol.2012.01.011
 """
-function mKGE(obs::Array, sim::Array)::Float64
+function mKGE(obs, sim)::Float64
     # Timing
     r = Statistics.cor(obs, sim)
 
@@ -102,14 +104,14 @@ end
 
 
 """Bounded modified KGE between -1 and 1."""
-function BmKGE(obs::Array, sim::Array)::Float64
+function BmKGE(obs, sim)::Float64
     mkge = mKGE(obs, sim)
     return mkge / (2 - mkge)
 end
 
 
 """Normalized modified KGE between 0 and 1."""
-function NmKGE(obs::Array, sim::Array)::Float64
+function NmKGE(obs, sim)::Float64
     return 1 / (2 - mKGE(obs, sim))
 end
 
@@ -124,7 +126,7 @@ References
     https://doi.org/10.1080/02626667.2018.1552002
 
 """
-function npKGE(obs::Array, sim::Array)::Float64
+function npKGE(obs, sim)::Float64
     r = StatsBase.corspearman(obs, sim)
 
     # flow duration curves
@@ -144,7 +146,7 @@ end
 
 
 """Bounded non-parametric KGE between -1 and 1."""
-function BnpKGE(obs::Array, sim::Array)::Float64
+function BnpKGE(obs, sim)::Float64
     npkge = npKGE(obs, sim)
     return npkge / (2 - npkge)
 end
@@ -153,4 +155,30 @@ end
 """Normalized non-parametric KGE between 0 and 1."""
 function NnpKGE(obs::Array, sim::Array)::Float64
     return 1 / (2 - npKGE(obs, sim))
+end
+
+
+"""Liu Mean Efficiency metric.
+
+References
+----------
+1. Liu, D., 2020.
+    A rational performance criterion for hydrological model.
+    Journal of Hydrology 590, 125488.
+    https://doi.org/10.1016/j.jhydrol.2020.125488
+
+"""
+function LME(obs, sim)::Float64
+    μ_o = mean(obs)
+    μ_s = mean(sim)
+    β = (μ_s / μ_o)
+
+    r = Statistics.cor(obs, sim)
+    σ_s = std(sim)
+    σ_o = std(obs)
+    k_1 = r * (σ_s / σ_o)
+
+    LME = 1 - sqrt((k_1 - 1)^2 + (β - 1)^2)
+
+    return LME
 end
