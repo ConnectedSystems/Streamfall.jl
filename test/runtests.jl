@@ -25,11 +25,12 @@ end
         1.675,  # f
         54.35254,  # a
         0.187,  # b
-        2.9,  # storage_coef
+        2.9,  # gw storage_coef
         0.727,  # alpha
         100.0,  # storage
-        0.0,  # quickflow
-        0.0  # slowflow
+        0.0,  # initial quickflow
+        0.0,  # initial slowflow
+        0.0  # initial gw store
     )
 
     rain = 7.96848605e+01
@@ -157,3 +158,5 @@ end
     slow_store = 1.0 / (1.0 + b) * slow_store
     @test flow_results[2] == slow_store
 end
+
+include("test_metrics.jl")
