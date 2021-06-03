@@ -5,7 +5,7 @@ using MetaGraphs, Streamfall
 
 # Load and generate stream network
 network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
-mg, g = create_network("Example Network", network)
+sn = create_network("Example Network", network)
 
 # Load climate data
 climate_data = DataFrame!(CSV.File("../test/data/campaspe/climate/climate_historic.csv",
@@ -26,39 +26,13 @@ hist_dam_releases = hist_dam_releases[first_date .<= hist_dam_releases.Date .<= 
 climate = Climate(climate_data, "_rain", "_evap")
 
 @info "Running example stream..."
-# run_catchment!(mg, g, climate; water_order=hist_dam_releases)
 
-# dam_id, dam_node = get_gauge(mg, "406000")
-# h_levels = hist_dam_levels[:, "Dam Level [mAHD]"]
-# n_levels = dam_node.level
-
-# @info "NNSE:" Streamfall.NNSE(h_levels, n_levels)
-# @info "RMSE:" Streamfall.RMSE(h_levels, n_levels)
-
-# plot(h_levels, legend=:bottomleft, label="Historic")
-# display(plot!(n_levels, label="IHACRES"))
-
-# outflow = in_node.outflow
-# append!(outflow, NaN)
-# erain = in_node.effective_rainfall
-# append!(erain, NaN)
-
-# res = Dict(
-#     "Outflow"=> outflow,
-#     "CMD"=>in_node.storage,
-#     "Quick Store"=>in_node.quick_store,
-#     "Slow Store"=>in_node.slow_store,
-#     "erain"=>erain
-# )
-
-# CSV.write("outflow.csv", DataFrame(res))
-
-reset!(mg, g)
+reset!(sn)
 
 dam_id, dam_node = get_gauge(mg, "406000")
 timesteps = sim_length(climate)
 for ts in (1:timesteps)
-    run_node!(mg, g, dam_id, climate, ts; water_order=hist_dam_releases)
+    run_node!(sn, dam_id, climate, ts; water_order=hist_dam_releases)
 end
 
 h_data = hist_dam_levels[:, "Dam Level [mAHD]"]

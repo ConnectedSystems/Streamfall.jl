@@ -92,7 +92,7 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
         for i in ins
             src_name = MetaGraphs.get_prop(mg, i, :name)
             # Get inflow from previous node
-            upstream_flow, upstream_level = run_node!(mg, g, i, climate, timestep; water_order=water_order, exchange=exchange)
+            upstream_flow = run_node!(sn, i, climate, timestep; water_order=water_order, exchange=exchange)
             inflow += upstream_flow
         end
     end
@@ -159,6 +159,7 @@ export IHACRES, IHACRESNode, BilinearNode, ExpuhNode, DamNode, Climate
 export find_inlets_and_outlets, create_network, create_node
 export param_info, update_params!, run_node!, reset!, sim_length, run_catchment!
 export run_node_with_temp!
-export climate_values, get_node, get_gauge, get_node_id
+export climate_values, get_node, get_gauge, get_node_id, get_prop
+export set_prop!
 
 end  # end module

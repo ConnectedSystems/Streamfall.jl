@@ -12,6 +12,8 @@ Example_node3:
         - Example_node1
         - Example_node2
     outlets: Example_node4
+
+    ... model parameters ...
 ```
 
 Each node definition can then hold the relevant parameter details/values for a given node.
@@ -20,14 +22,14 @@ A full example of the spec is available [here](https://github.com/ConnectedSyste
 
 [LightGraphs](https://github.com/JuliaGraphs/LightGraphs.jl) and [MetaGraphs](https://github.com/JuliaGraphs/MetaGraphs.jl) are used for network traversal/analysis.
 
-In the (near) future, it will be possible to read in stream network information from a standardised XML-based format and/or a Shapefile.
+In the future, it will be possible to read in stream network information from a standardised XML-based format and/or a Shapefile.
 
 
 ## Running a network
 
 ```julia
 using YAML, DataFrames, CSV, Plots
-using MetaGraphs, Streamfall
+using Streamfall
 
 
 # Load and generate stream network
@@ -35,7 +37,7 @@ using MetaGraphs, Streamfall
 # g = graph network
 # mg = meta-graph
 network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
-mg, g = create_network("Example Network", network)
+sn = create_network("Example Network", network)
 
 # Load climate data
 climate_data = DataFrame!(CSV.File("../test/data/campaspe/climate/climate_historic.csv", 
@@ -45,19 +47,19 @@ climate = Climate(climate_data, "_rain", "_evap")
 
 
 @info "Running example stream..."
-run_catchment!(mg, g, climate)
+run_catchment!(sn, climate)
 
 node_id = 1
 @info "Displaying outflow from node $(node_id)"
 
-out_node = get_prop(mg, node_id, :node)
+out_node = get_prop(sn, node_id, :node)
 plot(out_node.outflow)
 ```
 
 For more fine-grain control, one approach is to identify the outlets for a given network...
 
 ```julia
-inlets, outlets = find_inlets_and_outlets(g)
+inlets, outlets = find_inlets_and_outlets(sn)
 ```
 
 ... and call `run_node!` for each outlet (with relevant climate data), which will recurse through all relevant nodes upstream.
@@ -68,7 +70,7 @@ inlets, outlets = find_inlets_and_outlets(g)
 timesteps = sim_length(climate)
 for ts in (1:timesteps)
     for outlet in outlets
-        run_node!(mg, g, outlet, climate, ts)
+        run_node!(sn, outlet, climate, ts)
     end
 end
 ```

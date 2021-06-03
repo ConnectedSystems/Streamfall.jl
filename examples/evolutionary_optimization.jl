@@ -18,8 +18,8 @@ using Infiltrator
 
 
     network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
-    mg, g = create_network("Example Network", network)
-    inlets, outlets = find_inlets_and_outlets(g)
+    sn = create_network("Example Network", network)
+    inlets, outlets = find_inlets_and_outlets(sn)
 
     # @info "Network has the following inlets and outlets:" inlets outlets
 
@@ -46,16 +46,16 @@ using Infiltrator
 
     climate = Climate(climate_data, "_rain", "_evap")
 
-    function obj_func(params, climate, mg, g, v_id, next_vid, calib_data)
+    function obj_func(params, climate, sn, v_id, next_vid, calib_data)
 
-        this_node = get_prop(mg, v_id, :node)
+        this_node = get_prop(sn, v_id, :node)
         update_params!(this_node, params...)
 
-        next_node = get_prop(mg, next_vid, :node)
+        next_node = get_prop(sn, next_vid, :node)
     
         timesteps = sim_length(climate)
         for ts in (1:timesteps)
-            run_node!(mg, g, next_vid, climate, ts; water_order=hist_dam_releases)
+            run_node!(sn, next_vid, climate, ts; water_order=hist_dam_releases)
         end
 
         if next_node.node_id == "406000"
@@ -76,7 +76,7 @@ using Infiltrator
         # score = RMSE
     
         # reset to clear stored values
-        reset!(mg, g)
+        reset!(sn)
     
         # Borg method expects tuple to be returned
         # return (score, )
@@ -85,25 +85,25 @@ using Infiltrator
 end
 
 
-function calibrate(mg, g, v_id, climate, calib_data)
+function calibrate(sn, v_id, climate, calib_data)
 
     inlets = inneighbors(g, v_id)
     if !isempty(inlets)
         for ins in inlets
-            calibrate(g, mg, ins, climate, calib_data)
+            calibrate(sn, ins, climate, calib_data)
         end
     end
 
-    outs = outneighbors(g, v_id)
+    outs = outneighbors(sn, v_id)
     @assert length(outs) == 1 || throw("Streamfall currently only supports a single outlet.")
     outs = outs[1]
 
-    this_node = get_prop(mg, v_id, :node)
-    next_node = get_prop(mg, outs, :node)
+    this_node = get_prop(sn, v_id, :node)
+    next_node = get_prop(sn, outs, :node)
     next_id = next_node.node_id
 
     # Create new optimization function
-    opt_func = x -> obj_func(x, climate, mg, g, v_id, outs, calib_data)
+    opt_func = x -> obj_func(x, climate, sn, v_id, outs, calib_data)
 
     # Get node parameters
     x0, param_bounds = param_info(this_node; with_level=false)
@@ -121,36 +121,36 @@ function calibrate(mg, g, v_id, climate, calib_data)
     @info "Best Params:" bs
 
     # Update node with calibrated parameters
-    update_params!(get_prop(mg, v_id, :node), bs...)
+    update_params!(get_prop(sn, v_id, :node), bs...)
 
     return res
 end
 
 
-match = collect(filter_vertices(mg, :name, "406219"))
+match = collect(filter_vertices(sn, :name, "406219"))
 v_id = match[1]
 
 @info "Starting calibration..."
-res = calibrate(mg, g, v_id, climate, hist_data)
+res = calibrate(sn, v_id, climate, hist_data)
 
 @info best_fitness(res)
 @info best_candidate(res)
 
-node = get_prop(mg, v_id, :node)
+node = get_prop(sn, v_id, :node)
 @info node
 
 
 using Plots
 
-match = collect(filter_vertices(mg, :name, "406000"))
+match = collect(filter_vertices(sn, :name, "406000"))
 dam_id = match[1]
 
 timesteps = sim_length(climate)
 for ts in (1:timesteps)
-    run_node!(mg, g, dam_id, climate, ts; water_order=hist_dam_releases)
+    run_node!(sn, dam_id, climate, ts; water_order=hist_dam_releases)
 end
 
-dam_node = get_prop(mg, dam_id, :node)
+dam_node = get_prop(sn, dam_id, :node)
 h_data = hist_dam_levels[:, "Dam Level [mAHD]"]
 n_data = dam_node.level
 
@@ -159,13 +159,3 @@ n_data = dam_node.level
 
 plot(h_data)
 plot!(n_data)
-
-
-# timesteps = sim_length(climate)
-# for ts in (1:timesteps)
-#     run_node!(mg, g, 2, climate, ts; water_order=hist_dam_releases)
-# end
-
-# node = get_prop(mg, 2, :node)
-# plot(node.level)
-# plot!(hist_dam_levels[:, "Dam Level [mAHD]"])

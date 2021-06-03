@@ -64,6 +64,7 @@ end
 
 
 """Create a node if needed"""
+create_node(sn::StreamfallNetwork, node_id, details, nid) = create_node(sn.mg, node_id, details, nid)
 function create_node(mg, node_id, details, nid)
     details = copy(details)
     match = collect(MetaGraphs.filter_vertices(mg, :name, node_id))
@@ -95,7 +96,7 @@ end
 """Create a network from a YAML-derived spec
 
     network = YAML.load_file("example_network.yml")
-    mg, g = create_network("Example Network", network)
+    sn = create_network("Example Network", network)
 
 """
 function create_network(name::String, network::Dict)
@@ -103,21 +104,18 @@ function create_network(name::String, network::Dict)
     g = SimpleDiGraph(num_nodes)
     mg = MetaGraph(g)
     MetaGraphs.set_prop!(mg, :description, name)
-    # sn = StreamfallNetwork(mg, g)
     
     nid = 1
     for (node, details) in network
         node_id = string(node)
 
         this_id, nid = create_node(mg, node_id, details, nid)
-        # @info "Creating $(node_id) as $(this_id)"
 
         inlets = details["inlets"]
         in_id = nid
         if !isnothing(inlets)
             for inlet in inlets
                 in_id, nid = create_node(mg, string(inlet), network[inlet], nid)
-                # @info "Inlet: Creating link from $(inlet) to $(node_id) | $(in_id) -> $(this_id)"
                 add_edge!(g, in_id, this_id)
             end
         end
@@ -127,13 +125,14 @@ function create_network(name::String, network::Dict)
         if !isnothing(outlets)
             for outlet in outlets
                 out_id, nid = create_node(mg, string(outlet), network[outlet], nid)
-                # @info "Outlet: Creating link from $(node_id) to $(outlet) | $(this_id) -> $(out_id)"
                 add_edge!(g, this_id, out_id)
             end
         end
     end
 
-    return mg, g
+    sn = StreamfallNetwork(mg, g)
+
+    return sn
 end
 
 

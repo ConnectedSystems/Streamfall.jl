@@ -1,6 +1,6 @@
 using YAML
 using Test
-using Streamfall, MetaGraphs
+using Streamfall
 
 
 @testset "Bare node creation" begin
@@ -56,9 +56,9 @@ end
     # Ensure specified parameter values are being assigned on node creation
     # Load and generate stream network
     network = YAML.load_file("data/campaspe/campaspe_network.yml")
-    mg, g = create_network("Example Network", network)
+    sn = create_network("Example Network", network)
 
-    target_node = get_prop(mg, 1, :node)
+    target_node = get_prop(sn, 1, :node)
 
     @test target_node.area == 1985.73
     @test target_node.level_params[1] == -3.3502

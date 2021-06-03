@@ -8,12 +8,12 @@ using BlackBoxOptim
 include("_obj_func_definition.jl")
 
 
-function calibrate(mg, g, v_id, climate, calib_data)
+function calibrate(sn, v_id, climate, calib_data)
 
     inlets = inneighbors(g, v_id)
     if !isempty(inlets)
         for ins in inlets
-            calibrate(mg, g, ins, climate, calib_data)
+            calibrate(sn, ins, climate, calib_data)
         end
     end
 
@@ -24,7 +24,7 @@ function calibrate(mg, g, v_id, climate, calib_data)
     this_node = get_node(mg, v_id)
 
     # Create new optimization function
-    opt_func = x -> obj_func(x, climate, mg, g, v_id, outs, calib_data)
+    opt_func = x -> obj_func(x, climate, sn, v_id, outs, calib_data)
 
     # Get node parameters
     x0, param_bounds = param_info(this_node; with_level=false)
@@ -49,9 +49,9 @@ function calibrate(mg, g, v_id, climate, calib_data)
 end
 
 
-v_id, node = get_gauge(mg, "406219")
+v_id, node = get_gauge(sn, "406219")
 @info "Starting calibration..."
-res, opt = calibrate(mg, g, v_id, climate, hist_data)
+res, opt = calibrate(sn, v_id, climate, hist_data)
 
 @info best_fitness(res)
 @info best_candidate(res)
@@ -61,10 +61,10 @@ res, opt = calibrate(mg, g, v_id, climate, hist_data)
 
 using Plots
 
-dam_id, dam_node = get_gauge(mg, "406000")
+dam_id, dam_node = get_gauge(sn, "406000")
 timesteps = sim_length(climate)
 for ts in (1:timesteps)
-    run_node!(mg, g, dam_id, climate, ts; water_order=hist_dam_releases)
+    run_node!(sn, dam_id, climate, ts; water_order=hist_dam_releases)
 end
 
 h_data = hist_dam_levels[:, "Dam Level [mAHD]"]
@@ -72,16 +72,3 @@ n_data = dam_node.level
 
 @info "NNSE:" Streamfall.NNSE(h_data, n_data)
 @info "RMSE:" Streamfall.RMSE(h_data, n_data)
-
-
-# plot(h_data)
-# plot!(n_data)
-
-# timesteps = sim_length(climate)
-# for ts in (1:timesteps)
-#     run_node!(mg, g, 2, climate, ts; water_order=hist_dam_releases)
-# end
-
-# node = get_prop(mg, 2, :node)
-# plot(node.level)
-# plot!(hist_dam_levels[:, "Dam Level [mAHD]"])

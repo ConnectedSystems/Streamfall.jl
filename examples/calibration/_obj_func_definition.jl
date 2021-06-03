@@ -12,8 +12,8 @@ using Streamfall
 
 
 network = YAML.load_file(joinpath(DATA_PATH, "campaspe_network.yml"))
-mg, g = create_network("Example Network", network)
-inlets, outlets = find_inlets_and_outlets(g)
+sn = create_network("Example Network", network)
+inlets, outlets = find_inlets_and_outlets(sn)
 
 # @info "Network has the following inlets and outlets:" inlets outlets
 
@@ -39,16 +39,16 @@ hist_data = Dict(
 climate = Climate(climate_data, "_rain", "_evap")
 
 
-function obj_func(params, climate, mg, g, v_id, next_vid, calib_data)
+function obj_func(params, climate, sn, v_id, next_vid, calib_data)
 
-    this_node = get_node(mg, v_id)
+    this_node = get_node(sn, v_id)
     update_params!(this_node, params...)
 
-    next_node = get_node(mg, next_vid)
+    next_node = get_node(sn, next_vid)
 
     timesteps = sim_length(climate)
     for ts in (1:timesteps)
-        Streamfall.run_node!(mg, g, next_vid, climate, ts; water_order=hist_dam_releases)
+        Streamfall.run_node!(sn, next_vid, climate, ts; water_order=hist_dam_releases)
     end
 
     if next_node.node_id == "406000"
@@ -72,7 +72,7 @@ function obj_func(params, climate, mg, g, v_id, next_vid, calib_data)
     # score = RMSE
 
     # reset to clear stored values
-    reset!(mg, g)
+    reset!(sn)
 
     # Borg method expects tuple to be returned
     # return (score, )
