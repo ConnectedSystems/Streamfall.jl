@@ -13,11 +13,11 @@ function calibrate(sn, v_id, climate, calib_data)
     inlets = inneighbors(g, v_id)
     if !isempty(inlets)
         for ins in inlets
-            calibrate(g, mg, ins, climate, calib_data)
+            calibrate(sn, ins, climate, calib_data)
         end
     end
 
-    outs = outneighbors(g, v_id)
+    outs = outneighbors(sn, v_id)
     @assert length(outs) == 1 || throw("Streamfall currently only supports a single outlet.")
     outs = outs[1]
 
@@ -50,7 +50,7 @@ function calibrate(sn, v_id, climate, calib_data)
 end
 
 
-v_id, node = get_gauge(mg, "406219")
+v_id, node = get_gauge(sn, "406219")
 @info "Starting calibration..."
 res, opt = calibrate(sn, v_id, climate, hist_data)
 
@@ -62,7 +62,7 @@ res, opt = calibrate(sn, v_id, climate, hist_data)
 
 using Plots
 
-dam_id, dam_node = get_gauge(mg, "406000")
+dam_id, dam_node = get_gauge(sn, "406000")
 timesteps = sim_length(climate)
 for ts in (1:timesteps)
     run_node!(sn, dam_id, climate, ts; water_order=hist_dam_releases)
@@ -76,13 +76,3 @@ n_data = dam_node.level
 
 plot(h_data)
 plot!(n_data)
-
-
-# timesteps = sim_length(climate)
-# for ts in (1:timesteps)
-#     run_node!(sn, 2, climate, ts; water_order=hist_dam_releases)
-# end
-
-# node = get_prop(mg, 2, :node)
-# plot(node.level)
-# plot!(hist_dam_levels[:, "Dam Level [mAHD]"])

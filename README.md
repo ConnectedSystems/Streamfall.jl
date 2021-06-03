@@ -33,9 +33,7 @@ using Streamfall
 
 
 # Load and generate stream network
-# Gets the graph representation of the stream and associated metadata.
-# g = graph network
-# mg = meta-graph
+# Creates a graph representation of the stream with associated metadata.
 network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
 sn = create_network("Example Network", network)
 

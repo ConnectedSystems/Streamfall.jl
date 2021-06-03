@@ -1,6 +1,6 @@
 using YAML, DataFrames, CSV, Plots
 using Statistics
-using MetaGraphs, Streamfall
+using Streamfall
 
 
 # Load and generate stream network
@@ -29,7 +29,7 @@ climate = Climate(climate_data, "_rain", "_evap")
 
 reset!(sn)
 
-dam_id, dam_node = get_gauge(mg, "406000")
+dam_id, dam_node = get_gauge(sn, "406000")
 timesteps = sim_length(climate)
 for ts in (1:timesteps)
     run_node!(sn, dam_id, climate, ts; water_order=hist_dam_releases)

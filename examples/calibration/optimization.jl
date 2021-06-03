@@ -10,18 +10,18 @@ include("_obj_func_definition.jl")
 
 function calibrate(sn, v_id, climate, calib_data)
 
-    inlets = inneighbors(g, v_id)
+    inlets = inneighbors(sn, v_id)
     if !isempty(inlets)
         for ins in inlets
             calibrate(sn, ins, climate, calib_data)
         end
     end
 
-    outs = outneighbors(g, v_id)
+    outs = outneighbors(sn, v_id)
     @assert length(outs) <= 1 || throw("Streamfall currently only supports a single outlet. ($(length(outs)))")
     outs = outs[1]
 
-    this_node = get_node(mg, v_id)
+    this_node = get_node(sn, v_id)
 
     # Create new optimization function
     opt_func = x -> obj_func(x, climate, sn, v_id, outs, calib_data)
