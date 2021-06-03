@@ -34,8 +34,8 @@ end
 """Calculate the 2009 Kling-Gupta Efficiency (KGE) metric.
 
 A KGE score of 1 means perfect fit.
-Similar to NSE, a score < 0 indicates that a mean of observations
-provides better estimates (although this is debated, see [2]).
+A score < -0.41 indicates that the mean of observations
+provides better estimates (see Knoben et al., 2019).
 
 Note: Although similar, NSE and KGE cannot be directly compared.
 
@@ -55,8 +55,13 @@ References
 """
 function KGE(obs, sim)::Float64
     r = Statistics.cor(obs, sim)
+    if isnan(r)
+        r = 0.0
+    end
+
     α = std(sim) / std(obs)
-    β = (mean(sim) - mean(obs)) / std(obs)
+    # β = (mean(sim) - mean(obs)) / std(obs)
+    β = mean(sim) / mean(obs)
 
     kge = 1 - sqrt((r - 1)^2 + (α - 1)^2 + (β - 1)^2)
 
@@ -90,12 +95,19 @@ Also known as KGE prime (KGE').
 function mKGE(obs, sim)::Float64
     # Timing
     r = Statistics.cor(obs, sim)
+    if isnan(r)
+        r = 0.0
+    end
 
     # Variability
-    γ = StatsBase.variation(sim) / StatsBase.variation(obs)
+    cv_s = StatsBase.variation(sim)
+    if isnan(cv_s)
+        cv_s = 0.0
+    end
+    γ = cv_s / StatsBase.variation(obs)
 
     # Magnitude
-    β = (mean(sim) - mean(obs)) / std(obs)
+    β = mean(sim) / mean(obs)
 
     mod_kge = 1 - sqrt((r - 1)^2 + (β - 1)^2 + (γ - 1)^2)
 
@@ -128,16 +140,29 @@ References
 """
 function npKGE(obs, sim)::Float64
     r = StatsBase.corspearman(obs, sim)
+    if isnan(r)
+        r = 0.0
+    end
 
     # flow duration curves
-    x = length(sim) * mean(sim)
-    fdc_sim = sort(sim / x)
+    μ_s = mean(sim)
+    if μ_s == 0.0
+        fdc_sim = repeat([0.0], length(sim))
+    else
+        x = length(sim) * μ_s
+        fdc_sim = sort(sim / x)
+    end
 
-    x = length(obs) * mean(obs)
+    μ_o = mean(obs)
+    x = length(obs) * μ_o
     fdc_obs = sort(obs / x)
 
     α = 1 - 0.5 * sum(abs.(fdc_sim - fdc_obs))
-    β = (mean(sim) - mean(obs)) / std(obs)
+    if μ_o == 0.0
+        β = 0.0
+    else
+        β = μ_s / μ_o
+    end
 
     kge = 1 - sqrt((r - 1)^2 + (α - 1)^2 + (β - 1)^2)
 
