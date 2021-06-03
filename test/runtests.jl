@@ -123,11 +123,16 @@ end
 
     @info flow_results
 
-    @test flow_results[1] == (1.0 / (1.0 + a) * (prev_quick + (e_rain * area)))
+    quickflow = (prev_quick + (e_rain * area))
+    α = exp(-a)
+    quickflow = α * quickflow
+
+    @test flow_results[1] == quickflow
 
     b2 = 1.0
     slow_store = prev_slow + (recharge * area) - (loss * b2)
-    slow_store = 1.0 / (1.0 + b) * slow_store
+    α = exp(-b)
+    slow_store = α * slow_store
     @test flow_results[2] == slow_store
 
     e_rain = 0.0
@@ -151,11 +156,15 @@ end
 
     @info flow_results
 
-    @test flow_results[1] == (1.0 / (1.0 + a) * (prev_quick + (e_rain * area)))
+    quickflow = (prev_quick + (e_rain * area))
+    α = exp(-a)
+    @test flow_results[1] == (α * quickflow)
 
     b2 = 1.0
     slow_store = prev_slow + (recharge * area) - (loss * b2)
-    slow_store = 1.0 / (1.0 + b) * slow_store
+    α = exp(-b)
+    β = (1.0 - α) * slow_store
+    slow_store = α * slow_store
     @test flow_results[2] == slow_store
 end
 
