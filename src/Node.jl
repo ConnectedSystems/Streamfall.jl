@@ -31,6 +31,9 @@ function get_gauge(mg, gauge_id::String)::Tuple
 end
 
 
+get_node(sn::StreamfallNetwork, v_id) = MetaGraphs.get_prop(sn.mg, v_id, :node)
+get_node_name(sn::StreamfallNetwork, v_id) = MetaGraphs.get_prop(sn.mg, v_id, :name)
+
 get_node(mg, v_id) = MetaGraphs.get_prop(mg, v_id, :node)
 get_node_name(mg, v_id) = MetaGraphs.get_prop(mg, v_id, :name)
 
