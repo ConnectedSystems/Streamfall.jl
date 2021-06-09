@@ -1,28 +1,41 @@
 # Streamfall.jl
 
-Experimental graph-based streamflow modelling system written in Julialang.
+An experimental graph-based streamflow modelling system written in Julialang.
 
-Currently the only model available is the IHACRES rainfall-runoff model, leveraging [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim).
+Aims of the project are to leverage the Julia language and ecosystem to allow/enable:
+- Quick application of a range of rainfall-runoff models
+- Enable composed use of these models in tandem
+- Quick calibration
+
+Note that the only model currently available is the IHACRES rainfall-runoff model, leveraging [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim).
+
+[LightGraphs](https://github.com/JuliaGraphs/LightGraphs.jl) and [MetaGraphs](https://github.com/JuliaGraphs/MetaGraphs.jl) are used underneath for network traversal/analysis.
 
 Stream networks are specified in YAML files, with connectivity defined as a single item or a list of entries:
 
 ```yaml
-Example_node3:
-    inlets:
-        - Example_node1
-        - Example_node2
-    outlets: Example_node4
 
-    ... model parameters ...
+# ... Partial snippet of stream definition as an example ...
+
+Node3:
+    node_type: IHACRESNode  # node type, typically tied to the attached model
+    inlets:  # nodes that contribute incoming streamflow
+        - Node1
+        - Node2
+    outlets: Node4  # node that this node flows to
+    area: 150.0  # subcatchment area in km^2
+    parameters:
+        # model specific parameters defined here
+        ...
 ```
 
-Each node definition can then hold the relevant parameter details/values for a given node.
+A full example of the spec is available [here](https://github.com/ConnectedSystems/Streamfall.jl/blob/main/test/data/campaspe/campaspe_network.yml). The snippet above defines `Node 3` in the diagram below.
 
-A full example of the spec is available [here](https://github.com/ConnectedSystems/Streamfall.jl/blob/main/test/data/campaspe/campaspe_network.yml).
+[![](https://mermaid.ink/img/eyJjb2RlIjoiZ3JhcGggTFJcbiAgICBBKChOb2RlIDEpKSAtLT4gQygoTm9kZSAzKSlcbiAgICBCKChOb2RlIDIpKSAtLT4gQ1xuICAgIEMgLS0-IEQoKE5vZGUgNCkpXG4gICAgXG4gICIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In0sInVwZGF0ZUVkaXRvciI6ZmFsc2UsImF1dG9TeW5jIjp0cnVlLCJ1cGRhdGVEaWFncmFtIjpmYWxzZX0)](https://mermaid-js.github.io/mermaid-live-editor/edit##eyJjb2RlIjoiZ3JhcGggTFJcbiAgICBBKChOb2RlIDEpKSAtLT4gQygoTm9kZSAzKSlcbiAgICBCKChOb2RlIDIpKSAtLT4gQ1xuICAgIEMgLS0-IEQoKE5vZGUgKSlcbiAgICBcbiAgIiwibWVybWFpZCI6IntcbiAgXCJ0aGVtZVwiOiBcImRlZmF1bHRcIlxufSIsInVwZGF0ZUVkaXRvciI6ZmFsc2UsImF1dG9TeW5jIjp0cnVlLCJ1cGRhdGVEaWFncmFtIjpmYWxzZX0)
 
-[LightGraphs](https://github.com/JuliaGraphs/LightGraphs.jl) and [MetaGraphs](https://github.com/JuliaGraphs/MetaGraphs.jl) are used for network traversal/analysis.
 
-In the future, it will be possible to read in stream network information from a standardised XML-based format and/or a Shapefile.
+
+Each node definition then defines a subcatchment and holds the relevant parameter values for the associated model. In the future, it will be possible to read in stream network information from other formats (e.g., GeoPackage).
 
 
 ## Running a network
@@ -38,23 +51,26 @@ network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
 sn = create_network("Example Network", network)
 
 # Load climate data
-climate_data = DataFrame!(CSV.File("../test/data/campaspe/climate/climate_historic.csv", 
+climate_data = DataFrame!(CSV.File("../test/data/campaspe/climate/climate_historic.csv",
                           comment="#",
                           dateformat="YYYY-mm-dd"))
+
+# Indicate which columns are precipitation and evaporation data based on partial identifiers
 climate = Climate(climate_data, "_rain", "_evap")
 
 
-@info "Running example stream..."
+# This runs an entire stream network
+@info "Running an example stream..."
 run_catchment!(sn, climate)
 
-node_id = 1
-@info "Displaying outflow from node $(node_id)"
-
-out_node = get_prop(sn, node_id, :node)
-plot(out_node.outflow)
+@info "Displaying outflow from node 406219"
+node_id, node = get_gauge(sn, "406219")
+plot(node.outflow)
 ```
 
-For more fine-grain control, one approach is to identify the outlets for a given network...
+Individual nodes can be run for more fine-grain control.
+
+One alternative approach is to identify the outlets for a given network...
 
 ```julia
 inlets, outlets = find_inlets_and_outlets(sn)
