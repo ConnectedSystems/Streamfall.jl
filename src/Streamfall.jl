@@ -133,12 +133,20 @@ function run_catchment!(mg, g, climate; water_order=nothing, exchange=nothing)
     end
 end
 
+"""Run model for all time steps.
+
+Parameters
+----------
+* sn : StreamfallNetwork
+* target_node : node to run in the network
+* climate : Climate object holding rainfall and evaporation data (or temperature)
+* water_order : water orders for each time step (defaults to nothing)
+* exchange : exchange with groundwater system at each time step (defaults to nothing)
+"""
 function run_node!(sn::StreamfallNetwork, target_node, climate; water_order=nothing, exchange=nothing)::Nothing
     timesteps = sim_length(climate)
-    mg = sn.mg
-    g = sn.g
     for ts in (1:timesteps)
-        run_node!(mg, g, target_node, climate, ts; water_order=water_order, exchange=exchange)
+        run_node!(sn.mg, sn.g, target_node, climate, ts; water_order=water_order, exchange=exchange)
     end
 end
 
