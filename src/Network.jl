@@ -63,6 +63,22 @@ function find_inlets_and_outlets(G)
 end
 
 
+inlets(sn::StreamfallNetwork, nid::Number) = inneighbors(sn.g, nid)
+outlets(sn::StreamfallNetwork, nid::Number) = outneighbors(sn.g, nid)
+
+function inlets(sn::StreamfallNetwork, gauge_id::String)
+    nid, _ = get_gauge(sn.mg, gauge_id)
+    return inneighbors(sn.g, nid)
+end
+
+
+"""Identify nodes downstream."""
+function outlets(sn::StreamfallNetwork, gauge_id::String)::Array{Int}
+    nid, _ = get_gauge(sn.mg, gauge_id)
+    return outneighbors(sn.g, nid)
+end
+
+
 """Create a node if needed"""
 create_node(sn::StreamfallNetwork, node_id, details, nid) = create_node(sn.mg, node_id, details, nid)
 function create_node(mg, node_id, details, nid)
@@ -123,6 +139,9 @@ function create_network(name::String, network::Dict)
         outlets = details["outlets"]
         out_id = in_id
         if !isnothing(outlets)
+            msg = "Streamfall currently only supports a single outlet. ($(length(outlets)))"
+            @assert length(outlets) <= 1 || throw(ArgumentError(msg))
+
             for outlet in outlets
                 out_id, nid = create_node(mg, string(outlet), network[outlet], nid)
                 add_edge!(g, this_id, out_id)
