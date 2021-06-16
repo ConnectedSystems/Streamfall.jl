@@ -1,9 +1,9 @@
-<img align="center" src="docs/src/assets/logo.png" alt="Streamfall.jl" />  
+<img align="center" src="docs/src/assets/logo.png" alt="Streamfall.jl" />
 
 
 Streamfall: An experimental graph-based streamflow modelling system written in Julialang.
 
-Aims of the project are to leverage the Julia language and ecosystem to allow/enable:
+Aims of the project are to leverage the Julia language and ecosystem to support:
 - Quick application and exploratory analysis
 - Use of different rainfall-runoff models in tandem [**aspiration**]
 - Modelling and assessment of interacting systems
@@ -37,22 +37,26 @@ A full example of the spec is available [here](https://github.com/ConnectedSyste
 
 
 
-Each node definition then defines a subcatchment and holds the relevant parameter values for the associated model. In the future, it will be possible to read in stream network information from other formats (e.g., GeoPackage).
+Each node defines a subcatchment and holds the relevant parameter values for the associated model. In the future, it will be possible to read in stream network information from other formats (e.g., GeoPackage).
 
 
 ## Running a network
 
+
+
 ```julia
-using YAML, DataFrames, CSV, Plots
+using YAML, DataFrames, CSV
 using Streamfall
 
 
 # Load and generate stream network
 # Creates a graph representation of the stream with associated metadata.
 network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
+
+# Name of network/catchment and its specification
 sn = create_network("Example Network", network)
 
-# Load climate data
+# Load climate data - in this case from a CSV file with data for all nodes.
 climate_data = DataFrame!(CSV.File("../test/data/campaspe/climate/climate_historic.csv",
                           comment="#",
                           dateformat="YYYY-mm-dd"))
@@ -72,7 +76,23 @@ plot(node.outflow)
 
 Individual nodes can be run for more fine-grain control.
 
-One alternative approach is to identify the outlets for a given network...
+```julia
+# Run up to a point in the stream for all time steps.
+# All nodes upstream will be run as well (but not those downstream)
+node_id, node = get_gauge(sn, "406219")
+run_node!(sn, node_id, climate)
+
+# Reset a node
+reset!(node)
+
+# Run a specific node, and only a specific node, for all time steps
+inflow = ...      # array of inflows for each time step
+extractions = ... # extractions from stream for each time step
+gw_flux = ...     # forced groundwater interactions for each time step
+run_node!(node, climate; inflow=inflow, water_order=extractions, exchange=gw_flux)
+```
+
+Another approach is to identify the outlets for a given network...
 
 ```julia
 inlets, outlets = find_inlets_and_outlets(sn)
