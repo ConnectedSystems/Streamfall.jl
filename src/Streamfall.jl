@@ -64,10 +64,29 @@ function timestep_value(timestep, gauge_id::String, col_partial::String, dataset
     return amount
 end
 
-"""Run a model attached to a node.
 
-water_order: Volume of water to be extracted (in ML/timestep)
-exchange: Volume of flux (in ML/timestep), where negative values are losses to the groundwater system.
+"""Find common time frame between time series."""
+function find_common_timeframe(timeseries::T...) where {T<:DataFrame}
+    for t in timeseries
+        @assert "Date" in names(t)
+    end
+
+    min_date = maximum(map(x -> x.Date[1], timeseries...))
+    max_date = minimum(map(x -> x.Date[end], timeseries...))
+    return (min_date, max_date)
+end
+
+
+"""Run a model attached to a node for a given time step.
+Recurses upstream as needed.
+
+# Arguments
+- `sn::StreamfallNetwork`
+- `node_id::Int`
+- `climate::Climate`
+- `timestep::Int`
+- `water_order::Vector` : Volume of water to be extracted (in ML/timestep)
+- `exchange::Vector` : Volume of flux (in ML/timestep), where negative values are losses to the groundwater system
 """
 run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int; water_order=nothing, exchange=nothing) =
     run_node!(sn.mg, sn.g, node_id, climate, timestep; water_order=water_order, exchange=exchange)
@@ -86,13 +105,11 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
     ins = inneighbors(g, node_id)
     if isempty(ins)
         inflow = 0.0
-        src_name = "Out-of-Catchment"
     else
         inflow = 0.0
         for i in ins
-            src_name = MetaGraphs.get_prop(mg, i, :name)
             # Get inflow from previous node
-            upstream_flow = run_node!(sn, i, climate, timestep; water_order=water_order, exchange=exchange)
+            upstream_flow, upstream_level = run_node!(mg, g, i, climate, timestep; water_order=water_order, exchange=exchange)
             inflow += upstream_flow
         end
     end
@@ -110,9 +127,9 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
     # Calculate outflow for this node
     func = MetaGraphs.get_prop(mg, node_id, :nfunc)
     if curr_node isa IHACRESNode
-        outflow, level = func(curr_node, rain, et, inflow, wo)
+        outflow, level = func(curr_node, rain, et, inflow, wo, ex)
     elseif curr_node isa ExpuhNode
-        outflow, level = func(curr_node, rain, et, inflow, wo)
+        outflow, level = func(curr_node, rain, et, inflow, wo, ex)
     elseif curr_node isa DamNode
         outflow, level = func(curr_node, rain, et, inflow, wo, ex)
     else
@@ -123,6 +140,7 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
 end
 
 
+"""Run scenario for an entire catchment."""
 function run_catchment!(sn::StreamfallNetwork, climate; water_order=nothing, exchange=nothing) 
     run_catchment!(sn.mg, sn.g, climate; water_order=water_order, exchange=exchange)
 end
@@ -159,12 +177,63 @@ function run_node!(mg, g, target_node, climate; water_order=nothing, exchange=no
 end
 
 
+"""
+Run a specific node, and only that node, for all time steps.
+
+# Arguments
+- `node::NetworkNode` :
+- `climate::Climate` :
+- `inflow::Vector` : Time series of inflows from any upstream node.
+- `water_order::Vector` : Time series of water extractions from this subcatchment
+- `exchange::Vector` : Time series of groundwater flux
+"""
+function run_node!(node::NetworkNode, climate; inflow=nothing, water_order=nothing, exchange=nothing)
+    timesteps = sim_length(climate)
+
+    for ts in (1:timesteps)
+        if checkbounds(Bool, curr_node.outflow, ts)
+            # already ran for this time step so no need to recurse further
+            return curr_node.outflow[ts], curr_node.level[ts]
+        end
+
+        gauge_id = node.node_id
+        rain, et = climate_values(node, climate, ts)
+        if ismissing(rain) | ismissing(et)
+            @warn "No climate data found for node $(node_id) ($(gauge_id)) using column markers $(climate.rainfall_id) and $(climate.et_id)"
+            return 0.0
+        end
+
+        wo = 0.0
+        ex = 0.0
+        if !isnothing(water_order)
+            wo = water_order[ts]
+        end
+
+        if !isnothing(exchange)
+            ex = exchange[ts]
+        end
+
+        if !isnothing(inflow)
+            if inflow isa Vector
+                in_flow = inflow[ts]
+            elseif inflow isa Number
+                in_flow = inflow
+            end
+        end
+
+        run_node!(node, rain, et, in_flow, wo, ex)
+    end
+
+    return node.outflow, node.level
+end
+
+
 include("metrics.jl")
 
 
 export @def
 export IHACRES, IHACRESNode, BilinearNode, ExpuhNode, DamNode, Climate
-export find_inlets_and_outlets, create_network, create_node
+export find_inlets_and_outlets, inlets, outlets, create_network, create_node
 export param_info, update_params!, run_node!, reset!, sim_length, run_catchment!
 export run_node_with_temp!
 export climate_values, get_node, get_gauge, get_node_id, get_prop
