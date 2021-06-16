@@ -30,34 +30,25 @@ climate = Climate(climate_data, "_rain", "_evap")
 reset!(sn)
 
 dam_id, dam_node = get_gauge(sn, "406000")
-timesteps = sim_length(climate)
-for ts in (1:timesteps)
-    run_node!(sn, dam_id, climate, ts; water_order=hist_dam_releases)
-end
+Streamfall.run_node!(sn, dam_id, climate; water_order=hist_dam_releases)
 
 h_data = hist_dam_levels[:, "Dam Level [mAHD]"]
 n_data = dam_node.level
 
-@info "NNSE:" Streamfall.NNSE(h_data, n_data)
-@info "NSE:" Streamfall.NSE(h_data, n_data)
-@info "RMSE:" Streamfall.RMSE(h_data, n_data)
+nnse_score = Streamfall.NNSE(h_data, n_data)
+nse_score = Streamfall.NSE(h_data, n_data)
+rmse_score = Streamfall.RMSE(h_data, n_data)
 
-nse = round(Streamfall.NSE(h_data, n_data), digits=4)
-rmse = round(Streamfall.RMSE(h_data, n_data), digits=4)
+@info "NNSE:" nnse_score
+@info "NSE:" nse_score
+@info "RMSE:" rmse_score
+
+nse = round(nse_score, digits=4)
+rmse = round(rmse_score, digits=4)
 
 plot(h_data,
      legend=:bottomleft,
-     title="IHACRES Calibration\n(NSE: $(nse); RMSE: $(rmse))",
+     title="Calibrated IHACRES\n(NSE: $(nse); RMSE: $(rmse))",
      label="Historic", xlabel="Day", ylabel="Dam Level [mAHD]")
 
 plot!(n_data, label="IHACRES")
-
-savefig("calibration_ts_comparison.png")
-
-# 1:1 Plot
-scatter(h_data, n_data, legend=false, 
-        markerstrokewidth=0, markerstrokealpha=0, alpha=0.2)
-plot!(h_data, h_data, color=:red, markersize=.1, markerstrokewidth=0,
-      xlabel="Historic [mAHD]", ylabel="IHACRES [mAHD]", title="Historic vs Modelled")
-
-savefig("calibration_1to1.png")
