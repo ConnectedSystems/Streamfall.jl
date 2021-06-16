@@ -1,7 +1,7 @@
 module Streamfall
 
-using LightGraphs, MetaGraphs, Distributed, DataFrames
 using Statistics
+using LightGraphs, MetaGraphs, Distributed, DataFrames
 
 
 const MODPATH = @__DIR__
@@ -20,6 +20,7 @@ end
 # (which makes sense but still, many hours wasted!)
 # https://github.com/JuliaLang/julia/issues/29602
 const IHACRES = joinpath(MODPATH, "../deps", "usr", "lib", "ihacres$(libext)")
+
 
 """@def macro
 
@@ -49,9 +50,8 @@ include("DamNode.jl")
 include("Climate.jl")
 
 
-
-function timestep_value(timestep, gauge_id::String, col_partial::String, dataset=nothing)
-    amount = 0.0
+function timestep_value(timestep, gauge_id::String, col_partial::String, dataset=nothing)::Float64
+    amount::Float64 = 0.0
     if !isnothing(dataset)
         target_col = filter(x -> occursin(gauge_id, string(x))
                                 & occursin(col_partial, string(x)),
@@ -133,20 +133,20 @@ function run_catchment!(mg, g, climate; water_order=nothing, exchange=nothing)
     end
 end
 
-"""Run model for all time steps.
 
-Parameters
-----------
-* sn : StreamfallNetwork
-* target_node : node to run in the network
-* climate : Climate object holding rainfall and evaporation data (or temperature)
-* water_order : water orders for each time step (defaults to nothing)
-* exchange : exchange with groundwater system at each time step (defaults to nothing)
+"""Run model for all time steps, recursing upstream as needed.
+
+# Arguments
+- `sn::StreamfallNetwork`
+- `node_id::Int` : node to run in the network
+- `climate::Climate` : Climate object holding rainfall and evaporation data (or temperature)
+- `water_order::Vector` : water orders for each time step (defaults to nothing)
+- `exchange::Vector` : exchange with groundwater system at each time step (defaults to nothing)
 """
-function run_node!(sn::StreamfallNetwork, target_node, climate; water_order=nothing, exchange=nothing)::Nothing
+function run_node!(sn::StreamfallNetwork, node_id, climate; water_order=nothing, exchange=nothing)::Nothing
     timesteps = sim_length(climate)
     for ts in (1:timesteps)
-        run_node!(sn.mg, sn.g, target_node, climate, ts; water_order=water_order, exchange=exchange)
+        run_node!(sn.mg, sn.g, node_id, climate, ts; water_order=water_order, exchange=exchange)
     end
 end
 

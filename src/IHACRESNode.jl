@@ -165,9 +165,9 @@ function run_node!(s_node::BilinearNode,
                    ext::Float64,
                    gw_exchange::Float64=0.0,
                    loss::Float64=0.0;
-                   current_store=nothing,
-                   quick_store=nothing,
-                   slow_store=nothing)::Tuple{Float64, Float64}
+                   current_store::Union{Nothing, Float64}=nothing,
+                   quick_store::Union{Nothing, Float64}=nothing,
+                   slow_store::Union{Nothing, Float64}=nothing)::Tuple{Float64, Float64}
     if !isnothing(current_store)
         s_node.storage[end] = current_store
     end
@@ -413,14 +413,14 @@ end
 """
 function update_params!(node::BilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64)::Nothing
-    node.d = Param(d, bounds=node.d.bounds)
-    node.d2 = Param(d2, bounds=node.d2.bounds)
-    node.e = Param(e, bounds=node.e.bounds)
-    node.f = Param(f, bounds=node.f.bounds)
-    node.a = Param(a, bounds=node.a.bounds)
-    node.b = Param(b, bounds=node.b.bounds)
-    node.storage_coef = Param(s_coef, bounds=node.storage_coef.bounds)
-    node.alpha = Param(alpha, bounds=node.alpha.bounds)
+    node.d = Param(d, bounds=node.d.bounds::Tuple)
+    node.d2 = Param(d2, bounds=node.d2.bounds::Tuple)
+    node.e = Param(e, bounds=node.e.bounds::Tuple)
+    node.f = Param(f, bounds=node.f.bounds::Tuple)
+    node.a = Param(a, bounds=node.a.bounds::Tuple)
+    node.b = Param(b, bounds=node.b.bounds::Tuple)
+    node.storage_coef = Param(s_coef, bounds=node.storage_coef.bounds::Tuple)
+    node.alpha = Param(alpha, bounds=node.alpha.bounds::Tuple)
 
     return nothing
 end
@@ -432,31 +432,33 @@ Update all parameters
 function update_params!(node::BilinearNode{Param}, d::Float64, d2::Float64, e::Float64, f::Float64,
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
                         p1::Float64, p2::Float64, p3::Float64, p4::Float64, p5::Float64, p6::Float64, p7::Float64, p8::Float64, CTF::Float64)::Nothing
-    node.d = Param(d, bounds=node.d.bounds)
-    node.d2 = Param(d2, bounds=node.d2.bounds)
-    node.e = Param(e, bounds=node.e.bounds)
-    node.f = Param(f, bounds=node.f.bounds)
-    node.a = Param(a, bounds=node.a.bounds)
-    node.b = Param(b, bounds=node.b.bounds)
-    node.storage_coef = Param(s_coef, bounds=node.storage_coef.bounds)
-    node.alpha = Param(alpha, bounds=node.alpha.bounds)
+    node.d = Param(d, bounds=node.d.bounds::Tuple)
+    node.d2 = Param(d2, bounds=node.d2.bounds::Tuple)
+    node.e = Param(e, bounds=node.e.bounds::Tuple)
+    node.f = Param(f, bounds=node.f.bounds::Tuple)
+    node.a = Param(a, bounds=node.a.bounds::Tuple)
+    node.b = Param(b, bounds=node.b.bounds::Tuple)
+    node.storage_coef = Param(s_coef, bounds=node.storage_coef.bounds::Tuple)
+    node.alpha = Param(alpha, bounds=node.alpha.bounds::Tuple)
 
     n_lparams = node.level_params
     node.level_params = [
-        Param(p1, bounds=n_lparams[1].bounds)
-        Param(p2, bounds=n_lparams[2].bounds)
-        Param(p3, bounds=n_lparams[3].bounds)
-        Param(p4, bounds=n_lparams[4].bounds)
-        Param(p5, bounds=n_lparams[5].bounds)
-        Param(p6, bounds=n_lparams[6].bounds)
-        Param(p7, bounds=n_lparams[7].bounds)
-        Param(p8, bounds=n_lparams[8].bounds)
-        Param(CTF, bounds=n_lparams[9].bounds)
+        Param(p1, bounds=n_lparams[1].bounds::Tuple)
+        Param(p2, bounds=n_lparams[2].bounds::Tuple)
+        Param(p3, bounds=n_lparams[3].bounds::Tuple)
+        Param(p4, bounds=n_lparams[4].bounds::Tuple)
+        Param(p5, bounds=n_lparams[5].bounds::Tuple)
+        Param(p6, bounds=n_lparams[6].bounds::Tuple)
+        Param(p7, bounds=n_lparams[7].bounds::Tuple)
+        Param(p8, bounds=n_lparams[8].bounds::Tuple)
+        Param(CTF, bounds=n_lparams[9].bounds::Tuple)
     ] 
 
     return nothing
 end
 
+
+# update_bounds!()
 
 
 function reset!(s_node::IHACRESNode)::Nothing

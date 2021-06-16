@@ -45,7 +45,7 @@ function climate_values(node::NetworkNode, climate::Climate, timestep::Union{Not
     return select(data, vcat(rain_col, et_col))[timestep, :]
 end
 
-function sim_length(climate::Climate)
+function sim_length(climate::Climate)::Int64
     return nrow(climate.climate_data)
 end
 
