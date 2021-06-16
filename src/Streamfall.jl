@@ -71,8 +71,8 @@ function find_common_timeframe(timeseries::T...) where {T<:DataFrame}
         @assert "Date" in names(t)
     end
 
-    min_date = maximum(map(x -> x.Date[1], timeseries...))
-    max_date = minimum(map(x -> x.Date[end], timeseries...))
+    min_date = maximum([x.Date[1] for x in timeseries])
+    max_date = minimum([x.Date[end] for x in timeseries])
     return (min_date, max_date)
 end
 
