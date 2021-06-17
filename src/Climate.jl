@@ -21,28 +21,23 @@ function climate_values(node::NetworkNode, climate::Climate, timestep::Union{Not
 
     data = climate.climate_data
 
-    rain_col = filter(x -> occursin(node_id, string(x))
-                        & occursin(climate.rainfall_id, string(x)),
-                        propertynames(data))
-    et_col = filter(x -> occursin(node_id, string(x))
-                      & occursin(climate.et_id, string(x)),
-                      propertynames(data))
-
-    # if !isnothing(climate.t_id)
-    #     t_col = filter(x -> occursin(node_id, string(x))
-    #                   & occursin(climate.t_id, string(x)),
-    #                   propertynames(data))
-    # end
+    rain_col = filter(x -> occursin(node_id, x)
+                        & occursin(climate.rainfall_id, x),
+                        names(data))[1]
+    et_col = filter(x -> occursin(node_id, x)
+                      & occursin(climate.et_id, x),
+                      names(data))[1]
 
     if isempty(rain_col) | isempty(et_col)
         return (missing, missing)
     end
 
     if isnothing(timestep)
-        return select(data, vcat(rain_col, et_col))
+        return select(data, [rain_col, et_col])
     end
 
-    return select(data, vcat(rain_col, et_col))[timestep, :]
+    return data[timestep, [rain_col, et_col]]
+    # return select(data, vcat(rain_col, et_col))[timestep, :]
 end
 
 function sim_length(climate::Climate)::Int64
