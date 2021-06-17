@@ -173,6 +173,7 @@ rain : Float64, rainfall in mm
 et : Float64, evapotranspiration data in mm
 irrig_ext : Float64, irrigation extractions 
 extractions : Float64, extraction data in ML
+gw_flux : Float64, groundwater interaction
 
 :returns: numeric, outflow from Dam
 """
@@ -181,13 +182,13 @@ function run_node!(node::DamNode,
                    et::Float64, 
                    inflow::Float64, 
                    extractions::Float64, 
-                   groundwater_gain_loss::Float64=0.0)
+                   gw_flux::Float64=0.0)
 
     volume = storage(node)
     dam_area = node.calc_dam_area(volume)
     discharge = node.calc_dam_discharge(volume, node.max_storage)
 
-    updated_store = update_volume(volume, inflow, groundwater_gain_loss, rain, et,
+    updated_store = update_volume(volume, inflow, gw_flux, rain, et,
                                   dam_area, extractions, discharge, node.max_storage)
     outflow = node.calc_dam_outflow(discharge, extractions)
 
