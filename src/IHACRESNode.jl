@@ -149,7 +149,6 @@ evap: float, evapotranspiration
 inflow: float, inflow from previous node
 ext: float, irrigation and other water extractions
 gw_exchange: float, flux in ML - positive is contribution to stream, negative is infiltration
-loss: float,
 current_store: replacement cmd value
 quick_store: replacement quick_store value
 slow_store: replacement slow_store value
@@ -163,8 +162,7 @@ function run_node!(s_node::BilinearNode,
                    evap::Float64,
                    inflow::Float64,
                    ext::Float64,
-                   gw_exchange::Float64=0.0,
-                   loss::Float64=0.0;
+                   gw_exchange::Float64=0.0;
                    current_store::Union{Nothing, Float64}=nothing,
                    quick_store::Union{Nothing, Float64}=nothing,
                    slow_store::Union{Nothing, Float64}=nothing)::Tuple{Float64, Float64}
@@ -220,8 +218,7 @@ function run_node!(s_node::BilinearNode,
         recharge::Cdouble,
         s_node.area::Cdouble,
         s_node.a::Cdouble,
-        s_node.b::Cdouble,
-        loss::Cdouble
+        s_node.b::Cdouble
     )::Cvoid
 
     # @assert any(isnan.(flow_results)) == false
@@ -294,7 +291,6 @@ temp: float, temperature
 inflow: float, inflow from previous node
 ext: float, irrigation and other water extractions
 gw_exchange: float, flux in ML - positive is contribution to stream, negative is infiltration
-loss: float,
 current_store: replacement cmd value
 quick_store: replacement quick_store value
 slow_store: replacement slow_store value
@@ -308,8 +304,7 @@ function run_node_with_temp!(s_node::BilinearNode,
                    temp::Float64,
                    inflow::Float64,
                    ext::Float64,
-                   gw_exchange::Float64=0.0,
-                   loss::Float64=0.0;
+                   gw_exchange::Float64=0.0;
                    current_store=nothing,
                    quick_store=nothing,
                    slow_store=nothing)::Tuple{Float64, Float64}
@@ -368,8 +363,7 @@ function run_node_with_temp!(s_node::BilinearNode,
         recharge::Cdouble,
         s_node.area::Cdouble,
         s_node.a::Cdouble,
-        s_node.b::Cdouble,
-        loss::Cdouble
+        s_node.b::Cdouble
     )::Cvoid
 
     @assert any(isnan.(flow_results)) == false

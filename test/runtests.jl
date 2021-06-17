@@ -38,12 +38,11 @@ end
     inflow = 9.19583373e-11
     extraction = 1.59313987e-12
     gw_exchange = 2.47076926e-11
-    loss = 5.51086184e-11
     current_store = 1.03467364e+02
     quick_store = 8.46269687e+02
     slow_store = 3.67133471e+02
 
-    res = run_node!(test_node, rain, evap, inflow, extraction, gw_exchange, loss; 
+    res = run_node!(test_node, rain, evap, inflow, extraction, gw_exchange;
                     current_store=current_store, quick_store=quick_store, slow_store=slow_store)
 
     @test !any(isnan, res)
@@ -103,7 +102,6 @@ end
     b = 0.187
     e_rain = 3.421537294474909e-6
     recharge = 3.2121031313153022e-6
-    loss = 0.0
 
     prev_quick = 100.0
     prev_slow = 100.0
@@ -117,8 +115,7 @@ end
         recharge::Cdouble,
         area::Cdouble,
         a::Cdouble,
-        b::Cdouble,
-        loss::Cdouble
+        b::Cdouble
     )::Cvoid
 
     @info flow_results
@@ -129,8 +126,7 @@ end
 
     @test flow_results[1] == quickflow
 
-    b2 = 1.0
-    slow_store = prev_slow + (recharge * area) - (loss * b2)
+    slow_store = prev_slow + (recharge * area)
     α = exp(-b)
     slow_store = α * slow_store
     @test flow_results[2] == slow_store
@@ -150,8 +146,7 @@ end
         recharge::Cdouble,
         area::Cdouble,
         a::Cdouble,
-        b::Cdouble,
-        loss::Cdouble
+        b::Cdouble
     )::Cvoid
 
     @info flow_results
@@ -160,8 +155,7 @@ end
     α = exp(-a)
     @test flow_results[1] == (α * quickflow)
 
-    b2 = 1.0
-    slow_store = prev_slow + (recharge * area) - (loss * b2)
+    slow_store = prev_slow + (recharge * area)
     α = exp(-b)
     β = (1.0 - α) * slow_store
     slow_store = α * slow_store

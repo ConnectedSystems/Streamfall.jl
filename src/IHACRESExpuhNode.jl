@@ -117,8 +117,7 @@ function run_node!(s_node::ExpuhNode,
             evap::Float64, 
             inflow::Float64, 
             ext::Float64,
-            gw_exchange::Float64=0.0, 
-            loss::Float64=0.0;
+            gw_exchange::Float64=0.0;
             current_store=nothing,
             quick_store=nothing,
             slow_store=nothing,
@@ -138,13 +137,11 @@ function run_node!(s_node::ExpuhNode,
 
     cmd::Float64 = s_node.storage[end]
 
-    # rain = rain * s_node.area
     e_rainfall = @ccall IHACRES.calc_effective_rainfall(rain::Cdouble, cmd::Cdouble, s_node.d::Cdouble, s_node.d2::Cdouble)::Cdouble
-    # mf = @ccall IHACRES.calc_linear_interim_cmd(cmd::Cdouble, s_node.d::Cdouble, e_rainfall::Cdouble)::Cdouble
     mf = @ccall IHACRES.calc_trig_interim_cmd(cmd::Cdouble, s_node.d::Cdouble, e_rainfall::Cdouble)::Cdouble
 
     et::Float64 = @ccall IHACRES.calc_ET(s_node.e::Cdouble, evap::Cdouble, mf::Cdouble, s_node.f::Cdouble, s_node.d::Cdouble)::Cdouble
-    cmd = @ccall IHACRES.calc_cmd(mf::Cdouble, rain::Cdouble, et::Cdouble, e_rainfall::Cdouble, loss::Cdouble)::Cdouble
+    cmd = @ccall IHACRES.calc_cmd(mf::Cdouble, rain::Cdouble, et::Cdouble, e_rainfall::Cdouble)::Cdouble
 
     (prev_q, prev_s) = (s_node.quick_store[end], s_node.slow_store[end])
 
@@ -175,7 +172,7 @@ function run_node!(s_node::ExpuhNode,
 end
 
 
-function run_node_with_temp!(s_node::ExpuhNode, rain::Float64, temp::Float64, inflow::Float64, ext::Float64; gw_exchange::Float64=0.0, loss::Float64=0.0)::Tuple
+function run_node_with_temp!(s_node::ExpuhNode, rain::Float64, temp::Float64, inflow::Float64, ext::Float64; gw_exchange::Float64=0.0)::Tuple
 
     cmd::Float64 = s_node.storage[end]
 
@@ -192,7 +189,7 @@ function run_node_with_temp!(s_node::ExpuhNode, rain::Float64, temp::Float64, in
         s_node.d::Cdouble
     )::Cdouble
 
-    cmd = @ccall IHACRES.calc_cmd(current_store::Cdouble, rain::Cdouble, et::Cdouble, e_rainfall::Cdouble, loss::Cdouble)::Cdouble
+    cmd = @ccall IHACRES.calc_cmd(current_store::Cdouble, rain::Cdouble, et::Cdouble, e_rainfall::Cdouble)::Cdouble
 
     (prev_q, prev_s) = (s_node.quick_store[end], s_node.slow_store[end])
 
