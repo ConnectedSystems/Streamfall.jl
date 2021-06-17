@@ -286,7 +286,7 @@ with least-squares.
 
 In Fowler et al., [1] the subperiod is one year. This method is "naive" in 
 that the time series is partitioned into `N` chunks of `n_members`.
-Therefore, leap years or partial years are not fully considered.
+Therefore, leap years or partial years are not considered.
 
 # Arguments
 - `obs::Vector` : Historic observations to compare against
