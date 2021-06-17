@@ -50,11 +50,11 @@ include("DamNode.jl")
 include("Climate.jl")
 
 
-function timestep_value(timestep, gauge_id::String, col_partial::String, dataset=nothing)::Float64
+function timestep_value(timestep::Int, gauge_id::String, col_partial::String, dataset=nothing)::Float64
     amount::Float64 = 0.0
     if !isnothing(dataset)
-        target_col = filter(x -> occursin(gauge_id, string(x))
-                                & occursin(col_partial, string(x)),
+        target_col = filter(x -> occursin(gauge_id, x)
+                                & occursin(col_partial, x),
                                 names(dataset))
         if !isempty(target_col)
             amount = checkbounds(Bool, dataset.Date, timestep) ? dataset[timestep, target_col][1] : 0.0
