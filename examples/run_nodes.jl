@@ -2,26 +2,29 @@ using YAML, DataFrames, CSV, Plots
 using Statistics
 using Streamfall
 
+here = @__DIR__
+
+data_path = joinpath(here, "../test/data/campaspe/")
 
 # Load and generate stream network
-network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
+network = YAML.load_file(joinpath(data_path, "campaspe_network.yml"))
 sn = create_network("Example Network", network)
 
 # Load climate data
-climate_data = DataFrame!(CSV.File("../test/data/campaspe/climate/climate_historic.csv",
+date_format = "YYYY-mm-dd"
+climate_data = DataFrame!(CSV.File(joinpath(data_path, "climate/climate_historic.csv"),
                           comment="#",
-                          dateformat="YYYY-mm-dd"))
+                          dateformat=date_format))
 
-hist_dam_levels = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_levels_for_fit.csv", dateformat="YYYY-mm-dd"))
-hist_dam_releases = DataFrame!(CSV.File("../test/data/campaspe/dam/historic_releases.csv", dateformat="YYYY-mm-dd"))
+dam_level_fn = joinpath(data_path, "dam/historic_levels_for_fit.csv")
+dam_releases_fn = joinpath(data_path, "dam/historic_releases.csv")
+hist_dam_levels = DataFrame!(CSV.File(dam_level_fn, dateformat=date_format))
+hist_dam_releases = DataFrame!(CSV.File(dam_releases_fn, dateformat=date_format))
 
 # Subset to same range
-first_date = max(hist_dam_levels.Date[1], hist_dam_releases.Date[1], climate_data.Date[1])
-last_date = min(hist_dam_levels.Date[end], hist_dam_releases.Date[end], climate_data.Date[end])
-
-climate_data = climate_data[first_date .<= climate_data.Date .<= last_date, :]
-hist_dam_levels = hist_dam_levels[first_date .<= hist_dam_levels.Date .<= last_date, :]
-hist_dam_releases = hist_dam_releases[first_date .<= hist_dam_releases.Date .<= last_date, :]
+climate_data, hist_dam_levels, hist_dam_releases = Streamfall.align_time_frame(climate_data, 
+                                                                               hist_dam_levels, 
+                                                                               hist_dam_releases)
 
 climate = Climate(climate_data, "_rain", "_evap")
 
@@ -39,16 +42,16 @@ nnse_score = Streamfall.NNSE(h_data, n_data)
 nse_score = Streamfall.NSE(h_data, n_data)
 rmse_score = Streamfall.RMSE(h_data, n_data)
 
-@info "NNSE:" nnse_score
-@info "NSE:" nse_score
-@info "RMSE:" rmse_score
+@info "Obj Func Scores:" nnse_score nse_score rmse_score
 
 nse = round(nse_score, digits=4)
 rmse = round(rmse_score, digits=4)
 
 plot(h_data,
      legend=:bottomleft,
-     title="Calibrated IHACRES\n(NSE: $(nse); RMSE: $(rmse))",
+     title="Calibrated IHACRES\n(RMSE: $(rmse); NSE: $(nse))",
      label="Historic", xlabel="Day", ylabel="Dam Level [mAHD]")
 
-plot!(n_data, label="IHACRES")
+display(plot!(n_data, label="IHACRES"))
+
+# savefig("calibrated_example.png")
