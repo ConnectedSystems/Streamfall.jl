@@ -82,7 +82,7 @@ Individual nodes can be run for more fine-grain control.
 node_id, node = get_gauge(sn, "406219")
 run_node!(sn, node_id, climate)
 
-# Reset a node
+# Reset a node (clears stored states)
 reset!(node)
 
 # Run a specific node, and only a specific node, for all time steps
