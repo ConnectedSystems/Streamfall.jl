@@ -82,11 +82,11 @@ end
 
 """Subset an arbitrary number of DataFrames to their shared period of time.
 
-Returns data in same order as input.
+Returns copy of data in same order as input.
 
 # Example
 ```julia-repl
-julia> climate, streamflow = match_time_periods!(climate, streamflow)
+julia> climate, streamflow = align_time_frame(climate, streamflow)
 ```
 """
 function align_time_frame(timeseries::T...) where {T<:DataFrame}
