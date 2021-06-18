@@ -163,3 +163,4 @@ end
 end
 
 include("test_metrics.jl")
+include("test_data_op.jl")
