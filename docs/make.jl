@@ -1,8 +1,8 @@
 push!(LOAD_PATH,"../src/")
 
-using Pkg
+# using Pkg
 
-pkg"activate .."
+# pkg"activate .."
 
 using Documenter, Streamfall
 
