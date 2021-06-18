@@ -94,5 +94,12 @@ plot!(h_data, h_data, color=:red, markersize=.1, markerstrokewidth=0,
 
 savefig("calibration_1to1.png")
 
-
-# Best candidate found: [54.9098, 0.135862, 1.22086, 2.99995, 0.309896, 0.0861618, 0.977643, 0.869782]
+# NNSE: 0.9643; RMSE: 1.43553
+# d: 84.28015146853407
+# d2: 2.4224106535469145
+# e: 0.8129590022893607
+# f: 2.579276454391652
+# a: 5.923379062122229
+# b: 0.0989925603647026
+# storage_coef: 1.8613364808233752  # gw storage factor
+# alpha: 0.7279050097363565

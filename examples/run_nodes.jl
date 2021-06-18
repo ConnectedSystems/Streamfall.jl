@@ -3,7 +3,6 @@ using Statistics
 using Streamfall
 
 here = @__DIR__
-
 data_path = joinpath(here, "../test/data/campaspe/")
 
 # Load and generate stream network
@@ -42,7 +41,7 @@ nnse_score = Streamfall.NNSE(h_data, n_data)
 nse_score = Streamfall.NSE(h_data, n_data)
 rmse_score = Streamfall.RMSE(h_data, n_data)
 
-@info "Obj Func Scores:" nnse_score nse_score rmse_score
+@info "Obj Func Scores:" rmse_score nnse_score nse_score
 
 nse = round(nse_score, digits=4)
 rmse = round(rmse_score, digits=4)
@@ -54,4 +53,4 @@ plot(h_data,
 
 display(plot!(n_data, label="IHACRES"))
 
-# savefig("calibrated_example.png")
+savefig("calibrated_example.png")

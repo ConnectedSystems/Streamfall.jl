@@ -16,9 +16,6 @@ Random.seed!(101)
 network = YAML.load_file(joinpath(DATA_PATH, "campaspe_network.yml"))
 sn = create_network("Example Network", network)
 
-# inlets, outlets = find_inlets_and_outlets(sn)
-# @info "Network has the following inlets and outlets:" inlets outlets
-
 climate_data = DataFrame!(CSV.File(joinpath(DATA_PATH, "climate/climate_historic.csv"),
                             comment="#",
                             dateformat="YYYY-mm-dd"))
@@ -26,19 +23,12 @@ climate_data = DataFrame!(CSV.File(joinpath(DATA_PATH, "climate/climate_historic
 hist_dam_levels = DataFrame!(CSV.File(joinpath(DATA_PATH, "dam/historic_levels_for_fit.csv"), dateformat="YYYY-mm-dd"))
 hist_dam_releases = DataFrame!(CSV.File(joinpath(DATA_PATH, "dam/historic_releases.csv"), dateformat="YYYY-mm-dd"))
 
-# We're ignoring flow data as it is severely limited (only ~5 years)
-# hist_406219_flow = DataFrame!(CSV.File(joinpath(DATA_PATH, "gauges/406219_outflow_edited.csv"), dateformat="YYYY-mm-dd"))
+climate_data, hist_dam_levels, hist_dam_releases = Streamfall.align_time_frame(climate_data, 
+                                                                               hist_dam_levels, 
+                                                                               hist_dam_releases)
 
-# Subset climate and historic flow data to same range
-first_date, last_date = Streamfall.find_common_timeframe(hist_dam_levels, hist_dam_releases, climate_data)
-
-climate_data = climate_data[first_date .<= climate_data.Date .<= last_date, :]
-hist_dam_releases = hist_dam_releases[first_date .<= hist_dam_releases.Date .<= last_date, :]
-hist_dam_levels = hist_dam_levels[first_date .<= hist_dam_levels.Date .<= last_date, :]
-# hist_406219_flow = hist_406219_flow[first_date .<= hist_406219_flow.Date .<= last_date, :]
 
 hist_data = Dict(
-    # "406219" => hist_406219_flow[:, "406219_outflow_[ML]"],
     "406000" => hist_dam_levels[:, "Dam Level [mAHD]"],
     "406000_releases" => hist_dam_releases
 )
