@@ -65,7 +65,10 @@ function timestep_value(timestep::Int, gauge_id::String, col_partial::String, da
 end
 
 
-"""Find common time frame between time series."""
+"""Find common time frame between time series.
+
+Requires that all DataFrames have a "Date" column.
+"""
 function find_common_timeframe(timeseries::T...) where {T<:DataFrame}
     for t in timeseries
         @assert "Date" in names(t)
@@ -77,6 +80,23 @@ function find_common_timeframe(timeseries::T...) where {T<:DataFrame}
 end
 
 
+"""Subset an arbitrary number of DataFrames to their shared period of time.
+
+Returns data in same order as input.
+
+# Example
+```julia-repl
+julia> climate, streamflow = match_time_periods!(climate, streamflow)
+```
+"""
+function align_time_frame(timeseries::T...) where {T<:DataFrame}
+    min_date, max_date = find_common_timeframe(timeseries...)
+    modded = [t[min_date .<= t.Date .<= max_date, :] for t in timeseries]
+
+    return modded
+end
+
+
 """Run a model attached to a node for a given time step.
 Recurses upstream as needed.
 
@@ -85,13 +105,14 @@ Recurses upstream as needed.
 - `node_id::Int`
 - `climate::Climate`
 - `timestep::Int`
-- `water_order::Vector` : Volume of water to be extracted (in ML/timestep)
-- `exchange::Vector` : Volume of flux (in ML/timestep), where negative values are losses to the groundwater system
+- `water_order::DataFrame` : Volume of water to be extracted (in ML/timestep)
+- `exchange::DataFrame` : Volume of flux (in ML/timestep), where negative values are losses to the groundwater system
 """
-run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int; water_order=nothing, exchange=nothing) =
-    run_node!(sn.mg, sn.g, node_id, climate, timestep; water_order=water_order, exchange=exchange)
-function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Climate, timestep::Int; 
-                   water_order=nothing, exchange=nothing)
+function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int; 
+                   water_order::Union{DataFrame, Nothing}=nothing,
+                   exchange::Union{DataFrame, Nothing}=nothing)
+    mg = sn.mg
+    g = sn.g
 
     curr_node = MetaGraphs.get_prop(mg, node_id, :node)
     if checkbounds(Bool, curr_node.outflow, timestep)
@@ -109,7 +130,7 @@ function run_node!(mg::MetaGraph, g::AbstractGraph, node_id::Int, climate::Clima
         inflow = 0.0
         for i in ins
             # Get inflow from previous node
-            upstream_flow, upstream_level = run_node!(mg, g, i, climate, timestep; water_order=water_order, exchange=exchange)
+            upstream_flow, _ = run_node!(sn, i, climate, timestep; water_order=water_order, exchange=exchange)
             inflow += upstream_flow
         end
     end
@@ -141,11 +162,9 @@ end
 
 
 """Run scenario for an entire catchment."""
-function run_catchment!(sn::StreamfallNetwork, climate; water_order=nothing, exchange=nothing) 
-    run_catchment!(sn.mg, sn.g, climate; water_order=water_order, exchange=exchange)
-end
-function run_catchment!(mg, g, climate; water_order=nothing, exchange=nothing)
-    inlets, outlets = find_inlets_and_outlets(g)
+function run_catchment!(sn::StreamfallNetwork, climate; water_order=nothing, exchange=nothing)
+    mg, g = sn.mg, sn.g
+    _, outlets = find_inlets_and_outlets(g)
     for outlet in outlets
         run_node!(mg, g, outlet, climate; water_order=water_order, exchange=exchange)
     end
@@ -164,17 +183,17 @@ end
 function run_node!(sn::StreamfallNetwork, node_id, climate; water_order=nothing, exchange=nothing)::Nothing
     timesteps = sim_length(climate)
     for ts in (1:timesteps)
-        run_node!(sn.mg, sn.g, node_id, climate, ts; water_order=water_order, exchange=exchange)
+        run_node!(sn, node_id, climate, ts; water_order=water_order, exchange=exchange)
     end
 end
 
 
-function run_node!(mg, g, target_node, climate; water_order=nothing, exchange=nothing)
-    timesteps = sim_length(climate)
-    for ts in (1:timesteps)
-        run_node!(mg, g, target_node, climate, ts; water_order=water_order, exchange=exchange)
-    end
-end
+# function run_node!(mg, g, target_node, climate; water_order=nothing, exchange=nothing)
+#     timesteps = sim_length(climate)
+#     for ts in (1:timesteps)
+#         run_node!(mg, g, target_node, climate, ts; water_order=water_order, exchange=exchange)
+#     end
+# end
 
 
 """
