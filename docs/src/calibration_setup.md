@@ -24,29 +24,29 @@ using Streamfall
 Note that the `DATA_PATH` is pointing to the `test/data/campaspe/` directory.
 
 ```julia
+# Load and generate stream network
 network = YAML.load_file(joinpath(DATA_PATH, "campaspe_network.yml"))
 sn = create_network("Example Network", network)
 ```
 
-
 ## Loading historic data
 
 ```julia
-climate_data = DataFrame!(CSV.File(joinpath(DATA_PATH, "climate/climate_historic.csv"),
-                            comment="#",
-                            dateformat="YYYY-mm-dd"))
+# Load climate data
+date_format = "YYYY-mm-dd"
+climate_data = DataFrame!(CSV.File(joinpath(data_path, "climate/climate_historic.csv"),
+                          comment="#",
+                          dateformat=date_format))
 
-hist_dam_levels = DataFrame!(CSV.File(joinpath(DATA_PATH, "dam/historic_levels_for_fit.csv"), dateformat="YYYY-mm-dd"))
-hist_dam_releases = DataFrame!(CSV.File(joinpath(DATA_PATH, "dam/historic_releases.csv"), dateformat="YYYY-mm-dd"))
+dam_level_fn = joinpath(data_path, "dam/historic_levels_for_fit.csv")
+dam_releases_fn = joinpath(data_path, "dam/historic_releases.csv")
+hist_dam_levels = DataFrame!(CSV.File(dam_level_fn, dateformat=date_format))
+hist_dam_releases = DataFrame!(CSV.File(dam_releases_fn, dateformat=date_format))
 
-# The example data is of different time periods
-# Here we subset these to matching time frames
-first_date = max(hist_dam_levels.Date[1], hist_dam_releases.Date[1], climate_data.Date[1])
-last_date = min(hist_dam_levels.Date[end], hist_dam_releases.Date[end], climate_data.Date[end])
-
-climate_data = climate_data[first_date .<= climate_data.Date .<= last_date, :]
-hist_dam_releases = hist_dam_releases[first_date .<= hist_dam_releases.Date .<= last_date, :]
-hist_dam_levels = hist_dam_levels[first_date .<= hist_dam_levels.Date .<= last_date, :]
+# Subset to same range
+climate_data, hist_dam_levels, hist_dam_releases = Streamfall.align_time_frame(climate_data, 
+                                                                               hist_dam_levels, 
+                                                                               hist_dam_releases)
 
 # Create historic data alias
 hist_data = Dict(

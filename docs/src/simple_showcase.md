@@ -1,71 +1,48 @@
 # A simple showcase of a hydrological system
 
-Here we showcase a two-node network representing a river and a dam downstream.
+Here we showcase a two-node network representing inflows into a dam and the dam itself.
 
-The Lower Campaspe catchment - a small semi-arid basin in North-Central Victoria, Australia - is used for the example here.
+The Lower Campaspe catchment - a small semi-arid basin in North-Central Victoria, Australia - is used for the example.
 
-- Figure of catchment
-
-As a graph, the network looks like this:
-
-- Figure of two-node network
-
-Which represents the following area:
-
-- Zoomed in figure of the previous figure showing dam and area above the dam
+```@raw html
+<iframe style="width: 720px; height: 600px; border: none;" src="https://nationalmap.gov.au/#share=s-dIbct7mdo25m7ZK2EVr7Koi4cMp" allowFullScreen mozAllowFullScreen webkitAllowFullScreen></iframe>
+```
 
 In this example, we are focused on representing dam levels.
 
-
 This example uses the setup as detailed in [Calibration setup](@ref)
-
-
 
 ```julia
 @info "Running example stream..."
 
-reset!(sn)
+reset!(sn) # clear any previous runs
 
-run_node!(node::NetworkNode, climate; inflow=nothing, water_order=nothing, exchange=nothing)
-
-timesteps = sim_length(climate)
-
+# Run the dam node and above
 dam_id, dam_node = get_gauge(sn, "406000")
 run_node!(sn, dam_id, climate; water_order=hist_dam_releases)
 
+# Get performance metrics
 h_data = hist_dam_levels[:, "Dam Level [mAHD]"]
 n_data = dam_node.level
 
+rmse_score = Streamfall.RMSE(h_data, n_data)
 nnse_score = Streamfall.NNSE(h_data, n_data)
 nse_score = Streamfall.NSE(h_data, n_data)
-rmse_score = Streamfall.RMSE(h_data, n_data)
 
-@info "NNSE:" nnse_score
-@info "NSE:" nse_score
-@info "RMSE:" rmse_score
-
-nse = round(nse_score, digits=4)
 rmse = round(rmse_score, digits=4)
+nnse = round(nnse_score, digits=4)
+nse = round(nse_score, digits=4)
 
-# Calibration results
+@info "Scores:" rmse_score nnse_score nse_score
+
+
+# Results of model run
 plot(h_data,
      legend=:bottomleft,
-     title="Calibrated IHACRES\n(NSE: $(nse); RMSE: $(rmse))",
+     title="Calibrated IHACRES\n(RMSE: $(rmse); NSE: $(nse))",
      label="Historic", xlabel="Day", ylabel="Dam Level [mAHD]")
 
 plot!(n_data, label="IHACRES")
-
-savefig("calibration_ts_comparison.png")
-
-# 1:1 Plot
-scatter(h_data, n_data, legend=false, 
-        markerstrokewidth=0, markerstrokealpha=0, alpha=0.2)
-plot!(h_data, h_data, color=:red, markersize=.1, markerstrokewidth=0,
-      xlabel="Historic [mAHD]", ylabel="IHACRES [mAHD]", title="Historic vs Modelled")
-
-savefig("calibration_1to1.png")
 ```
 
-![](assets/calibration_ts_comparison.png)
-
-![](assets/calibration_1to1.png)
+![](assets/calibrated_example.png)

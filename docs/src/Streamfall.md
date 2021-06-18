@@ -1,4 +1,4 @@
-# Streamfall.jl
+# Methods to run a network or node
 
 ```@autodocs
 Modules = [Streamfall]

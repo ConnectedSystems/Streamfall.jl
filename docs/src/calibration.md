@@ -79,9 +79,39 @@ end
 h_data = hist_dam_levels[:, "Dam Level [mAHD]"]
 n_data = dam_node.level
 
-@info "Downstream Dam Level NNSE:" Streamfall.NNSE(h_data, n_data)
-@info "Downstream Dam Level RMSE:" Streamfall.RMSE(h_data, n_data)
+rmse = Streamfall.RMSE(h_data, n_data)
+nse = Streamfall.NSE(h_data, n_data)
+
+# Results of model run
+plot(h_data,
+     legend=:bottomleft,
+     title="Calibrated IHACRES\n(RMSE: $(rmse); NSE: $(nse))",
+     label="Historic", xlabel="Day", ylabel="Dam Level [mAHD]")
+
+plot!(n_data, label="IHACRES")
+
+savefig("calibrated_example.png")
+
+# 1:1 Plot
+scatter(h_data, n_data, legend=false, 
+        markerstrokewidth=0, markerstrokealpha=0, alpha=0.2)
+plot!(h_data, h_data, color=:red, markersize=.1, markerstrokewidth=0,
+      xlabel="Historic [mAHD]", ylabel="IHACRES [mAHD]", title="Historic vs Modelled")
+
+savefig("calibration_1to1.png")
 
 
-# Best candidate found: [54.9098, 0.135862, 1.22086, 2.99995, 0.309896, 0.0861618, 0.977643, 0.869782]
+# NNSE: 0.9643; RMSE: 1.43553
+# d: 84.28015146853407
+# d2: 2.4224106535469145
+# e: 0.8129590022893607
+# f: 2.579276454391652
+# a: 5.923379062122229
+# b: 0.0989925603647026
+# storage_coef: 1.8613364808233752  # gw storage factor
+# alpha: 0.7279050097363565
 ```
+
+![](assets/calibrated_example.png)
+
+![](assets/calibration_1to1.png)

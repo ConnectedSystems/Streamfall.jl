@@ -15,11 +15,18 @@ makedocs(sitename="Streamfall Documentation",
         "index.md",
         "Streamfall.md",
         "metrics.md",
-        "Calibration" => [
-            "calibration_setup.md",
-            "calibration.md",
+        "Examples" => [
+            "Calibration" => [
+                "calibration_setup.md",
+                "calibration.md",
+            ],
             "simple_showcase.md",
             "multisystem_showcase.md",
         ]
+        
     ]
+)
+
+deploydocs(
+    repo = "github.com/ConnectedSystems/Streamfall.jl.git",
 )
