@@ -1,7 +1,7 @@
-# Available metrics
+# Defining a network
 
 ```@autodocs
 Modules = [Streamfall]
 Order   = [:function, :type]
-Pages   = ["metrics.jl"]
+Pages   = ["Network.jl"]
 ```

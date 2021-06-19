@@ -1,16 +1,17 @@
-# A simple showcase of a hydrological system
+# A simple example
 
-Here we showcase a two-node network representing inflows into a dam and the dam itself.
+In this example we showcase a two-node network to represent water levels at Lake Eppalock, 
+a dam in the Lower Campaspe catchment located in North-Central Victoria, Australia.
 
-The Lower Campaspe catchment - a small semi-arid basin in North-Central Victoria, Australia - is used for the example.
+The map below shows Lake Eppalock, along with relevant gauge locations/data 
+(click the brown dots on the map to see further gauge details).
+
+This example uses the setup as detailed in [Calibration setup](@ref).
 
 ```@raw html
 <iframe style="width: 720px; height: 600px; border: none;" src="https://nationalmap.gov.au/#share=s-dIbct7mdo25m7ZK2EVr7Koi4cMp" allowFullScreen mozAllowFullScreen webkitAllowFullScreen></iframe>
 ```
 
-In this example, we are focused on representing dam levels.
-
-This example uses the setup as detailed in [Calibration setup](@ref)
 
 ```julia
 @info "Running example stream..."

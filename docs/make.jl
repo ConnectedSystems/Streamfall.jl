@@ -13,15 +13,16 @@ makedocs(sitename="Streamfall Documentation",
     ),
     pages = [
         "index.md",
-        "Streamfall.md",
-        "metrics.md",
+        "network.md",
+        "use_methods.md",
         "Examples" => [
             "Calibration" => [
+                "metrics.md",
                 "calibration_setup.md",
                 "calibration.md",
             ],
             "simple_showcase.md",
-            "multisystem_showcase.md",
+            # "multisystem_showcase.md",
         ]
         
     ]
