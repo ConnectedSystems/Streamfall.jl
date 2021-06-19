@@ -9,14 +9,27 @@ struct Climate
 end
 
 
-function subcatchment_data(node::NetworkNode, climate::Climate)
-    node_id = node.node_id
-    cols = filter(x -> occursin(node_id, string(x)), propertynames(climate))
+"""
+    subcatchment_data(node::NetworkNode, climate::Climate)
 
-    return cols
+Extract data for a given node from climate object.
+"""
+function subcatchment_data(node::NetworkNode, climate::Climate)::DataFrame
+    node_id = node.node_id
+    data = climate.climate_data
+    cols = filter(x -> occursin(node_id, string(x)), names(data))
+
+    return data[:, cols]
 end
 
-function climate_values(node::NetworkNode, climate::Climate, timestep::Union{Nothing, Int}=nothing)
+
+"""
+    climate_values(node::NetworkNode, climate::Climate, timestep::Union{Nothing, Int}=nothing)
+
+Extract climate related data for a given time step.
+"""
+function climate_values(node::NetworkNode, climate::Climate, 
+                        timestep::Union{Nothing, Int}=nothing)
     node_id = node.node_id
 
     data = climate.climate_data
@@ -37,9 +50,14 @@ function climate_values(node::NetworkNode, climate::Climate, timestep::Union{Not
     end
 
     return data[timestep, [rain_col, et_col]]
-    # return select(data, vcat(rain_col, et_col))[timestep, :]
 end
 
+
+"""
+    sim_length(climate::Climate)::Int64
+
+Simulation length is dependent on available climate data.
+"""
 function sim_length(climate::Climate)::Int64
     return nrow(climate.climate_data)
 end

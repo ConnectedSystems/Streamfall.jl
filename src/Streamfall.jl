@@ -50,7 +50,8 @@ include("DamNode.jl")
 include("Climate.jl")
 
 
-function timestep_value(timestep::Int, gauge_id::String, col_partial::String, dataset=nothing)::Float64
+function timestep_value(timestep::Int, gauge_id::String, col_partial::String, 
+                        dataset::Union{DataFrame, Nothing}=nothing)::Float64
     amount::Float64 = 0.0
     if !isnothing(dataset)
         target_col = filter(x -> occursin(gauge_id, x)
@@ -65,7 +66,10 @@ function timestep_value(timestep::Int, gauge_id::String, col_partial::String, da
 end
 
 
-"""Find common time frame between time series.
+"""
+    find_common_timeframe(timeseries::T...)
+
+Find common time frame between time series.
 
 Requires that all DataFrames have a "Date" column.
 """
@@ -80,9 +84,12 @@ function find_common_timeframe(timeseries::T...) where {T<:DataFrame}
 end
 
 
-"""Subset an arbitrary number of DataFrames to their shared period of time.
+"""
+    align_time_frame(timeseries::T...)
 
-Returns copy of data in same order as input.
+Subset an arbitrary number of DataFrames to their shared period of time.
+
+Returns subsetted copy of data in same order as input.
 
 # Example
 ```julia-repl
@@ -97,7 +104,12 @@ function align_time_frame(timeseries::T...) where {T<:DataFrame}
 end
 
 
-"""Run a model attached to a node for a given time step.
+"""
+    run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int; 
+              water_order::Union{DataFrame, Nothing}=nothing,
+              exchange::Union{DataFrame, Nothing}=nothing)
+
+Run a model attached to a node for a given time step.
 Recurses upstream as needed.
 
 # Arguments
@@ -111,8 +123,7 @@ Recurses upstream as needed.
 function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int; 
                    water_order::Union{DataFrame, Nothing}=nothing,
                    exchange::Union{DataFrame, Nothing}=nothing)
-    mg = sn.mg
-    g = sn.g
+    mg, g = sn.mg, sn.g
 
     curr_node = MetaGraphs.get_prop(mg, node_id, :node)
     if checkbounds(Bool, curr_node.outflow, timestep)
@@ -147,31 +158,40 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
 
     # Calculate outflow for this node
     func = MetaGraphs.get_prop(mg, node_id, :nfunc)
-    if curr_node isa IHACRESNode
-        outflow, level = func(curr_node, rain, et, inflow, wo, ex)
-    elseif curr_node isa ExpuhNode
-        outflow, level = func(curr_node, rain, et, inflow, wo, ex)
-    elseif curr_node isa DamNode
-        outflow, level = func(curr_node, rain, et, inflow, wo, ex)
-    else
-        throw(ArgumentError("Unknown node type!"))
-    end
+    outflow, level = func(curr_node, rain, et, inflow, wo, ex)
+    # if curr_node isa IHACRESNode
+    #     outflow, level = func(curr_node, rain, et, inflow, wo, ex)
+    # elseif curr_node isa ExpuhNode
+    #     outflow, level = func(curr_node, rain, et, inflow, wo, ex)
+    # elseif curr_node isa DamNode
+    #     outflow, level = func(curr_node, rain, et, inflow, wo, ex)
+    # else
+    #     throw(ArgumentError("Unknown node type!"))
+    # end
 
     return outflow, level
 end
 
 
-"""Run scenario for an entire catchment."""
-function run_catchment!(sn::StreamfallNetwork, climate; water_order=nothing, exchange=nothing)
-    mg, g = sn.mg, sn.g
-    _, outlets = find_inlets_and_outlets(g)
+"""
+    run_catchment!(sn::StreamfallNetwork, climate::Climate; water_order=nothing, exchange=nothing)
+
+Run scenario for an entire catchment.
+"""
+function run_catchment!(sn::StreamfallNetwork, climate::Climate; 
+                        water_order=nothing, exchange=nothing)
+    _, outlets = find_inlets_and_outlets(sn)
     for outlet in outlets
-        run_node!(mg, g, outlet, climate; water_order=water_order, exchange=exchange)
+        run_node!(sn, outlet, climate; water_order=water_order, exchange=exchange)
     end
 end
 
 
-"""Run model for all time steps, recursing upstream as needed.
+"""
+    run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate; 
+              water_order=nothing, exchange=nothing)::Nothing
+
+Run model for all time steps, recursing upstream as needed.
 
 # Arguments
 - `sn::StreamfallNetwork`
@@ -180,7 +200,7 @@ end
 - `water_order::Vector` : water orders for each time step (defaults to nothing)
 - `exchange::Vector` : exchange with groundwater system at each time step (defaults to nothing)
 """
-function run_node!(sn::StreamfallNetwork, node_id, climate; water_order=nothing, exchange=nothing)::Nothing
+function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate; water_order=nothing, exchange=nothing)::Nothing
     timesteps = sim_length(climate)
     for ts in (1:timesteps)
         run_node!(sn, node_id, climate, ts; water_order=water_order, exchange=exchange)
@@ -188,15 +208,10 @@ function run_node!(sn::StreamfallNetwork, node_id, climate; water_order=nothing,
 end
 
 
-# function run_node!(mg, g, target_node, climate; water_order=nothing, exchange=nothing)
-#     timesteps = sim_length(climate)
-#     for ts in (1:timesteps)
-#         run_node!(mg, g, target_node, climate, ts; water_order=water_order, exchange=exchange)
-#     end
-# end
-
-
 """
+    run_node!(node::NetworkNode, climate; 
+              inflow=nothing, water_order=nothing, exchange=nothing)
+
 Run a specific node, and only that node, for all time steps.
 
 # Arguments
