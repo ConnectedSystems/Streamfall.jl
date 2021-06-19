@@ -1,4 +1,5 @@
-DATA_PATH = "../../test/data/campaspe/"
+HERE = @__DIR__
+DATA_PATH = joinpath(HERE, "../../test/data/campaspe/")
 
 # Ensure dependent data and packages are available
 using Statistics, DataFrames, CSV
@@ -20,8 +21,10 @@ climate_data = DataFrame!(CSV.File(joinpath(DATA_PATH, "climate/climate_historic
                             comment="#",
                             dateformat="YYYY-mm-dd"))
 
-hist_dam_levels = DataFrame!(CSV.File(joinpath(DATA_PATH, "dam/historic_levels_for_fit.csv"), dateformat="YYYY-mm-dd"))
-hist_dam_releases = DataFrame!(CSV.File(joinpath(DATA_PATH, "dam/historic_releases.csv"), dateformat="YYYY-mm-dd"))
+hist_dam_levels = DataFrame!(CSV.File(joinpath(DATA_PATH, "dam/historic_levels_for_fit.csv"), 
+                             dateformat="YYYY-mm-dd"))
+hist_dam_releases = DataFrame!(CSV.File(joinpath(DATA_PATH, "dam/historic_releases.csv"), 
+                               dateformat="YYYY-mm-dd"))
 
 climate_data, hist_dam_levels, hist_dam_releases = Streamfall.align_time_frame(climate_data, 
                                                                                hist_dam_levels, 
