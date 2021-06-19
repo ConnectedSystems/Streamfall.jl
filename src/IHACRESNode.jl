@@ -151,7 +151,7 @@ end
 
 Run node with ET data to calculate outflow and update state.
 
-# Parameters
+# Arguments
 - `s_node::BilinearNode` : IHACRESNode
 - rain : rainfall for time step
 - evap : evapotranspiration for time step
@@ -159,8 +159,8 @@ Run node with ET data to calculate outflow and update state.
 - ext : irrigation and other water extractions
 - gw_exchange : flux in ML where positive is contribution to stream, negative is infiltration
 - current_store : replacement cmd value
-- quick_store : replacement quick_store value
-- slow_store : replacement slow_store value
+- quick_store : replacement quick store value
+- slow_store : replacement slow store value
 
 # Returns
 - float, outflow from node, stream level

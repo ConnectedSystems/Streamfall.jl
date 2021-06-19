@@ -75,6 +75,11 @@ function DamNode(
 end
 
 
+"""
+    DamNode(node_id::String, spec::Dict)
+
+Create DamNode from a given specification.
+"""
 function DamNode(node_id::String, spec::Dict)
     n = DamNode{Param}(; node_id=node_id, area=spec["area"], route=false,
                        max_storage=spec["max_storage"])
@@ -136,24 +141,24 @@ end
 
 
 """
-Update dam volume for timestep
+    update_volume(volume, node_inflow, gamma, rain, evap, area, extractions, discharge, max_store)::Float64
 
-Parameters
-----------
-volume : float, current water volume in ML
-node_inflow : float, inflow from previous node in ML
-gamma : float, groundwater exchange (positive is gain from gw flow, negative is loss to infiltration)
-rain : float, rainfall input
-evap : float, evaporation loss
-infiltration : float, infiltration loss
-area : float, dam surface area in square kilometers
-extractions : float, water extraction from dam in ML
-discharge : float, discharge from dam in ML
-max_store : float, maximum dam storage in ML
+Update dam volume for timestep.
 
-Returns
--------
-float, volume of water stored in dam
+# Arguments
+- volume : current water volume in ML
+- node_inflow : inflow from previous node in ML
+- gamma : groundwater exchange (positive is gain from gw flow, negative is loss to infiltration)
+- rain : rainfall input
+- evap : evaporation loss
+- infiltration : infiltration loss
+- area : dam surface area in square kilometers
+- extractions : water extraction from dam in ML
+- discharge : discharge from dam in ML
+- max_store : maximum dam storage in ML
+
+# Returns
+volume of water stored in dam
 """
 function update_volume(volume, node_inflow, gamma, rain, evap, area, extractions, discharge, max_store)::Float64
     
@@ -166,22 +171,22 @@ end
 """
 Calculate outflow for the dam node for a single time step.
 
-Parameters
-----------
-node : DamNode
-rain : Float64, rainfall in mm
-et : Float64, evapotranspiration data in mm
-irrig_ext : Float64, irrigation extractions 
-extractions : Float64, extraction data in ML
-gw_flux : Float64, groundwater interaction
+# Parameters
+- node : DamNode
+- rain : rainfall in mm
+- et : evapotranspiration data in mm
+- irrig_ext : irrigation extractions 
+- extractions : extraction data in ML
+- gw_flux : groundwater interaction
 
-:returns: numeric, outflow from Dam
+# Returns
+- outflow from dam
 """
 function run_node!(node::DamNode, 
-                   rain::Float64, 
-                   et::Float64, 
-                   inflow::Float64, 
-                   extractions::Float64, 
+                   rain::Float64,
+                   et::Float64,
+                   inflow::Float64,
+                   extractions::Float64,
                    gw_flux::Float64=0.0)
 
     volume = storage(node)
@@ -213,7 +218,9 @@ end
 
 
 """
-Extract node parameter values and bounds
+    param_info(node::DamNode; kwargs...)::Tuple
+
+Extract node parameter values and bounds.
 """
 function param_info(node::DamNode; kwargs...)::Tuple
     tmp = Model(node)
@@ -225,6 +232,7 @@ end
 
 
 """
+    update_params!(node::DamNode, storage_coef::Float64)::Nothing
 """
 function update_params!(node::DamNode, storage_coef::Float64)::Nothing
     node.storage_coef = Param(storage_coef, bounds=node.storage_coef.bounds)
