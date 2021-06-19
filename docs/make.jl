@@ -14,6 +14,7 @@ makedocs(sitename="Streamfall Documentation",
     pages = [
         "index.md",
         "network.md",
+        "nodes.md",
         "use_methods.md",
         "Examples" => [
             "Calibration" => [
