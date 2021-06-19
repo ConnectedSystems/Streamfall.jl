@@ -139,23 +139,31 @@ end
 
 
 """
+    run_node!(s_node::BilinearNode,
+              rain::Float64,
+              evap::Float64,
+              inflow::Float64,
+              ext::Float64,
+              gw_exchange::Float64=0.0;
+              current_store::Union{Nothing, Float64}=nothing,
+              quick_store::Union{Nothing, Float64}=nothing,
+              slow_store::Union{Nothing, Float64}=nothing)::Tuple{Float64, Float64}
+
 Run node with ET data to calculate outflow and update state.
 
-Parameters
-----------
-s_node
-rain: float, rainfall
-evap: float, evapotranspiration
-inflow: float, inflow from previous node
-ext: float, irrigation and other water extractions
-gw_exchange: float, flux in ML - positive is contribution to stream, negative is infiltration
-current_store: replacement cmd value
-quick_store: replacement quick_store value
-slow_store: replacement slow_store value
+# Parameters
+- `s_node::BilinearNode` : IHACRESNode
+- rain : rainfall for time step
+- evap : evapotranspiration for time step
+- inflow : inflow from previous node
+- ext : irrigation and other water extractions
+- gw_exchange : flux in ML where positive is contribution to stream, negative is infiltration
+- current_store : replacement cmd value
+- quick_store : replacement quick_store value
+- slow_store : replacement slow_store value
 
-Returns
-----------
-float, outflow from node
+# Returns
+- float, outflow from node, stream level
 """
 function run_node!(s_node::BilinearNode,
                    rain::Float64,
@@ -261,6 +269,8 @@ end
 
 
 """
+    param_info(node::IHACRESNode; with_level::Bool = true)::Tuple
+
 Extract node parameter values and bounds
 """
 function param_info(node::IHACRESNode; with_level::Bool = true)::Tuple
@@ -281,23 +291,17 @@ end
 
 
 """
+    run_node_with_temp!(s_node::BilinearNode,
+                        rain::Float64,
+                        temp::Float64,
+                        inflow::Float64,
+                        ext::Float64,
+                        gw_exchange::Float64=0.0;
+                        current_store=nothing,
+                        quick_store=nothing,
+                        slow_store=nothing)::Tuple{Float64, Float64}
+
 Run node with temperature data to calculate outflow and update state.
-
-Parameters
-----------
-s_node
-rain: float, rainfall
-temp: float, temperature
-inflow: float, inflow from previous node
-ext: float, irrigation and other water extractions
-gw_exchange: float, flux in ML - positive is contribution to stream, negative is infiltration
-current_store: replacement cmd value
-quick_store: replacement quick_store value
-slow_store: replacement slow_store value
-
-Returns
-----------
-float, outflow from node
 """
 function run_node_with_temp!(s_node::BilinearNode,
                    rain::Float64,
@@ -404,6 +408,10 @@ end
 
 
 """
+    update_params!(node::BilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
+                   a::Float64, b::Float64, s_coef::Float64, alpha::Float64)::Nothing
+
+Update model parameters.
 """
 function update_params!(node::BilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64)::Nothing
@@ -421,7 +429,11 @@ end
 
 
 """
-Update all parameters
+    update_params!(node::BilinearNode{Param}, d::Float64, d2::Float64, e::Float64, f::Float64,
+                   a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
+                   p1::Float64, p2::Float64, p3::Float64, p4::Float64, p5::Float64, p6::Float64, p7::Float64, p8::Float64, CTF::Float64)::Nothing
+
+Update all parameters.
 """
 function update_params!(node::BilinearNode{Param}, d::Float64, d2::Float64, e::Float64, f::Float64,
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
@@ -451,10 +463,15 @@ function update_params!(node::BilinearNode{Param}, d::Float64, d2::Float64, e::F
     return nothing
 end
 
-
+# TODO
 # update_bounds!()
 
 
+"""
+    reset!(s_node::IHACRESNode)::Nothing
+
+Reset node. Clears all states back to their initial values.
+"""
 function reset!(s_node::IHACRESNode)::Nothing
     s_node.storage = [s_node.storage[1]]
     s_node.quick_store = [s_node.quick_store[1]]
