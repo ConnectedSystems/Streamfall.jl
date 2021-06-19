@@ -30,5 +30,8 @@ makedocs(sitename="Streamfall Documentation",
 
 deploydocs(
     repo = "github.com/ConnectedSystems/Streamfall.jl.git",
-    devbranch = "main"
+    devbranch = "main",
+    target="build",
+    deps=nothing,
+    make=nothing
 )
