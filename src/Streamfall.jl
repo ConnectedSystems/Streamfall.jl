@@ -56,7 +56,7 @@ function timestep_value(timestep::Int, gauge_id::String, col_partial::String,
     if !isnothing(dataset)
         if dataset isa Vector
             amount = dataset[ts]
-        elseif inflow isa DataFrame
+        elseif dataset isa DataFrame
             # Extract data for time step based on partial match
             target_col = filter(x -> occursin(gauge_id, x)
                                 & occursin(col_partial, x),
@@ -64,7 +64,7 @@ function timestep_value(timestep::Int, gauge_id::String, col_partial::String,
             if !isempty(target_col)
                 amount = checkbounds(Bool, dataset.Date, timestep) ? dataset[timestep, target_col][1] : 0.0
             end
-        elseif inflow isa Number
+        elseif dataset isa Number
             amount = dataset
         end
     end
