@@ -285,8 +285,8 @@ then recombined. The approach addresses the lack of consideration of dry years
 with least-squares.
 
 In Fowler et al., [1] the subperiod is one year. This method is "naive" in 
-that the time series is partitioned into `N` chunks of `n_members`.
-Therefore, leap years or partial years are not considered.
+that the time series is partitioned into `N` chunks of `n_members` and does
+not consider date/time.
 
 # Arguments
 - `obs::Vector` : Historic observations to compare against
