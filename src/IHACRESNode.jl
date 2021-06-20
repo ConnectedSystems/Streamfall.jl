@@ -111,23 +111,6 @@ function BilinearNode(node_id::String, area::Float64, d::Float64, d2::Float64, e
     n.gw_store = [gw_store]
 
     return n
-
-    # return BilinearNode{Float64}(
-    #     node_id=node_id,
-    #     area=area,
-    #     d=d,
-    #     d2=d2,
-    #     e=e,
-    #     f=f,
-    #     a=a,
-    #     b=b,
-    #     storage_coef=s_coef,
-    #     alpha=alpha,
-    #     storage=[store],
-    #     quick_store=[quick],
-    #     slow_store=[slow],
-    #     gw_store=[gw_store]
-    # )
 end
 
 
