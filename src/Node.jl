@@ -11,8 +11,20 @@ end
 
 
 """
-Retrieve network node_id for a given gauge (by name).
+    param_info(node::NetworkNode)
+
+Generic parameter information extractor.
 """
+function param_info(node::NetworkNode)
+    tmp = Model(node)
+    values = collect(tmp.val)
+    bounds = collect(tmp.bounds)
+    
+    return values, bounds
+end
+
+
+"""Retrieve network node_id for a given gauge (by name)."""
 function get_node_id(mg::MetaGraph, gauge_id::String)::Int64
     v = collect(MetaGraphs.filter_vertices(mg, :name, gauge_id))
     @assert length(v) == 1 || "Found more than 1 node with gauge $(gauge_id)"
@@ -21,11 +33,13 @@ end
 
 
 """
+    get_gauge(sn::StreamfallNetwork, gauge_id::String)
+
 Retrieve node_id and node property for a specified gauge.
 
 # Arguments
 - sn::StreamfallNetwork
-- gauge_id::String : name/id for node of interest
+- gauge_id::String : name of node of interest
 
 # Returns
 Tuple, node position id and node object
