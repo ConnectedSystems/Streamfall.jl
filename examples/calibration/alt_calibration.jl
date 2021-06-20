@@ -68,7 +68,7 @@ using Plots
 update_params!(node, best_params...)
 
 dam_id, dam_node = get_gauge(sn, "406000")
-run_node!(sn, dam_id, climate; water_order=hist_dam_releases)
+run_node!(sn, dam_id, climate; extraction=hist_dam_releases)
 
 h_data = hist_data["406000"]
 n_data = dam_node.level
@@ -86,4 +86,6 @@ plot(h_data,
 
 plot!(n_data, label="IHACRES")
 
+# RMSE calibrated best candidate: [124.069, 1.97, 0.823727, 1.95943, 8.1387, 0.0988389, 9.48091, 0.696038]
+# Split RMSE calibrated best candidate
 savefig("calibrated_Split_NmKGE.png")

@@ -48,16 +48,8 @@ end
 
 
 function BilinearNode(node_id::String, spec::Dict)
-    route = true
-    if haskey(spec, "route")
-        route = spec["route"]
-    end
-    # if isnothing(spec["inlets"]) || isempty(spec["inlets"])
-    #     route = false
-    # end
         
-    n = BilinearNode{Param}(; node_id=node_id, area=spec["area"], 
-                            route=route)
+    n = BilinearNode{Param}(; node_id=node_id, area=spec["area"])
 
     node_params = spec["parameters"]
     n_lparams = n.level_params
@@ -100,26 +92,42 @@ function BilinearNode(node_id::String, spec::Dict)
 end
 
 
-function BilinearNode(node_id::String, area::Float64, route::Bool, d::Float64, d2::Float64, e::Float64, f::Float64, 
+"""
+    BilinearNode(node_id::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
+                a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
+                store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
+
+Create a IHACRES node that adopts the bilinear CMD module.
+"""
+function BilinearNode(node_id::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
                     a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
                     store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
-    return BilinearNode{Float64}(
-        node_id=node_id,
-        area=area,
-        route=route,
-        d=d,
-        d2=d2,
-        e=e,
-        f=f,
-        a=a,
-        b=b,
-        storage_coef=s_coef,
-        alpha=alpha,
-        storage=[store],
-        quick_store=[quick],
-        slow_store=[slow],
-        gw_store=[gw_store]
-    )
+    n = BilinearNode{Param}(; node_id=node_id, area=area)
+    update_params!(n, d, d2, e, f, a, b, s_coef, alpha)
+
+    n.storage = [store]
+    n.quick_store = [quick]
+    n.slow_store = [slow]
+    n.gw_store = [gw_store]
+
+    return n
+
+    # return BilinearNode{Float64}(
+    #     node_id=node_id,
+    #     area=area,
+    #     d=d,
+    #     d2=d2,
+    #     e=e,
+    #     f=f,
+    #     a=a,
+    #     b=b,
+    #     storage_coef=s_coef,
+    #     alpha=alpha,
+    #     storage=[store],
+    #     quick_store=[quick],
+    #     slow_store=[slow],
+    #     gw_store=[gw_store]
+    # )
 end
 
 
@@ -237,23 +245,20 @@ function run_node!(s_node::BilinearNode,
     # else:
     #     outflow = calc_outflow(outflow, ext)
     # # End if
-    if s_node.route
-        gw_store = s_node.gw_store[end]
-        routing_res = [0.0, 0.0]
-        @ccall IHACRES.routing(
-            routing_res::Ptr{Cdouble},
-            gw_store::Cdouble,
-            s_node.storage_coef::Cdouble,
-            inflow::Cdouble,
-            outflow::Cdouble,
-            ext::Cdouble,
-            gw_exchange::Cdouble)::Cvoid
 
-        # @assert any(isnan.(routing_res)) == false
-        (gw_store, outflow) = routing_res
-    else
-        gw_store = 0.0
-    end
+    gw_store = s_node.gw_store[end]
+    routing_res = [0.0, 0.0]
+    @ccall IHACRES.routing(
+        routing_res::Ptr{Cdouble},
+        gw_store::Cdouble,
+        s_node.storage_coef::Cdouble,
+        inflow::Cdouble,
+        outflow::Cdouble,
+        ext::Cdouble,
+        gw_exchange::Cdouble)::Cvoid
+
+    # @assert any(isnan.(routing_res)) == false
+    (gw_store, outflow) = routing_res
 
     level_params = Array{Float64}(s_node.level_params)
     level::Float64 = @ccall IHACRES.calc_ft_level(
@@ -373,26 +378,19 @@ function run_node_with_temp!(s_node::BilinearNode,
     @assert any(isnan.(flow_results)) == false
     (nq_store, ns_store, outflow) = flow_results
 
-    # if self.next_node:  # and ('dam' not in self.next_node.node_type):
-    #     cmd, outflow = routing(cmd, s_node.storage_coef, inflow, outflow, ext, gamma=gw_exchange)
-    # else:
-    #     outflow = calc_outflow(outflow, ext)
-    # # End if
-    if s_node.route
-        gw_store = s_node.gw_store[end]
-        routing_res = [0.0, 0.0]
-        @ccall IHACRES.routing(
-            routing_res::Ptr{Cdouble},
-            gw_store::Cdouble,
-            s_node.storage_coef::Cdouble,
-            inflow::Cdouble,
-            outflow::Cdouble,
-            ext::Cdouble,
-            gw_exchange::Cdouble)::Cvoid
+    gw_store = s_node.gw_store[end]
+    routing_res = [0.0, 0.0]
+    @ccall IHACRES.routing(
+        routing_res::Ptr{Cdouble},
+        gw_store::Cdouble,
+        s_node.storage_coef::Cdouble,
+        inflow::Cdouble,
+        outflow::Cdouble,
+        ext::Cdouble,
+        gw_exchange::Cdouble)::Cvoid
 
-        @assert any(isnan.(routing_res)) == false
-        (gw_store, outflow) = routing_res
-    end
+    @assert any(isnan.(routing_res)) == false
+    (gw_store, outflow) = routing_res
 
     level_params = Array{Float64}(s_node.level_params)
     level::Float64 = @ccall IHACRES.calc_ft_level(

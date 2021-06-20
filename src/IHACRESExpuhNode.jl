@@ -41,13 +41,7 @@ end
 
 
 function ExpuhNode(node_id::String, spec::Dict)
-    route = true
-    if isnothing(spec["inlets"]) || isempty(spec["inlets"])
-        route = false
-    end
-        
-    n = ExpuhNode{Param}(; node_id=node_id, area=spec["area"], 
-                           route=route)
+    n = ExpuhNode{Param}(; node_id=node_id, area=spec["area"])
 
     node_params = spec["parameters"]
     n_lparams = n.level_params
@@ -90,13 +84,12 @@ function ExpuhNode(node_id::String, spec::Dict)
 end
 
 
-function ExpuhNode(node_id::String, area::Float64, route::Bool, d::Float64, d2::Float64, e::Float64, f::Float64, 
+function ExpuhNode(node_id::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
                     tau_q::Float64, tau_s::Float64, v_s::Float64, s_coef::Float64,
                     store::Float64, quick::Float64, slow::Float64)
     return ExpuhNode{Float64}(
         node_id=node_id,
         area=area,
-        route=route,
         d=d,
         d2=d2,
         e=e,
@@ -150,19 +143,17 @@ function run_node!(s_node::ExpuhNode,
                               s_node.area::Cdouble, s_node.tau_q::Cdouble, s_node.tau_s::Cdouble)::Cvoid
     (quick_store, slow_store, outflow) = flow_res
 
-    if s_node.route
-        gw_store = s_node.gw_store[end]
-        routing_res = [0.0, 0.0]
-        @ccall IHACRES.routing(
-                routing_res::Ptr{Cdouble},
-                gw_store::Cdouble,
-                s_node.storage_coef::Cdouble,
-                inflow::Cdouble,
-                outflow::Cdouble,
-                ext::Cdouble,
-                gw_exchange::Cdouble)::Cvoid
-        (gw_store, outflow) = routing_res
-    end
+    gw_store = s_node.gw_store[end]
+    routing_res = [0.0, 0.0]
+    @ccall IHACRES.routing(
+            routing_res::Ptr{Cdouble},
+            gw_store::Cdouble,
+            s_node.storage_coef::Cdouble,
+            inflow::Cdouble,
+            outflow::Cdouble,
+            ext::Cdouble,
+            gw_exchange::Cdouble)::Cvoid
+    (gw_store, outflow) = routing_res
 
     level::Float64 = @ccall IHACRES.calc_ft_level(outflow::Cdouble, s_node.level_params::Ptr{Cdouble})::Cdouble
 
@@ -198,19 +189,17 @@ function run_node_with_temp!(s_node::ExpuhNode, rain::Float64, temp::Float64, in
                               s_node.area::Cdouble, s_node.tau_q::Cdouble, s_node.tau_s::Cdouble)::Cvoid
     (quick_store, slow_store, outflow) = flow_res
 
-    if s_node.route
-        gw_store = s_node.gw_store[end]
-        routing_res = [0.0, 0.0]
-        @ccall IHACRES.routing(
-                routing_res::Ptr{Cdouble},
-                gw_store::Cdouble,
-                s_node.storage_coef::Cdouble,
-                inflow::Cdouble,
-                outflow::Cdouble,
-                ext::Cdouble,
-                gw_exchange::Cdouble)::Cvoid
-        (gw_store, outflow) = routing_res
-    end
+    gw_store = s_node.gw_store[end]
+    routing_res = [0.0, 0.0]
+    @ccall IHACRES.routing(
+            routing_res::Ptr{Cdouble},
+            gw_store::Cdouble,
+            s_node.storage_coef::Cdouble,
+            inflow::Cdouble,
+            outflow::Cdouble,
+            ext::Cdouble,
+            gw_exchange::Cdouble)::Cvoid
+    (gw_store, outflow) = routing_res
 
     level::Float64 = @ccall IHACRES.calc_ft_level(outflow::Cdouble, s_node.level_params::Ptr{Cdouble})::Cdouble
 

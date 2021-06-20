@@ -88,12 +88,10 @@ end
 
 
 """
-    create_node(sn::StreamfallNetwork, node_name::String, details::Dict, nid::Int)
     create_node(mg::MetaGraph, node_name::String, details::Dict, nid::Int)
 
-Create a node specified by with given name (if it does not exist).
+Create a node specified with given name (if it does not exist).
 """
-create_node(sn::StreamfallNetwork, node_name::String, details::Dict, nid::Int) = create_node(mg, node_name, details, nid)
 function create_node(mg::MetaGraph, node_name::String, details::Dict, nid::Int)
     details = copy(details)
 

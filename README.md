@@ -47,8 +47,6 @@ Each node defines a subcatchment and holds the relevant parameter values for the
 
 ## Running a network
 
-
-
 ```julia
 using YAML, DataFrames, CSV
 using Streamfall
@@ -94,7 +92,7 @@ reset!(node)
 inflow = ...      # array of inflows for each time step
 extractions = ... # extractions from stream for each time step
 gw_flux = ...     # forced groundwater interactions for each time step
-run_node!(node, climate; inflow=inflow, water_order=extractions, exchange=gw_flux)
+run_node!(node, climate; inflow=inflow, extraction=extractions, exchange=gw_flux)
 ```
 
 Another approach is to identify the outlets for a given network...
@@ -116,4 +114,9 @@ for ts in (1:timesteps)
 end
 ```
 
-Preliminary usage examples are provided in the [examples](https://github.com/ConnectedSystems/Streamfall.jl/tree/main/examples) directory.
+See the [docs](https://connectedsystems.github.io/Streamfall.jl/dev) for an overview and example applications.
+
+
+Further preliminary usage examples are provided in the [examples](https://github.com/ConnectedSystems/Streamfall.jl/tree/main/examples) directory.
+
+

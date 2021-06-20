@@ -50,15 +50,22 @@ include("DamNode.jl")
 include("Climate.jl")
 
 
-function timestep_value(timestep::Int, gauge_id::String, col_partial::String, 
-                        dataset::Union{DataFrame, Nothing}=nothing)::Float64
+function timestep_value(timestep::Int, gauge_id::String, col_partial::String,
+                        dataset::Union{DataFrame, Vector, Number, Nothing}=nothing)::Float64
     amount::Float64 = 0.0
     if !isnothing(dataset)
-        target_col = filter(x -> occursin(gauge_id, x)
+        if dataset isa Vector
+            amount = dataset[ts]
+        elseif inflow isa DataFrame
+            # Extract data for time step based on partial match
+            target_col = filter(x -> occursin(gauge_id, x)
                                 & occursin(col_partial, x),
                                 names(dataset))
-        if !isempty(target_col)
-            amount = checkbounds(Bool, dataset.Date, timestep) ? dataset[timestep, target_col][1] : 0.0
+            if !isempty(target_col)
+                amount = checkbounds(Bool, dataset.Date, timestep) ? dataset[timestep, target_col][1] : 0.0
+            end
+        elseif inflow isa Number
+            amount = dataset
         end
     end
 
@@ -105,8 +112,8 @@ end
 
 
 """
-    run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int; 
-              water_order::Union{DataFrame, Nothing}=nothing,
+    run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int;
+              extraction::Union{DataFrame, Nothing}=nothing,
               exchange::Union{DataFrame, Nothing}=nothing)
 
 Run a model attached to a node for a given time step.
@@ -117,18 +124,20 @@ Recurses upstream as needed.
 - `node_id::Int`
 - `climate::Climate`
 - `timestep::Int`
-- `water_order::DataFrame` : Volume of water to be extracted (in ML/timestep)
+- `extraction::DataFrame` : Volume of water to be extracted (in ML/timestep)
 - `exchange::DataFrame` : Volume of flux (in ML/timestep), where negative values are losses to the groundwater system
 """
-function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int; 
-                   water_order::Union{DataFrame, Nothing}=nothing,
+function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int;
+                   extraction::Union{DataFrame, Nothing}=nothing,
                    exchange::Union{DataFrame, Nothing}=nothing)
     mg, g = sn.mg, sn.g
 
     curr_node = MetaGraphs.get_prop(mg, node_id, :node)
     if checkbounds(Bool, curr_node.outflow, timestep)
-        # already ran for this time step so no need to recurse further
-        return curr_node.outflow[timestep], curr_node.level[timestep]
+        if curr_node.outflow[timestep] != undef
+            # already ran for this time step so no need to recurse further
+            return curr_node.outflow[timestep], curr_node.level[timestep]
+        end
     end
 
     outflow = 0.0
@@ -141,7 +150,7 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
         inflow = 0.0
         for i in ins
             # Get inflow from previous node
-            upstream_flow, _ = run_node!(sn, i, climate, timestep; water_order=water_order, exchange=exchange)
+            upstream_flow, _ = run_node!(sn, i, climate, timestep; extraction=extraction, exchange=exchange)
             inflow += upstream_flow
         end
     end
@@ -153,43 +162,36 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
         return 0.0
     end
 
-    wo = timestep_value(timestep, gauge_id, "releases", water_order)
+    wo = timestep_value(timestep, gauge_id, "releases", extraction)
     ex = timestep_value(timestep, gauge_id, "exchange", exchange)
 
     # Calculate outflow for this node
     func = MetaGraphs.get_prop(mg, node_id, :nfunc)
     outflow, level = func(curr_node, rain, et, inflow, wo, ex)
-    # if curr_node isa IHACRESNode
-    #     outflow, level = func(curr_node, rain, et, inflow, wo, ex)
-    # elseif curr_node isa ExpuhNode
-    #     outflow, level = func(curr_node, rain, et, inflow, wo, ex)
-    # elseif curr_node isa DamNode
-    #     outflow, level = func(curr_node, rain, et, inflow, wo, ex)
-    # else
-    #     throw(ArgumentError("Unknown node type!"))
-    # end
 
     return outflow, level
 end
 
 
 """
-    run_catchment!(sn::StreamfallNetwork, climate::Climate; water_order=nothing, exchange=nothing)
+    run_basin!(sn::StreamfallNetwork, climate::Climate; extraction=nothing, exchange=nothing)
 
-Run scenario for an entire catchment.
+Run scenario for an entire catchment/basin.
 """
-function run_catchment!(sn::StreamfallNetwork, climate::Climate; 
-                        water_order=nothing, exchange=nothing)
+function run_basin!(sn::StreamfallNetwork, climate::Climate;
+                    extraction=nothing, exchange=nothing)
     _, outlets = find_inlets_and_outlets(sn)
     for outlet in outlets
-        run_node!(sn, outlet, climate; water_order=water_order, exchange=exchange)
+        run_node!(sn, outlet, climate; extraction=extraction, exchange=exchange)
     end
 end
 
+run_catchment! = run_basin!
+
 
 """
-    run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate; 
-              water_order=nothing, exchange=nothing)::Nothing
+    run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate;
+              extraction=nothing, exchange=nothing)::Nothing
 
 Run model for all time steps, recursing upstream as needed.
 
@@ -197,69 +199,80 @@ Run model for all time steps, recursing upstream as needed.
 - `sn::StreamfallNetwork`
 - `node_id::Int` : node to run in the network
 - `climate::Climate` : Climate object holding rainfall and evaporation data (or temperature)
-- `water_order::Vector` : water orders for each time step (defaults to nothing)
-- `exchange::Vector` : exchange with groundwater system at each time step (defaults to nothing)
+- `extraction::DataFrame` : water orders for each time step (defaults to nothing)
+- `exchange::DataFrame` : exchange with groundwater system at each time step (defaults to nothing)
 """
-function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate; water_order=nothing, exchange=nothing)::Nothing
+function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate; extraction=nothing, exchange=nothing)::Nothing
     timesteps = sim_length(climate)
     for ts in (1:timesteps)
-        run_node!(sn, node_id, climate, ts; water_order=water_order, exchange=exchange)
+        run_node!(sn, node_id, climate, ts; extraction=extraction, exchange=exchange)
     end
 end
 
 
 """
-    run_node!(node::NetworkNode, climate; 
-              inflow=nothing, water_order=nothing, exchange=nothing)
+    run_node!(node::NetworkNode, climate;
+              inflow=nothing, extraction=nothing, exchange=nothing)
 
 Run a specific node, and only that node, for all time steps.
 
 # Arguments
 - `node::NetworkNode` :
 - `climate::Climate` :
-- `inflow::Vector` : Time series of inflows from any upstream node.
-- `water_order::Vector` : Time series of water extractions from this subcatchment
+- `inflow::Vector` : Time series of inflows.
+- `extraction::Vector` : Time series of water extractions from this subcatchment
 - `exchange::Vector` : Time series of groundwater flux
 """
-function run_node!(node::NetworkNode, climate; inflow=nothing, water_order=nothing, exchange=nothing)
+function run_node!(node::NetworkNode, climate; inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
+    gauge_id = node.node_id
 
     for ts in (1:timesteps)
-        if checkbounds(Bool, curr_node.outflow, ts)
-            # already ran for this time step so no need to recurse further
-            return curr_node.outflow[ts], curr_node.level[ts]
-        end
-
-        gauge_id = node.node_id
-        rain, et = climate_values(node, climate, ts)
-        if ismissing(rain) | ismissing(et)
-            @warn "No climate data found for node $(node_id) ($(gauge_id)) using column markers $(climate.rainfall_id) and $(climate.et_id)"
-            return 0.0
-        end
-
-        wo = 0.0
-        ex = 0.0
-        if !isnothing(water_order)
-            wo = water_order[ts]
-        end
-
-        if !isnothing(exchange)
-            ex = exchange[ts]
-        end
-
-        if !isnothing(inflow)
-            if inflow isa Vector
-                in_flow = inflow[ts]
-            elseif inflow isa Number
-                in_flow = inflow
-            end
-        end
-
-        run_node!(node, rain, et, in_flow, wo, ex)
+        run_node!(node, climate, ts; inflow=inflow, extraction=extraction, exchange=exchange)
     end
 
     return node.outflow, node.level
 end
+
+
+"""
+    run_node!(node::NetworkNode, climate::Climate, ts::Int; 
+              inflow=nothing, extraction=nothing, exchange=nothing)
+
+Run a specific node for a specified time step.
+
+# Arguments
+- `node::NetworkNode` :
+- `climate::Climate` :
+- `inflow::DataFrame` : Time series of inflows from any upstream node.
+- `extraction::DataFrame` : Time series of water extractions from this subcatchment
+- `exchange::DataFrame` : Time series of groundwater flux
+"""
+function run_node!(node::NetworkNode, climate::Climate, ts::Int; inflow=nothing, extraction=nothing, exchange=nothing)
+
+    gauge_id = node.node_id
+    if checkbounds(Bool, node.outflow, ts)
+        if curr_node.outflow[ts] != undef
+            # already ran for this time step so no need to recurse further
+            return curr_node.outflow[ts], curr_node.level[ts]
+        end
+    end
+
+    rain, et = climate_values(node, climate, ts)
+    if ismissing(rain) | ismissing(et)
+        @warn "No climate data found for node $(node_id) ($(gauge_id)) using column markers $(climate.rainfall_id) and $(climate.et_id)"
+        return 0.0
+    end
+
+    wo = timestep_value(ts, gauge_id, "extraction", extraction)
+    ex = timestep_value(ts, gauge_id, "exchange", exchange)
+    in_flow = timestep_value(ts, gauge_id, "inflow", inflow)
+
+    run_node!(node, rain, et, in_flow, wo, ex)
+
+    return node.outflow[ts], node.level[ts]
+end
+
 
 
 include("metrics.jl")

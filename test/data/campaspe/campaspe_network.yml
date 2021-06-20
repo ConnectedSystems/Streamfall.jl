@@ -32,7 +32,6 @@
     inlets:
     outlets: 406000
     area: 1985.73
-    route: true
     parameters:
         # NNSE: 0.96555; RMSE: 1.43553
         d: 84.28015146853407

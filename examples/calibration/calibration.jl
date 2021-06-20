@@ -60,7 +60,7 @@ using Plots
 
 update_params!(node, best_params...)
 dam_id, dam_node = get_gauge(sn, "406000")
-Streamfall.run_node!(sn, dam_id, climate; water_order=hist_dam_releases)
+Streamfall.run_node!(sn, dam_id, climate; extraction=hist_dam_releases)
 
 h_data = hist_data["406000"]
 n_data = dam_node.level

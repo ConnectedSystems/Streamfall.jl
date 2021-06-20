@@ -46,7 +46,7 @@ function obj_func(params, climate, sn, v_id, calib_data::Dict)
     update_params!(this_node, params...)
 
     releases = calib_data["$(this_node.node_id)_releases"]
-    Streamfall.run_node!(sn, v_id, climate; water_order=releases)
+    Streamfall.run_node!(sn, v_id, climate; extraction=releases)
 
     n_data = this_node.outflow
     h_data = calib_data[this_node.node_id]
@@ -80,7 +80,7 @@ function obj_func(params, climate, sn, v_id, next_vid, calib_data::Dict)
     # Run next node which will run this node
     next_node = get_node(sn, next_vid)
     releases = calib_data["$(next_node.node_id)_releases"]
-    Streamfall.run_node!(sn, next_vid, climate; water_order=releases)
+    Streamfall.run_node!(sn, next_vid, climate; extraction=releases)
 
     # Alias data as necessary
     if next_node.node_id == "406000"
@@ -111,7 +111,7 @@ function alt_obj_func(params, climate, sn, v_id, next_vid, calib_data::Dict)
 
     # Run next node (which will also run this node)
     releases = calib_data["$(next_node.node_id)_releases"]
-    Streamfall.run_node!(sn, next_vid, climate; water_order=releases)
+    Streamfall.run_node!(sn, next_vid, climate; extraction=releases)
 
     # Alias data as necessary
     if next_node.node_id == "406000"

@@ -32,7 +32,7 @@ climate = Climate(climate_data, "_rain", "_evap")
 reset!(sn)
 
 dam_id, dam_node = get_gauge(sn, "406000")
-Streamfall.run_node!(sn, dam_id, climate; water_order=hist_dam_releases)
+Streamfall.run_node!(sn, dam_id, climate; extraction=hist_dam_releases)
 
 h_data = hist_dam_levels[:, "Dam Level [mAHD]"]
 n_data = dam_node.level
