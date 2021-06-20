@@ -20,7 +20,7 @@ reset!(sn) # clear any previous runs
 
 # Run the dam node and above
 dam_id, dam_node = get_gauge(sn, "406000")
-run_node!(sn, dam_id, climate; water_order=hist_dam_releases)
+run_node!(sn, dam_id, climate; extraction=hist_dam_releases)
 
 # Get performance metrics
 h_data = hist_dam_levels[:, "Dam Level [mAHD]"]

@@ -1,6 +1,6 @@
 # Streamfall.jl Documentation
 
-Streamfall: An experimental graph-based streamflow modelling system written in Julialang.
+Streamfall: An experimental graph-based streamflow modelling system written in [Julialang](http://julialang.org/).
 
 Aims of the project are to leverage the Julia language and ecosystem to allow/enable:
 - Quick application and exploratory analysis

@@ -73,7 +73,7 @@ reset!(node)
 dam_id, dam_node = get_gauge(sn, "406000")
 timesteps = sim_length(climate)
 for ts in (1:timesteps)
-    run_node!(sn, dam_id, climate, ts; water_order=hist_dam_releases)
+    run_node!(sn, dam_id, climate, ts; extraction=hist_dam_releases)
 end
 
 h_data = hist_dam_levels[:, "Dam Level [mAHD]"]

@@ -3,11 +3,12 @@ using Test
 using Streamfall
 
 
+TEST_DIR = @__DIR__
+
 @testset "Bare node creation" begin
     test_node = BilinearNode{Float64}(;
         node_id="Test",
-        area=100.0,
-        route=false
+        area=100.0
     )
 
     @info "Outflow:" run_node!(test_node, 6.0, 3.0, 50.0, 10.0)
@@ -18,7 +19,6 @@ end
     test_node = BilinearNode(
         "Test",  # name/id
         1985.73,  # area
-        false,    # route
         200.0,  # d
         2.0,  # d2
         1.0,  # e
@@ -54,7 +54,7 @@ end
 @testset "Network creation" begin
     # Ensure specified parameter values are being assigned on node creation
     # Load and generate stream network
-    network = YAML.load_file("data/campaspe/campaspe_network.yml")
+    network = YAML.load_file(joinpath(TEST_DIR, "data/campaspe/campaspe_network.yml"))
     sn = create_network("Example Network", network)
 
     target_node = get_prop(sn, 1, :node)

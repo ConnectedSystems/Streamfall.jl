@@ -13,6 +13,7 @@ makedocs(sitename="Streamfall Documentation",
     ),
     pages = [
         "index.md",
+        "primer.md",
         "network.md",
         "nodes.md",
         "use_methods.md",
