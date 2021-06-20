@@ -46,6 +46,7 @@ include("Network.jl")
 include("Node.jl")
 include("IHACRESNode.jl")
 include("IHACRESExpuhNode.jl")
+include("HyModNode.jl")
 include("DamNode.jl")
 include("Climate.jl")
 
@@ -270,6 +271,7 @@ include("metrics.jl")
 
 export @def
 export IHACRES, IHACRESNode, BilinearNode, ExpuhNode, DamNode, Climate
+export HyModNode, SimpleHyModNode
 export find_inlets_and_outlets, inlets, outlets, create_network, create_node
 export param_info, update_params!, run_node!, reset!, sim_length, run_catchment!
 export run_node_with_temp!
