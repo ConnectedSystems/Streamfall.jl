@@ -42,7 +42,7 @@ function climate_values(node::NetworkNode, climate::Climate,
                       names(data))[1]
 
     if isempty(rain_col) | isempty(et_col)
-        return (missing, missing)
+        throw(ArgumentError("No climate data found for $(node.node_id) at time step: $(timestep)"))
     end
 
     if isnothing(timestep)

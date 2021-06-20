@@ -157,11 +157,6 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
 
     gauge_id = curr_node.node_id
     rain, et = climate_values(curr_node, climate, timestep)
-    if ismissing(rain) | ismissing(et)
-        @warn "No climate data found for node $(node_id) ($(gauge_id)) using column markers $(climate.rainfall_id) and $(climate.et_id)"
-        return 0.0
-    end
-
     wo = timestep_value(timestep, gauge_id, "releases", extraction)
     ex = timestep_value(timestep, gauge_id, "exchange", exchange)
 
@@ -259,11 +254,6 @@ function run_node!(node::NetworkNode, climate::Climate, ts::Int; inflow=nothing,
     end
 
     rain, et = climate_values(node, climate, ts)
-    if ismissing(rain) | ismissing(et)
-        @warn "No climate data found for node $(node_id) ($(gauge_id)) using column markers $(climate.rainfall_id) and $(climate.et_id)"
-        return 0.0
-    end
-
     wo = timestep_value(ts, gauge_id, "extraction", extraction)
     ex = timestep_value(ts, gauge_id, "exchange", exchange)
     in_flow = timestep_value(ts, gauge_id, "inflow", inflow)
