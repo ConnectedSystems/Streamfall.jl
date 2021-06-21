@@ -138,7 +138,8 @@ end
               gw_exchange::Float64=0.0;
               current_store::Union{Nothing, Float64}=nothing,
               quick_store::Union{Nothing, Float64}=nothing,
-              slow_store::Union{Nothing, Float64}=nothing)::Tuple{Float64, Float64}
+              slow_store::Union{Nothing, Float64}=nothing,
+              gw_store::Union{Nothing, Float64}=nothing)::Tuple{Float64, Float64}
 
 Run node with ET data to calculate outflow and update state.
 
@@ -149,9 +150,10 @@ Run node with ET data to calculate outflow and update state.
 - inflow : inflow from previous node
 - ext : irrigation and other water extractions
 - gw_exchange : flux in ML where positive is contribution to stream, negative is infiltration
-- current_store : replacement cmd value
-- quick_store : replacement quick store value
-- slow_store : replacement slow store value
+- current_store : replacement cmd state value (uses last known state if not provided)
+- quick_store : replacement quick store state value
+- slow_store : replacement slow store state value
+- gw_store : replacement groundwater store state value
 
 # Returns
 - float, outflow from node, stream level
@@ -161,10 +163,12 @@ function run_node!(s_node::BilinearNode,
                    evap::Float64,
                    inflow::Float64,
                    ext::Float64,
-                   gw_exchange::Float64=0.0;
+                   gw_exchange::Float64;
                    current_store::Union{Nothing, Float64}=nothing,
                    quick_store::Union{Nothing, Float64}=nothing,
-                   slow_store::Union{Nothing, Float64}=nothing)::Tuple{Float64, Float64}
+                   slow_store::Union{Nothing, Float64}=nothing,
+                   gw_store::Union{Nothing, Float64}=nothing)::Tuple{Float64, Float64}
+
     if !isnothing(current_store)
         s_node.storage[end] = current_store
     end
@@ -177,9 +181,14 @@ function run_node!(s_node::BilinearNode,
         s_node.slow_store[end] = slow_store
     end
 
+    if !isnothing(gw_store)
+        s_node.gw_store[end] = gw_store
+    end
+
     current_store = s_node.storage[end]
     quick_store = s_node.quick_store[end]
     slow_store = s_node.slow_store[end]
+    gw_store = s_node.gw_store[end]
 
     interim_results = [0.0, 0.0, 0.0]
     @ccall IHACRES.calc_ft_interim_cmd(interim_results::Ptr{Cdouble},
@@ -220,16 +229,8 @@ function run_node!(s_node::BilinearNode,
         s_node.b::Cdouble
     )::Cvoid
 
-    # @assert any(isnan.(flow_results)) == false
     (nq_store, ns_store, outflow) = flow_results
 
-    # if self.next_node:  # and ('dam' not in self.next_node.node_type):
-    #     cmd, outflow = routing(cmd, s_node.storage_coef, inflow, outflow, ext, gamma=gw_exchange)
-    # else:
-    #     outflow = calc_outflow(outflow, ext)
-    # # End if
-
-    gw_store = s_node.gw_store[end]
     routing_res = [0.0, 0.0]
     @ccall IHACRES.routing(
         routing_res::Ptr{Cdouble},
@@ -240,7 +241,6 @@ function run_node!(s_node::BilinearNode,
         ext::Cdouble,
         gw_exchange::Cdouble)::Cvoid
 
-    # @assert any(isnan.(routing_res)) == false
     (gw_store, outflow) = routing_res
 
     level_params = Array{Float64}(s_node.level_params)
@@ -255,6 +255,40 @@ function run_node!(s_node::BilinearNode,
     return outflow, level
 end
 
+
+"""
+    run_node!(s_node::BilinearNode,
+              rain::Float64,
+              evap::Float64,
+              inflow::Float64,
+              ext::Float64,
+              gw_exchange::Float64,
+              timestep::Union{Int, Nothing})::Tuple{Float64, Float64}
+
+Run node for a given time step.
+"""
+function run_node!(s_node::BilinearNode,
+                   rain::Float64,
+                   evap::Float64,
+                   inflow::Float64,
+                   ext::Float64,
+                   gw_exchange::Float64,
+                   timestep::Union{Int, Nothing})::Tuple{Float64, Float64}
+    if !isnothing(timestep)
+        current_store = s_node.storage[timestep]
+        quick_store = s_node.quick_store[timestep]
+        slow_store = s_node.slow_store[timestep]
+        gw_store = s_node.gw_store[timestep]
+    else
+        current_store = nothing
+        quick_store = nothing
+        slow_store = nothing
+        gw_store = nothing
+    end
+
+    return run_node!(s_node, rain, evap, inflow, ext, gw_exchange; 
+                     current_store, quick_store, slow_store, gw_store)
+end
 
 """
     param_info(node::IHACRESNode; with_level::Bool = true)::Tuple
@@ -287,7 +321,8 @@ end
                         gw_exchange::Float64=0.0;
                         current_store=nothing,
                         quick_store=nothing,
-                        slow_store=nothing)::Tuple{Float64, Float64}
+                        slow_store=nothing
+                        gw_store=nothing)::Tuple{Float64, Float64}
 
 Run node with temperature data to calculate outflow and update state.
 """
@@ -299,25 +334,28 @@ function run_node_with_temp!(s_node::BilinearNode,
                    gw_exchange::Float64=0.0;
                    current_store=nothing,
                    quick_store=nothing,
-                   slow_store=nothing)::Tuple{Float64, Float64}
+                   slow_store=nothing,
+                   gw_store=nothing)::Tuple{Float64, Float64}
     if !isnothing(current_store)
         s_node.storage[end] = current_store
-        # current_store = s_node.storage[end]
     end
 
     if !isnothing(quick_store)
         s_node.quick_store[end] = quick_store
-        # quick_store = s_node.quick_store[end]
     end
 
     if !isnothing(slow_store)
         s_node.slow_store[end] = slow_store
-        # slow_store = s_node.slow_store[end]
+    end
+
+    if !isnothing(gw_store)
+        s_node.gw_store[end] = gw_store
     end
 
     current_store = s_node.storage[end]
     quick_store = s_node.quick_store[end]
     slow_store = s_node.slow_store[end]
+    gw_store = s_node.gw_store[end]
 
     interim_results = [0.0, 0.0, 0.0]
     @ccall IHACRES.calc_ft_interim_cmd(interim_results::Ptr{Cdouble},
@@ -361,7 +399,6 @@ function run_node_with_temp!(s_node::BilinearNode,
     @assert any(isnan.(flow_results)) == false
     (nq_store, ns_store, outflow) = flow_results
 
-    gw_store = s_node.gw_store[end]
     routing_res = [0.0, 0.0]
     @ccall IHACRES.routing(
         routing_res::Ptr{Cdouble},

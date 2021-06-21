@@ -21,16 +21,16 @@ end
 
 
 """Determine a node's connection"""
-function in_or_out(G, v)
-    ins = length(inneighbors(G, v))
-    outs = length(outneighbors(G, v))
+function in_or_out(g, v)
+    ins = length(inneighbors(g, v))
+    outs = length(outneighbors(g, v))
 
     inlet = false
     outlet = false
-    if ins == 0
-        inlet = true
-    elseif outs == 0
+    if outs == 0
         outlet = true
+    elseif ins == 0
+        inlet = true
     end
 
     return v, inlet, outlet

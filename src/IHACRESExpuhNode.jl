@@ -104,7 +104,16 @@ function ExpuhNode(node_id::String, area::Float64, d::Float64, d2::Float64, e::F
     )
 end
 
+"""
+    run_node!(s_node::ExpuhNode, rain::Float64, evap::Float64, 
+              inflow::Float64, ext::Float64, gw_exchange::Float64=0.0;
+              current_store=nothing,
+              quick_store=nothing,
+              slow_store=nothing,
+            )::Tuple
 
+Run given IHACRES ExpuhNode for a time step based on last known state.
+"""
 function run_node!(s_node::ExpuhNode, 
             rain::Float64, 
             evap::Float64, 

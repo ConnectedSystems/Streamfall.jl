@@ -44,11 +44,12 @@ end
 
 include("Network.jl")
 include("Node.jl")
+include("Climate.jl")
 include("IHACRESNode.jl")
 include("IHACRESExpuhNode.jl")
 include("HyModNode.jl")
 include("DamNode.jl")
-include("Climate.jl")
+
 
 
 function timestep_value(timestep::Int, gauge_id::String, col_partial::String,
@@ -132,40 +133,39 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
                    extraction::Union{DataFrame, Nothing}=nothing,
                    exchange::Union{DataFrame, Nothing}=nothing)
     mg, g = sn.mg, sn.g
+    ts = timestep
 
-    curr_node = MetaGraphs.get_prop(mg, node_id, :node)
-    if checkbounds(Bool, curr_node.outflow, timestep)
-        if curr_node.outflow[timestep] != undef
+    node = MetaGraphs.get_prop(mg, node_id, :node)
+    if checkbounds(Bool, node.outflow, ts)
+        if node.outflow[ts] != undef
             # already ran for this time step so no need to recurse further
-            return curr_node.outflow[timestep], curr_node.level[timestep]
+            return node.outflow[ts], node.level[ts]
         end
     end
-
-    outflow = 0.0
+    
     inflow = 0.0
-
     ins = inneighbors(g, node_id)
-    if isempty(ins)
-        inflow = 0.0
-    else
+    if !isempty(ins)
         inflow = 0.0
         for i in ins
             # Get inflow from previous node
-            upstream_flow, _ = run_node!(sn, i, climate, timestep; extraction=extraction, exchange=exchange)
-            inflow += upstream_flow
+            res = run_node!(sn, i, climate, ts;
+                            extraction=extraction, exchange=exchange)
+            if res isa Number
+                inflow += res
+            elseif length(res) > 1
+                inflow += res[1]
+            end
         end
     end
 
-    gauge_id = curr_node.node_id
-    rain, et = climate_values(curr_node, climate, timestep)
-    wo = timestep_value(timestep, gauge_id, "releases", extraction)
-    ex = timestep_value(timestep, gauge_id, "exchange", exchange)
+    gauge_id = node.node_id
+    rain, et = climate_values(node, climate, ts)
+    ext = timestep_value(ts, gauge_id, "extraction", extraction)
+    flux = timestep_value(ts, gauge_id, "exchange", exchange)
 
-    # Calculate outflow for this node
-    func = MetaGraphs.get_prop(mg, node_id, :nfunc)
-    outflow, level = func(curr_node, rain, et, inflow, wo, ex)
-
-    return outflow, level
+    # Get previous state relative to given time step.
+    return run_node!(node, rain, et, inflow, ext, flux, ts)
 end
 
 
@@ -213,57 +213,26 @@ end
 Run a specific node, and only that node, for all time steps.
 
 # Arguments
-- `node::NetworkNode` :
-- `climate::Climate` :
-- `inflow::Vector` : Time series of inflows.
-- `extraction::Vector` : Time series of water extractions from this subcatchment
-- `exchange::Vector` : Time series of groundwater flux
+- `node::NetworkNode` : Any Streamfall NetworkNode
+- `climate::Climate` : Climate data
+- `inflow::Union{DataFrame, Vector, Number}` : Inflow to node
+- `extraction::Union{DataFrame, Vector, Number}` : Extractions from this subcatchment
+- `exchange::Union{DataFrame, Vector, Number}` : Groundwater flux
 """
 function run_node!(node::NetworkNode, climate; inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
     gauge_id = node.node_id
-
     for ts in (1:timesteps)
-        run_node!(node, climate, ts; inflow=inflow, extraction=extraction, exchange=exchange)
+        rain, et = climate_values(node, climate, ts)
+        ext = timestep_value(ts, gauge_id, "extraction", extraction)
+        flux = timestep_value(ts, gauge_id, "exchange", exchange)
+        in_flow = timestep_value(ts, gauge_id, "inflow", inflow)
+        # run_node!(node, climate, ts; inflow=inflow, extraction=extraction, exchange=exchange)
+        run_node!(node, rain, et, in_flow, ext, flux, ts)
     end
 
     return node.outflow, node.level
 end
-
-
-"""
-    run_node!(node::NetworkNode, climate::Climate, ts::Int; 
-              inflow=nothing, extraction=nothing, exchange=nothing)
-
-Run a specific node for a specified time step.
-
-# Arguments
-- `node::NetworkNode` :
-- `climate::Climate` :
-- `inflow::DataFrame` : Time series of inflows from any upstream node.
-- `extraction::DataFrame` : Time series of water extractions from this subcatchment
-- `exchange::DataFrame` : Time series of groundwater flux
-"""
-function run_node!(node::NetworkNode, climate::Climate, ts::Int; inflow=nothing, extraction=nothing, exchange=nothing)
-
-    gauge_id = node.node_id
-    if checkbounds(Bool, node.outflow, ts)
-        if curr_node.outflow[ts] != undef
-            # already ran for this time step so no need to recurse further
-            return curr_node.outflow[ts], curr_node.level[ts]
-        end
-    end
-
-    rain, et = climate_values(node, climate, ts)
-    wo = timestep_value(ts, gauge_id, "extraction", extraction)
-    ex = timestep_value(ts, gauge_id, "exchange", exchange)
-    in_flow = timestep_value(ts, gauge_id, "inflow", inflow)
-
-    run_node!(node, rain, et, in_flow, wo, ex)
-
-    return node.outflow[ts], node.level[ts]
-end
-
 
 
 include("metrics.jl")
@@ -273,7 +242,8 @@ export @def
 export IHACRES, IHACRESNode, BilinearNode, ExpuhNode, DamNode, Climate
 export HyModNode, SimpleHyModNode
 export find_inlets_and_outlets, inlets, outlets, create_network, create_node
-export param_info, update_params!, run_node!, reset!, sim_length, run_catchment!
+export param_info, update_params!, sim_length
+export run_node!, reset!, run_catchment!, run_basin!
 export run_node_with_temp!
 export climate_values, get_node, get_gauge, get_node_id, get_prop
 export set_prop!
