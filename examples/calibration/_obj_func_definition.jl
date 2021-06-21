@@ -33,7 +33,7 @@ climate_data, hist_dam_levels, hist_dam_releases = Streamfall.align_time_frame(c
 
 hist_data = Dict(
     "406000" => hist_dam_levels[:, "Dam Level [mAHD]"],
-    "406000_releases" => hist_dam_releases
+    "406000_extractions" => hist_dam_releases
 )
 
 climate = Climate(climate_data, "_rain", "_evap")
@@ -45,7 +45,7 @@ function obj_func(params, climate, sn, v_id, calib_data::Dict)
     this_node = get_node(sn, v_id)
     update_params!(this_node, params...)
 
-    releases = calib_data["$(this_node.node_id)_releases"]
+    releases = calib_data["$(this_node.node_id)_extractions"]
     Streamfall.run_node!(sn, v_id, climate; extraction=releases)
 
     n_data = this_node.outflow
@@ -79,7 +79,7 @@ function obj_func(params, climate, sn, v_id, next_vid, calib_data::Dict)
 
     # Run next node which will run this node
     next_node = get_node(sn, next_vid)
-    releases = calib_data["$(next_node.node_id)_releases"]
+    releases = calib_data["$(next_node.node_id)_extractions"]
     Streamfall.run_node!(sn, next_vid, climate; extraction=releases)
 
     # Alias data as necessary
@@ -110,7 +110,7 @@ function alt_obj_func(params, climate, sn, v_id, next_vid, calib_data::Dict)
     next_node = get_node(sn, next_vid)
 
     # Run next node (which will also run this node)
-    releases = calib_data["$(next_node.node_id)_releases"]
+    releases = calib_data["$(next_node.node_id)_extractions"]
     Streamfall.run_node!(sn, next_vid, climate; extraction=releases)
 
     # Alias data as necessary

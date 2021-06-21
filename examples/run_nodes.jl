@@ -20,6 +20,10 @@ dam_releases_fn = joinpath(data_path, "dam/historic_releases.csv")
 hist_dam_levels = DataFrame!(CSV.File(dam_level_fn, dateformat=date_format))
 hist_dam_releases = DataFrame!(CSV.File(dam_releases_fn, dateformat=date_format))
 
+# Combine recorded extractions and releases together
+# hist_dam_releases[:, "406000_releases_[ML]"] .+ hist_dam_releases[:, "406000_extractions_[ML]"]
+hist_dam_releases[:, "406000_extractions_[ML]"] = hist_dam_releases[:, "406000_releases_[ML]"]
+
 # Subset to same range
 climate_data, hist_dam_levels, hist_dam_releases = Streamfall.align_time_frame(climate_data, 
                                                                                hist_dam_levels, 
