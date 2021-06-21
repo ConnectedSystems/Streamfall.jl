@@ -9,7 +9,7 @@ Base.@kwdef mutable struct SimpleHyModNode{A <: Union{Param, Real}} <: HyModNode
     @network_node
 
     # parameters
-    sm_max::A = Param(250.0, bounds=(1.0, 500.0))
+    Sm_max::A = Param(250.0, bounds=(1.0, 500.0))
     B::A = Param(1.0, bounds=(0.1, 2.0))
     alpha::A = Param(0.2, bounds=(0.1, 0.999))
     Kf::A = Param(0.5, bounds=(0.1, 0.999))
@@ -74,53 +74,67 @@ function run_node!(node::HyModNode, climate, ts; extraction=0.0, exchange=0.0)::
     Sm = node.Sm[ts]
     Sm_max = node.Sm_max
     B = node.B
+    alpha = node.alpha
+    Kf = node.Kf
+    Ks = node.Ks
+
     Sf1 = node.Sf1[ts]
     Sf2 = node.Sf2[ts]
     Sf3 = node.Sf3[ts]
     Ss1 = node.Ss1[ts]
 
-    # Calculate fluxes
-    Peff = P*(1 - max(1.0 - Sm/Sm_max,0.0)^B) # PDM model Moore 1985
-    Evap = min(ET*(Sm/Sm_max), Sm_t)
-
-    Qf1 = Kf*Sf1
-    Qf2 = Kf*Sf2
-    Qf3 = Kf*Sf3
-    Qs1 = Ks*Ss1
-
-    # update state variables
-    Sm_t1 = Sm + P - Peff - Evap
-    Sf1_t1 = Sf1 + alpha*Peff - Qf1
-    Sf2_t1 = Sf2 + Qf1 - Qf2
-    Sf3_t1 = Sf3 + Qf2 - Qf3
-    Ss1_t1 = Ss1 + (1-alpha)*Peff - Qs1
-
-    Q_t1 = (Qs1 + Qf3) - ext + flux
+    tmp_Q = run_hymod(node, P, ET, Sm, Sm_max, B, alpha, Kf, Ks, Sf1, Sf2, Sf3, Ss1)
+    Q_t1 = tmp_Q - ext + flux
 
     update_states(node, Sm_t1, Sf1_t1, Sf2_t1, Sf3_t1, Ss1_t1, Q_t1)
 
-    return node.outflow[end]
+    return Q_t1
 end
 
 
-# outflow, level = func(curr_node, rain, et, inflow, wo, ex)
-function run_node!(node::HyModNode, rain, et, inflow=0.0, extraction=0.0, exchange=0.0)
-    P = rain
-    ET = et
+"""
+    run_node!(node::HyModNode, rain::Float64, evap::Float64, 
+              inflow::Float64, extraction::Float64, exchange::Float64,
+              timestep::Int)
+
+Run given HyMod node for a time step (or last known state if not provided).
+"""
+function run_node!(node::HyModNode, rain::Float64, evap::Float64, 
+                   inflow::Float64, extraction::Float64, exchange::Float64, timestep=nothing)
     ext = extraction
     flux = exchange
+    ts = timestep
+    if isnothing(ts)
+        Sm = node.Sm[end]
+        Sf1 = node.Sf1[end]
+        Sf2 = node.Sf2[end]
+        Sf3 = node.Sf3[end]
+        Ss1 = node.Ss1[end]
+    else
+        Sm = node.Sm[ts]
+        Sf1 = node.Sf1[ts]
+        Sf2 = node.Sf2[ts]
+        Sf3 = node.Sf3[ts]
+        Ss1 = node.Ss1[ts]
+    end
 
-    Sm = node.Sm[end]
     Sm_max = node.Sm_max
     B = node.B
-    Sf1 = node.Sf1[end]
-    Sf2 = node.Sf2[end]
-    Sf3 = node.Sf3[end]
-    Ss1 = node.Ss1[end]
+    alpha = node.alpha
+    Kf = node.Kf
+    Ks = node.Ks
 
+    tmp_Q = run_hymod(node, rain, evap, Sm, Sm_max, B, alpha, Kf, Ks, Sf1, Sf2, Sf3, Ss1)
+    Q_t1 = inflow + tmp_Q - ext + flux
+
+    return Q_t1
+end
+
+
+function run_hymod(node::HyModNode, P, ET, Sm, Sm_max, B, alpha, Kf, Ks, Sf1, Sf2, Sf3, Ss1)
     # Calculate fluxes
     Peff = P*(1 - max(1.0 - Sm/Sm_max,0.0)^B) # PDM model Moore 1985
-    Evap = min(ET*(Sm/Sm_max), Sm_t)
+    Evap = min(ET*(Sm/Sm_max), Sm)
 
     Qf1 = Kf*Sf1
     Qf2 = Kf*Sf2
@@ -134,14 +148,16 @@ function run_node!(node::HyModNode, rain, et, inflow=0.0, extraction=0.0, exchan
     Sf3_t1 = Sf3 + Qf2 - Qf3
     Ss1_t1 = Ss1 + (1-alpha)*Peff - Qs1
 
-    Q_t1 = inflow + (Qs1 + Qf3) - ext + flux
+    Q_t1 = (Qs1 + Qf3)
 
     update_states(node, Sm_t1, Sf1_t1, Sf2_t1, Sf3_t1, Ss1_t1, Q_t1)
+
+    return Q_t1
 end
 
 
-function update_params!(node::HyModNode, sm_max, B, alpha, Kf, Ks)
-    node.sm_max = Param(sm_max, bounds=node.sm_max.bounds::Tuple)
+function update_params!(node::HyModNode, Sm_max, B, alpha, Kf, Ks)
+    node.Sm_max = Param(Sm_max, bounds=node.Sm_max.bounds::Tuple)
     node.B = Param(B, bounds=node.B.bounds::Tuple)
     node.alpha = Param(alpha, bounds=node.alpha.bounds::Tuple)
     node.Kf = Param(Kf, bounds=node.Kf.bounds::Tuple)
