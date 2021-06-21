@@ -26,6 +26,19 @@ Base.@kwdef mutable struct SimpleHyModNode{A <: Union{Param, Real}} <: HyModNode
 end
 
 
+function SimpleHyModNode(node_id::String, spec::Dict)
+    n = SimpleHyModNode{Param}(; node_id=node_id, area=spec["area"])
+    node_params = spec["parameters"]
+    for (p_name, p_val) in node_params
+        sym = Symbol(p_name)
+        p = getfield(n, sym)
+        setfield!(n, sym, Param(p_val, bounds=p.bounds))
+    end
+
+    return n
+end
+
+
 function SimpleHyModNode(node_id::String, area::Float64, sm_max::Float64, B::Float64,
                          alpha::Float64, Kf::Float64, Ks::Float64)
     n = SimpleHyModNode{Param}(; node_id=node_id, area=area)
