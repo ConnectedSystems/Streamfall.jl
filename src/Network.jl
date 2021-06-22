@@ -1,11 +1,17 @@
 using LightGraphs, MetaGraphs
 using ModelParameters
 
+import YAML: write_file
+
 
 struct StreamfallNetwork
     mg::MetaGraph
     g::SimpleDiGraph
 end
+
+
+Base.getindex(sn::StreamfallNetwork, n::String) = get_node(sn, n)
+Base.getindex(sn::StreamfallNetwork, nid::Int) = get_node(sn, nid)
 
 
 function set_prop!(sn::StreamfallNetwork, nid::Int64, prop::Symbol, var::Any)::Nothing
@@ -65,13 +71,14 @@ end
 inlets(sn::StreamfallNetwork, nid::Number) = inneighbors(sn.g, nid)
 outlets(sn::StreamfallNetwork, nid::Number) = outneighbors(sn.g, nid)
 
+
 """
     inlets(sn::StreamfallNetwork, node_id::String)
 
 Find nodes which provides inflows for given node.
 """
-function inlets(sn::StreamfallNetwork, node_id::String)::Array{Int}
-    nid, _ = get_gauge(sn.mg, node_id)
+function inlets(sn::StreamfallNetwork, node_name::String)::Array{Int}
+    nid, _ = sn[node_name]
     return inneighbors(sn.g, nid)
 end
 
@@ -81,8 +88,8 @@ end
 
 Find node immediately downstream from given node.
 """
-function outlets(sn::StreamfallNetwork, node_id::String)::Array{Int}
-    nid, _ = get_gauge(sn.mg, node_id)
+function outlets(sn::StreamfallNetwork, node_name::String)::Array{Int}
+    nid, _ = sn[node_name]
     return outneighbors(sn.g, nid)
 end
 
