@@ -272,20 +272,6 @@ end
 
 
 """
-    param_info(node::DamNode; kwargs...)::Tuple
-
-Extract node parameter values and bounds.
-"""
-function param_info(node::DamNode; kwargs...)::Tuple
-    tmp = Model(node)
-    values = collect(tmp.val)
-    bounds = collect(tmp.bounds)
-    
-    return values, bounds
-end
-
-
-"""
     update_params!(node::DamNode, storage_coef::Float64)::Nothing
 """
 function update_params!(node::DamNode, storage_coef::Float64)::Nothing
