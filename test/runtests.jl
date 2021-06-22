@@ -11,7 +11,7 @@ TEST_DIR = @__DIR__
         area=100.0
     )
 
-    @info "Outflow:" run_node!(test_node, 6.0, 3.0, 50.0, 10.0)
+    @test run_node!(test_node, 6.0, 3.0, 50.0, 10.0, 0.0) isa Any
 end
 
 
@@ -46,7 +46,6 @@ end
                     current_store=current_store, quick_store=quick_store, slow_store=slow_store)
 
     @test !any(isnan, res)
-    @info res
 end
 
 
@@ -118,8 +117,6 @@ end
         b::Cdouble
     )::Cvoid
 
-    @info flow_results
-
     quickflow = (prev_quick + (e_rain * area))
     α = exp(-a)
     quickflow = α * quickflow
@@ -149,8 +146,6 @@ end
         b::Cdouble
     )::Cvoid
 
-    @info flow_results
-
     quickflow = (prev_quick + (e_rain * area))
     α = exp(-a)
     @test flow_results[1] == (α * quickflow)
@@ -165,3 +160,4 @@ end
 include("test_metrics.jl")
 include("test_data_op.jl")
 include("test_networks.jl")
+include("test_calibration.jl")
