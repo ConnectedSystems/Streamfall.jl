@@ -1,0 +1,137 @@
+# Ensure dependent data and packages are available
+using Distributed, BlackBoxOptim
+
+
+function data_extraction(node, calib_data::Dict)
+    n_data = node.outflow
+    h_data = calib_data[node.node_id]
+
+    if h_data isa DataFrame
+        h_data = Array(subcatchment_data(node, h_data, "_outflow"))
+    end
+
+    return h_data, n_data
+end
+
+
+function data_extraction(node, calib_data::DataFrame)
+    n_data = node.outflow
+    h_data = Array(subcatchment_data(node, calib_data, "_outflow"))
+
+    return h_data, n_data
+end
+
+
+"""Calibrate current node."""
+function obj_func(params, climate, sn, v_id, calib_data; extractor::Function, metric::Function)
+
+    node = sn[v_id]
+    update_params!(node, params...)
+
+    ext = nothing
+    fluxes = nothing
+    try
+        ext = calib_data[:, "$(node.node_id)_extractions"]
+    catch e
+        if !isa(e, ArgumentError)
+            throw(e)
+        end
+    end
+
+    try
+        fluxes = calib_data[:, "$(node.node_id)_exchange"]
+    catch e
+        if !isa(e, ArgumentError)
+            throw(e)
+        end
+    end
+
+    Streamfall.run_node!(sn, v_id, climate; extraction=ext, exchange=fluxes)
+    h_data, n_data = extractor(node, calib_data)
+    score = metric(h_data, n_data)
+
+    # Reset to clear stored values
+    reset!(sn)
+
+    return score
+end
+
+
+"""
+    calibrate!(sn, v_id, climate, calib_data,
+               extractor::Function=Streamfall.data_extraction,
+               metric::Function=Streamfall.RMSE;
+               kwargs...)
+
+Calibrate a given node using the BlackBoxOptim package.
+
+# Arguments
+- `sn::StreamfallNetwork` : Network
+- `v_id::Int` : node identifier
+- `climate::Climate` : Climate data
+- `calib_data::Dict` : calibration data for target node by its id
+- `extractor::Function` : Calibration extraction method, define a custom one to change behavior
+- `metric::Function` : Optimization function to use. Defaults to RMSE.
+"""
+function calibrate!(sn, v_id, climate, calib_data,
+                   extractor::Function=Streamfall.data_extraction,
+                   metric::Function=Streamfall.RMSE;
+                   kwargs...)
+
+    # Set defaults as necessary
+    defaults = (;
+        MaxTime=900,
+        TraceInterval=30
+    )
+    kwargs = merge(defaults, kwargs)
+
+    # Fitness of model is dependent on upstream node.
+    ins = inlets(sn, v_id)
+
+    # Recurse through and calibrate all nodes upstream
+    if !isempty(ins)
+        for nid in ins
+            calibrate!(sn, nid, climate, calib_data, extractor, metric; kwargs...)
+        end
+    end
+
+    this_node = sn[v_id]
+
+    # Create context-specific optimization function
+    opt_func = x -> obj_func(x, climate, sn, v_id, calib_data; extractor, metric)
+
+    # Get node parameters (default values and bounds)
+    param_names, x0, param_bounds = param_info(this_node; with_level=false)
+    opt = bbsetup(opt_func; SearchRange=param_bounds,
+                  kwargs...)
+
+    res = bboptimize(opt)
+
+    bs = best_candidate(res)
+    @info "Calibrated $(v_id) ($(this_node.node_id)), with score: $(best_fitness(res))"
+    @info "Best Params:" collect(bs)
+
+    # Update node with calibrated parameters
+    update_params!(this_node, bs...)
+
+    return res, opt
+end
+
+
+"""
+    calibrate!(sn, climate, calib_data,
+               extractor::Function=Streamfall.data_extraction,
+               metric::Function=Streamfall.RMSE;
+               kwargs...)
+
+Calibrate a stream network.
+"""
+function calibrate!(sn::StreamfallNetwork, climate::Climate, calib_data,
+                   extractor::Function=Streamfall.data_extraction,
+                   metric::Function=Streamfall.RMSE;
+                   kwargs...)
+    _, outlets = find_inlets_and_outlets(sn)
+    for out in outlets
+        calibrate!(sn, out, climate, calib_data, extractor, metric; kwargs...)
+    end
+end
