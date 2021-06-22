@@ -14,13 +14,16 @@ end
     param_info(node::NetworkNode)
 
 Generic parameter information extractor.
+
+Extracts parameter names, values, and bounds
 """
-function param_info(node::NetworkNode)
+function param_info(node::NetworkNode; kwargs...)::Tuple
     tmp = Model(node)
     values = collect(tmp.val)
     bounds = collect(tmp.bounds)
+    param_names = collect(tmp.fieldname)
     
-    return values, bounds
+    return param_names, values, bounds
 end
 
 
