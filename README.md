@@ -86,7 +86,7 @@ Each node defines a subcatchment and holds the relevant parameter values for the
 ## Running a network
 
 ```julia
-using YAML, DataFrames, CSV
+using YAML, DataFrames, CSV, Plots
 using Streamfall
 
 
