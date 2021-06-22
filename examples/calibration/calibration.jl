@@ -19,13 +19,13 @@ function calibrate(sn, v_id, climate, calib_data)
         end
     end
 
-    this_node = get_node(sn, v_id)
+    this_node = sn[v_id]
 
     # Create new optimization function (see definition inside `_obj_func_definition.jl`)
     opt_func = x -> obj_func(x, climate, sn, v_id, next_node_id, calib_data)
 
     # Get node parameters (default values and bounds)
-    x0, param_bounds = param_info(this_node; with_level=false)
+    p_names, x0, param_bounds = param_info(this_node; with_level=false)
     opt = bbsetup(opt_func; SearchRange=param_bounds,
                   Method=:adaptive_de_rand_1_bin_radiuslimited,
                   MaxTime=2400.0,  # time in seconds to spend
@@ -46,9 +46,11 @@ function calibrate(sn, v_id, climate, calib_data)
 end
 
 
-v_id, node = get_gauge(sn, "406219")
+v_id, node = sn["406219"]
 @info "Starting calibration..."
 res, opt = calibrate(sn, v_id, climate, hist_data)
+
+# Stream
 
 best_params = best_candidate(res)
 
@@ -59,7 +61,7 @@ best_params = best_candidate(res)
 using Plots
 
 update_params!(node, best_params...)
-dam_id, dam_node = get_gauge(sn, "406000")
+dam_id, dam_node = sn["406000"]
 Streamfall.run_node!(sn, dam_id, climate; extraction=hist_dam_releases)
 
 h_data = hist_data["406000"]
