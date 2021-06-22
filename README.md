@@ -44,6 +44,10 @@ obs_streamflow = obs_data[:, ["Date", "node1_streamflow"]]
 
 # Run stream network
 run_basin!(sn, climate)
+
+# Compare "goodness-of-fit"
+node = sn[1]  # get node 1
+Streamfall.RMSE(obs_streamflow, node.outflow)
 ```
 
 ### More information
