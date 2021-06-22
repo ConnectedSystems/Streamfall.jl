@@ -42,6 +42,10 @@ climate = Climate(climate_data, "_P", "_ET")
 # Extract streamflow observations
 obs_streamflow = obs_data[:, ["Date", "node1_streamflow"]]
 
+# Calibrate network using the BlackBoxOptim package
+# keyword arguments will be passed to the `bboptimize()` function
+calibrate!(sn, climate, obs_streamflow; MaxTime=180.0)
+
 # Run stream network
 run_basin!(sn, climate)
 
