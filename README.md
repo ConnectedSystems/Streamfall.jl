@@ -18,6 +18,36 @@ Aims of the project are to leverage the Julia language and ecosystem to support:
 Development version of the documentation can be found [here](https://connectedsystems.github.io/Streamfall.jl/dev).
 
 
+## Quick usage example
+
+```julia
+using CSV, YAML
+using Streamfall
+
+
+# Load and generate stream network
+network_spec = YAML.load_file("network.yml")
+sn = create_network("Example Network", network_spec)
+
+# Prepare associated observations
+date_format = "YYYY-mm-dd"
+obs_data = DataFrame!(CSV.File("example_data.csv",
+                          comment="#",
+                          dateformat=date_format))
+
+# Set up climate data
+climate_data = obs_data[:, ["Date", "node1_P", "node1_ET"]]
+climate = Climate(climate_data, "_P", "_ET")
+
+# Extract streamflow observations
+obs_streamflow = obs_data[:, ["Date", "node1_streamflow"]]
+
+# Run stream network
+run_basin!(sn, climate)
+```
+
+### More information
+
 Stream networks are specified in YAML files, with connectivity defined as a single item or a list of entries:
 
 ```yaml
@@ -73,7 +103,7 @@ climate = Climate(climate_data, "_rain", "_evap")
 run_catchment!(sn, climate)
 
 @info "Displaying outflow from node 406219"
-node_id, node = get_gauge(sn, "406219")
+node_id, node = sn["406219"]
 plot(node.outflow)
 ```
 
@@ -82,7 +112,7 @@ Individual nodes can be run for more fine-grain control.
 ```julia
 # Run up to a point in the stream for all time steps.
 # All nodes upstream will be run as well (but not those downstream)
-node_id, node = get_gauge(sn, "406219")
+node_id, node = sn["406219"]
 run_node!(sn, node_id, climate)
 
 # Reset a node (clears stored states)
