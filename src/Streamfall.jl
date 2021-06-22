@@ -236,16 +236,16 @@ end
 
 
 include("metrics.jl")
+include("calibration.jl")
 
 
 export @def
 export IHACRES, IHACRESNode, BilinearNode, ExpuhNode, DamNode, Climate
 export HyModNode, SimpleHyModNode
 export find_inlets_and_outlets, inlets, outlets, create_network, create_node
-export param_info, update_params!, sim_length
-export run_node!, reset!, run_catchment!, run_basin!
-export run_node_with_temp!
-export climate_values, get_node, get_gauge, get_node_id, get_prop
-export set_prop!
+export climate_values, get_node, get_node_id, get_prop, set_prop!
+export param_info, update_params!, sim_length, reset!
+export run_catchment!, run_basin!, run_node!, run_node_with_temp!
+export calibrate!
 
 end  # end module
