@@ -36,7 +36,7 @@ end
 
 
 """
-    get_gauge(sn::StreamfallNetwork, gauge_id::String)
+    get_node(sn::StreamfallNetwork, node_name::String)
 
 Retrieve node_id and node property for a specified gauge.
 
@@ -47,15 +47,50 @@ Retrieve node_id and node property for a specified gauge.
 # Returns
 Tuple, node position id and node object
 """
-get_gauge(sn::StreamfallNetwork, gauge_id::String) = get_gauge(sn.mg, gauge_id)
-function get_gauge(mg, gauge_id::String)::Tuple
-    v_id = get_node_id(mg, gauge_id)
+get_node(sn::StreamfallNetwork, node_name::String) = get_node(sn.mg, node_name)
+function get_node(mg, node_name::String)::Tuple
+    v_id = get_node_id(mg, node_name)
     return v_id, MetaGraphs.get_prop(mg, v_id, :node)
 end
 
 
-get_node(sn::StreamfallNetwork, v_id::Int64)::NetworkNode = MetaGraphs.get_prop(sn.mg, v_id, :node)
-get_node_name(sn::StreamfallNetwork, v_id) = MetaGraphs.get_prop(sn.mg, v_id, :name)
+get_node(sn::StreamfallNetwork, v_id::Int)::NetworkNode = MetaGraphs.get_prop(sn.mg, v_id, :node)
+get_node_name(sn::StreamfallNetwork, v_id::Int) = MetaGraphs.get_prop(sn.mg, v_id, :name)
 
-get_node(mg, v_id) = MetaGraphs.get_prop(mg, v_id, :node)
-get_node_name(mg, v_id) = MetaGraphs.get_prop(mg, v_id, :name)
+get_node(mg, v_id::Int) = MetaGraphs.get_prop(mg, v_id, :node)
+get_node_name(mg, v_id::Int) = MetaGraphs.get_prop(mg, v_id, :name)
+
+
+"""
+    subcatchment_data(node::NetworkNode, data::DataFrame)
+
+Extract data for a given node from a dataframe.
+"""
+function subcatchment_data(node::NetworkNode, data::DataFrame, partial::String=nothing)::DataFrame
+    node_id = node.node_id
+    cols = filter(x -> occursin(node_id, string(x)), names(data))
+
+    if !isnothing(partial)
+        cols = filter(x -> occursin(node_id, x), cols)
+    end
+
+    return data[:, cols]
+end
+
+
+function extract_node_spec(node::NetworkNode)
+    spec = Dict()
+
+    area = node.area
+    param_names, x0, parameters = param_info(node)
+    params = Dict(zip(param_names, x0))
+
+    node_type = typeof(node).name
+    spec = Dict(
+        :node_type => node_type,
+        :area => area,
+        :parameters => params
+    )
+
+    return spec
+end

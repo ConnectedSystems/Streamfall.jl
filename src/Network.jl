@@ -185,3 +185,61 @@ function reset!(sn::StreamfallNetwork)::Nothing
         reset!(curr_node)
     end
 end
+
+
+function extract_node_spec!(sn::StreamfallNetwork, nid::Int, spec::Dict)::Dict
+    node = sn[nid]
+
+    node_name = node.node_id
+    if haskey(spec, node_name)
+        # This node already extracted.
+        return spec
+    end
+
+
+    ins = inlets(sn, nid)
+    outs = outlets(sn, nid)
+    in_ids::Union{Array{Int}, Nothing} = [sn[i].node_id for i in ins]
+    out_ids::Union{Array{Int}, Nothing} = [sn[i].node_id for i in outs]
+
+    if length(in_ids) == 0
+        in_ids = nothing
+    end
+
+    if length(out_ids) == 0
+        out_ids = nothing
+    end
+
+    node_spec = extract_node_spec(node)
+    network_spec = Dict(
+        :inlets => in_ids,
+        :outlets => out_ids
+    )
+
+    spec[node_name] = merge(node_spec, network_spec)
+end
+
+
+"""
+    extract_network_spec(sn::StreamfallNetwork)
+
+Extract network details
+"""
+function extract_network_spec(sn::StreamfallNetwork)::Dict
+    _, outlets = find_inlets_and_outlets(sn)
+    spec = Dict()
+    for nid in outlets
+        extract_node_spec!(sn, nid, spec)
+    end
+
+    # TODO: Make spec nicely ordered
+
+    return spec
+end
+
+
+function save_network_spec(sn::StreamfallNetwork, fn::String)
+    spec = extract_network_spec(sn)
+    write_file(fn, spec)
+end
+
