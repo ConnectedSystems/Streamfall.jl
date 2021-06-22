@@ -59,14 +59,14 @@ end
 function run_node!(node::SimpleHyModNode, climate; extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
     for ts in 1:timesteps
-        run_node!(node, climate, ts; extraction=extraction[ts], exchange=exchange[ts])
+        run_node!(node, climate, ts; extraction=extraction, exchange=exchange)
     end
 
     return node.outflow
 end
 
 
-function run_node!(node::HyModNode, climate, ts; extraction=0.0, exchange=0.0)::Float64
+function run_node!(node::HyModNode, climate, ts; extraction=nothing, exchange=nothing)::Float64
     P, ET = climate_values(node, climate, ts)
     ext = timestep_value(ts, node.node_id, "extraction", extraction)
     flux = timestep_value(ts, node.node_id, "exchange", exchange)
