@@ -76,12 +76,12 @@ end
 
 
 """
-    DamNode(node_id::String, spec::Dict)
+    DamNode(name::String, spec::Dict)
 
 Create DamNode from a given specification.
 """
-function DamNode(node_id::String, spec::Dict)
-    n = DamNode{Param}(; node_id=node_id, area=spec["area"],
+function DamNode(name::String, spec::Dict)
+    n = DamNode{Param}(; name=name, area=spec["area"],
                        max_storage=spec["max_storage"])
 
     node_params = spec["parameters"]
@@ -191,11 +191,11 @@ function run_node!(node::DamNode, climate::Climate, ts::Int;
         end
     end
 
-    gauge_id = node.node_id
+    node_name = node.name
     rain, et = climate_values(node, climate, ts)
-    wo = timestep_value(ts, gauge_id, "releases", extraction)
-    ex = timestep_value(ts, gauge_id, "exchange", exchange)
-    in_flow = timestep_value(ts, gauge_id, "inflow", inflow)
+    wo = timestep_value(ts, node_name, "releases", extraction)
+    ex = timestep_value(ts, node_name, "exchange", exchange)
+    in_flow = timestep_value(ts, node_name, "inflow", inflow)
 
     return run_node!(node, rain, et, in_flow, wo, ex)
 end

@@ -73,7 +73,7 @@ outlets(sn::StreamfallNetwork, nid::Number) = outneighbors(sn.g, nid)
 
 
 """
-    inlets(sn::StreamfallNetwork, node_id::String)
+    inlets(sn::StreamfallNetwork, node_name::String)
 
 Find nodes which provides inflows for given node.
 """
@@ -84,7 +84,7 @@ end
 
 
 """
-    outlets(sn::StreamfallNetwork, node_id::String)
+    outlets(sn::StreamfallNetwork, node_name::String)
 
 Find node immediately downstream from given node.
 """
@@ -147,9 +147,9 @@ function create_network(name::String, network::Dict)::StreamfallNetwork
     
     nid = 1
     for (node, details) in network
-        node_id = string(node)
+        name = string(node)
 
-        this_id, nid = create_node(mg, node_id, details, nid)
+        this_id, nid = create_node(mg, name, details, nid)
 
         inlets = details["inlets"]
         in_id = nid
@@ -194,36 +194,42 @@ function reset!(sn::StreamfallNetwork)::Nothing
 end
 
 
-function extract_node_spec!(sn::StreamfallNetwork, nid::Int, spec::Dict)::Dict
+function extract_node_spec!(sn::StreamfallNetwork, nid::Int, spec::Dict)::Nothing
     node = sn[nid]
 
-    node_name = node.node_id
+    node_name = string(node.name)
     if haskey(spec, node_name)
         # This node already extracted.
-        return spec
+        return
     end
-
 
     ins = inlets(sn, nid)
     outs = outlets(sn, nid)
-    in_ids::Union{Array{Int}, Nothing} = [sn[i].node_id for i in ins]
-    out_ids::Union{Array{Int}, Nothing} = [sn[i].node_id for i in outs]
-
-    if length(in_ids) == 0
-        in_ids = nothing
-    end
+    in_ids::Union{Array{String}, Nothing} = [sn[i].name for i in ins]
+    out_ids::Union{Array{String}, Nothing} = [sn[i].name for i in outs]
 
     if length(out_ids) == 0
         out_ids = nothing
     end
 
+    if length(in_ids) == 0
+        in_ids = nothing
+    else
+        # Recurse upstream
+        for n in ins
+            extract_node_spec!(sn, n, spec)
+        end
+    end
+
     node_spec = extract_node_spec(node)
     network_spec = Dict(
-        :inlets => in_ids,
-        :outlets => out_ids
+        "inlets" => in_ids,
+        "outlets" => out_ids
     )
 
     spec[node_name] = merge(node_spec, network_spec)
+
+    return nothing
 end
 
 

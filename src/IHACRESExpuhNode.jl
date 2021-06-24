@@ -40,8 +40,8 @@ Base.@kwdef mutable struct ExpuhNode{A <: Union{Param, Real}} <: IHACRESNode
 end
 
 
-function ExpuhNode(node_id::String, spec::Dict)
-    n = ExpuhNode{Param}(; node_id=node_id, area=spec["area"])
+function ExpuhNode(name::String, spec::Dict)
+    n = ExpuhNode{Param}(; name=name, area=spec["area"])
 
     node_params = spec["parameters"]
     n_lparams = n.level_params
@@ -84,11 +84,11 @@ function ExpuhNode(node_id::String, spec::Dict)
 end
 
 
-function ExpuhNode(node_id::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
+function ExpuhNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
                     tau_q::Float64, tau_s::Float64, v_s::Float64, s_coef::Float64,
                     store::Float64, quick::Float64, slow::Float64)
     return ExpuhNode{Float64}(
-        node_id=node_id,
+        name=name,
         area=area,
         d=d,
         d2=d2,

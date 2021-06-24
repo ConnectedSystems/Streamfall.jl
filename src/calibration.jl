@@ -4,7 +4,7 @@ using Distributed, BlackBoxOptim
 
 function data_extraction(node, calib_data::Dict)
     n_data = node.outflow
-    h_data = calib_data[node.node_id]
+    h_data = calib_data[node.name]
 
     if h_data isa DataFrame
         h_data = Array(subcatchment_data(node, h_data, "_outflow"))
@@ -31,7 +31,7 @@ function obj_func(params, climate, sn, v_id, calib_data; extractor::Function, me
     ext = nothing
     fluxes = nothing
     try
-        ext = calib_data[:, "$(node.node_id)_extractions"]
+        ext = calib_data[:, "$(node.name)_extractions"]
     catch e
         if !isa(e, ArgumentError)
             throw(e)
@@ -39,7 +39,7 @@ function obj_func(params, climate, sn, v_id, calib_data; extractor::Function, me
     end
 
     try
-        fluxes = calib_data[:, "$(node.node_id)_exchange"]
+        fluxes = calib_data[:, "$(node.name)_exchange"]
     catch e
         if !isa(e, ArgumentError)
             throw(e)
@@ -108,7 +108,7 @@ function calibrate!(sn, v_id, climate, calib_data,
     res = bboptimize(opt)
 
     bs = best_candidate(res)
-    @info "Calibrated $(v_id) ($(this_node.node_id)), with score: $(best_fitness(res))"
+    @info "Calibrated $(v_id) ($(this_node.name)), with score: $(best_fitness(res))"
     @info "Best Params:" collect(bs)
 
     # Update node with calibrated parameters
@@ -126,9 +126,9 @@ end
 
 Calibrate a stream network.
 """
-function calibrate!(sn::StreamfallNetwork, climate::Climate, calib_data,
+function calibrate!(sn::StreamfallNetwork, climate::Climate, calib_data;
                    extractor::Function=Streamfall.data_extraction,
-                   metric::Function=Streamfall.RMSE;
+                   metric::Function=Streamfall.RMSE,
                    kwargs...)
     _, outlets = find_inlets_and_outlets(sn)
     for out in outlets

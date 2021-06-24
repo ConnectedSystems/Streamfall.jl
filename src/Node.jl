@@ -5,8 +5,8 @@ using MetaGraphs
 abstract type NetworkNode end
 
 @def network_node begin
-    node_id::String
-    area::Float64  # area in km^2
+    name::String
+    area::Float64
 end
 
 
@@ -28,9 +28,10 @@ end
 
 
 """Retrieve network node_id for a given gauge (by name)."""
-function get_node_id(mg::MetaGraph, gauge_id::String)::Int64
-    v = collect(MetaGraphs.filter_vertices(mg, :name, gauge_id))
-    @assert length(v) == 1 || "Found more than 1 node with gauge $(gauge_id)"
+function get_node_id(mg::MetaGraph, node_name::String)::Int64
+    v = collect(MetaGraphs.filter_vertices(mg, :name, node_name))
+    @assert length(v) > 0 || error("Node with name '$(node_name)' not found")
+    @assert length(v) == 1 || error("Found more than 1 node with name '$(node_name)'")
     return v[1]
 end
 
@@ -42,7 +43,7 @@ Retrieve node_id and node property for a specified gauge.
 
 # Arguments
 - sn::StreamfallNetwork
-- gauge_id::String : name of node of interest
+- node_name::String : name of node of interest
 
 # Returns
 Tuple, node position id and node object
@@ -67,11 +68,11 @@ get_node_name(mg, v_id::Int) = MetaGraphs.get_prop(mg, v_id, :name)
 Extract data for a given node from a dataframe.
 """
 function subcatchment_data(node::NetworkNode, data::DataFrame, partial::String=nothing)::DataFrame
-    node_id = node.node_id
-    cols = filter(x -> occursin(node_id, string(x)), names(data))
+    name = node.name
+    cols = filter(x -> occursin(name, string(x)), names(data))
 
     if !isnothing(partial)
-        cols = filter(x -> occursin(node_id, x), cols)
+        cols = filter(x -> occursin(name, x), cols)
     end
 
     return data[:, cols]
@@ -82,14 +83,14 @@ function extract_node_spec(node::NetworkNode)
     spec = Dict()
 
     area = node.area
-    param_names, x0, parameters = param_info(node)
+    param_names, x0, _ = param_info(node)
     params = Dict(zip(param_names, x0))
 
     node_type = typeof(node).name
     spec = Dict(
-        :node_type => node_type,
-        :area => area,
-        :parameters => params
+        "node_type" => node_type,
+        "area" => area,
+        "parameters" => params
     )
 
     return spec

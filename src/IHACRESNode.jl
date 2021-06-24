@@ -47,9 +47,9 @@ Base.@kwdef mutable struct BilinearNode{A <: Union{Param, Real}} <: IHACRESNode
 end
 
 
-function BilinearNode(node_id::String, spec::Dict)
+function BilinearNode(name::String, spec::Dict)
         
-    n = BilinearNode{Param}(; node_id=node_id, area=spec["area"])
+    n = BilinearNode{Param}(; name=name, area=spec["area"])
 
     node_params = spec["parameters"]
     n_lparams = n.level_params
@@ -93,16 +93,16 @@ end
 
 
 """
-    BilinearNode(node_id::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
+    BilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
                 a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
                 store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
 
 Create a IHACRES node that adopts the bilinear CMD module.
 """
-function BilinearNode(node_id::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
+function BilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
                     a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
                     store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
-    n = BilinearNode{Param}(; node_id=node_id, area=area)
+    n = BilinearNode{Param}(; name=name, area=area)
     update_params!(n, d, d2, e, f, a, b, s_coef, alpha)
 
     n.storage = [store]

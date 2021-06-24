@@ -7,7 +7,7 @@ TEST_DIR = @__DIR__
 
 @testset "Bare node creation" begin
     test_node = BilinearNode{Float64}(;
-        node_id="Test",
+        name="Test",
         area=100.0
     )
 

@@ -159,10 +159,10 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
         end
     end
 
-    gauge_id = node.node_id
+    node_name = node.name
     rain, et = climate_values(node, climate, ts)
-    ext = timestep_value(ts, gauge_id, "extraction", extraction)
-    flux = timestep_value(ts, gauge_id, "exchange", exchange)
+    ext = timestep_value(ts, node_name, "extraction", extraction)
+    flux = timestep_value(ts, node_name, "exchange", exchange)
 
     # Get previous state relative to given time step.
     return run_node!(node, rain, et, inflow, ext, flux, ts)
@@ -221,13 +221,13 @@ Run a specific node, and only that node, for all time steps.
 """
 function run_node!(node::NetworkNode, climate; inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
-    gauge_id = node.node_id
+    node_name = node.name
     for ts in (1:timesteps)
         rain, et = climate_values(node, climate, ts)
-        ext = timestep_value(ts, gauge_id, "extraction", extraction)
-        flux = timestep_value(ts, gauge_id, "exchange", exchange)
-        in_flow = timestep_value(ts, gauge_id, "inflow", inflow)
-        # run_node!(node, climate, ts; inflow=inflow, extraction=extraction, exchange=exchange)
+        ext = timestep_value(ts, node_name, "extraction", extraction)
+        flux = timestep_value(ts, node_name, "exchange", exchange)
+        in_flow = timestep_value(ts, node_name, "inflow", inflow)
+
         run_node!(node, rain, et, in_flow, ext, flux, ts)
     end
 

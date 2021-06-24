@@ -5,6 +5,9 @@ using ModelParameters
 abstract type HyModNode <: NetworkNode end
 
 
+"""
+Simple implementation of HyMod - does not include snow melt processes.
+"""
 Base.@kwdef mutable struct SimpleHyModNode{A <: Union{Param, Real}} <: HyModNode
     @network_node
 
@@ -26,8 +29,8 @@ Base.@kwdef mutable struct SimpleHyModNode{A <: Union{Param, Real}} <: HyModNode
 end
 
 
-function SimpleHyModNode(node_id::String, spec::Dict)
-    n = SimpleHyModNode{Param}(; node_id=node_id, area=spec["area"])
+function SimpleHyModNode(name::String, spec::Dict)
+    n = SimpleHyModNode{Param}(; name=name, area=spec["area"])
     node_params = spec["parameters"]
     for (p_name, p_val) in node_params
         sym = Symbol(p_name)
@@ -39,9 +42,9 @@ function SimpleHyModNode(node_id::String, spec::Dict)
 end
 
 
-function SimpleHyModNode(node_id::String, area::Float64, sm_max::Float64, B::Float64,
+function SimpleHyModNode(name::String, area::Float64, sm_max::Float64, B::Float64,
                          alpha::Float64, Kf::Float64, Ks::Float64)
-    n = SimpleHyModNode{Param}(; node_id=node_id, area=area)
+    n = SimpleHyModNode{Param}(; name=name, area=area)
     update_params!(n, sm_max, B, alpha, Kf, Ks)
 
     # stores/output
@@ -68,8 +71,8 @@ end
 
 function run_node!(node::HyModNode, climate, ts; extraction=nothing, exchange=nothing)::Float64
     P, ET = climate_values(node, climate, ts)
-    ext = timestep_value(ts, node.node_id, "extraction", extraction)
-    flux = timestep_value(ts, node.node_id, "exchange", exchange)
+    ext = timestep_value(ts, node.name, "extraction", extraction)
+    flux = timestep_value(ts, node.name, "exchange", exchange)
 
     Sm = node.Sm[ts]
     Sm_max = node.Sm_max
