@@ -295,7 +295,7 @@ end
 
 Extract node parameter names, values, and bounds for IHACRESNode types.
 """
-function param_info(node::IHACRESNode; with_level::Bool = true)::Tuple
+function param_info(node::IHACRESNode; with_level::Bool = false)::Tuple
     tmp = Model(node)
     values = collect(tmp.val)
     bounds = collect(tmp.bounds)
