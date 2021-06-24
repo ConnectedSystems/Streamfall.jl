@@ -108,4 +108,5 @@ function Base.show(io::IO, n::NetworkNode)
     details = hcat(param_names, x0, [lb...], [ub...])
 
     pretty_table(io, details, ["Parameter", "Value", "Lower Bound", "Upper Bound"])
+    print("\n")
 end
