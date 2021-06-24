@@ -22,7 +22,7 @@ climate = Climate(climate_data, "_P", "_ET")
 
 # This will set node parameters to the optimal values found
 metric = (x, y) -> 1.0 - Streamfall.NNSE(x, y)
-calibrate!(sn, climate, hist_streamflow; metric=metric, MaxTime=360.0)
+calibrate!(sn, climate, hist_streamflow; metric=metric, MaxTime=90.0)
 
 # Save calibrated network spec to file
 Streamfall.save_network_spec(sn, "hymod_example_calibrated.yml")
