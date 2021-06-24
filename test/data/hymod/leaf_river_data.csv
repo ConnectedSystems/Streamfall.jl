@@ -1,4 +1,4 @@
-year,month,day,leaf_river_P,leaf_river_ET,leaf_river_streamflow,leaf_river_Tmax,leaf_river_Tmin,Date
+year,month,day,leaf_river_P,leaf_river_ET,leaf_river_outflow,leaf_river_Tmax,leaf_river_Tmin,Date
 2001,10,1,0.00E+00,2.75E+00,2.01E-01,2.55E+01,8.07E+00,2001-10-1
 2001,10,2,0.00E+00,2.72E+00,1.91E-01,2.71E+01,7.41E+00,2001-10-2
 2001,10,3,0.00E+00,2.68E+00,1.84E-01,2.72E+01,8.32E+00,2001-10-3
