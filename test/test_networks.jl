@@ -19,18 +19,29 @@ end
 
 
 @testset "Saving a network spec" begin
-    spec = Streamfall.extract_network_spec(sn)
+    spec::Dict{String, Union{Dict{String, Any}, Any}} = Streamfall.extract_network_spec(sn)
     @test spec isa Dict
+    @test haskey(spec, "leaf_river")
+
+    spec["02473000"] = spec["leaf_river"]
+
+    tmp_sn = create_network("Test", spec)
 
     tmp_fn, io = mktemp()
-    @test Streamfall.save_network_spec(sn, tmp_fn) isa Any
+    @test Streamfall.save_network_spec(tmp_sn, tmp_fn) isa Any
 
     tmp_network = YAML.load_file(tmp_fn)
     tmp_sn = create_network("Test", tmp_network)
 
     @test tmp_sn isa Streamfall.StreamfallNetwork
 
-    @info sn["leaf_river"]
-    @info tmp_sn["leaf_river"]
+    # There is currently a bug in YAML.jl which parses string integers as Ints
+    # which causes issues when the value starts with a 0 
+    # (incorrectly parses as an octal integer)
+    # If this test does not throw an error, then it means the issue has been resolved
+    # and can be removed after checking.
+    # see:
+    # https://github.com/JuliaData/YAML.jl/pull/45
+    @test_throws ErrorException sn["02473000"]
 end
 
