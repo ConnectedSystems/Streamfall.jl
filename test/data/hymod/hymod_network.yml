@@ -1,11 +1,11 @@
 leaf_river:
-    node_type: SimpleHyModNode
-    inlets:
-    outlets:
-    area: 2800.0  # subcatchment area in km^2
-    parameters:
-      Sm_max: 250.0
-      B: 1.0
-      alpha: 0.2
-      Kf: 0.5
-      Ks: 0.05
+  node_type: SimpleHyModNode
+  inlets:
+  outlets:
+  area: 2800.0  # subcatchment area in km^2
+  parameters:
+    Sm_max: 250.0
+    B: 1.0
+    alpha: 0.2
+    Kf: 0.5
+    Ks: 0.05
