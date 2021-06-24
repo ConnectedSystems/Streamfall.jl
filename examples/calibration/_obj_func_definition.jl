@@ -45,11 +45,11 @@ function obj_func(params, climate, sn, v_id, calib_data::Dict)
     this_node = sn[v_id]
     update_params!(this_node, params...)
 
-    releases = calib_data["$(this_node.node_id)_extractions"]
+    releases = calib_data["$(this_node.name)_extractions"]
     Streamfall.run_node!(sn, v_id, climate; extraction=releases)
 
     n_data = this_node.outflow
-    h_data = calib_data[this_node.node_id]
+    h_data = calib_data[this_node.name]
 
     # Calculate score (NNSE; 0 to 1)
     NNSE = Streamfall.NNSE(h_data, n_data)
@@ -79,19 +79,19 @@ function obj_func(params, climate, sn, v_id, next_vid, calib_data::Dict)
 
     # Run next node which will run this node
     next_node = sn[next_vid]
-    releases = calib_data["$(next_node.node_id)_extractions"]
+    releases = calib_data["$(next_node.name)_extractions"]
     Streamfall.run_node!(sn, next_vid, climate; extraction=releases)
 
     # Alias data as necessary
-    if next_node.node_id == "406000"
+    if next_node.name == "406000"
         n_data = next_node.level
-        h_data = calib_data[next_node.node_id]
-    elseif this_node.node_id == "406000"
+        h_data = calib_data[next_node.name]
+    elseif this_node.name == "406000"
         n_data = this_node.level
-        h_data = calib_data[this_node.node_id]
+        h_data = calib_data[this_node.name]
     else
         n_data = this_node.outflow
-        h_data = calib_data[this_node.node_id]
+        h_data = calib_data[this_node.name]
     end
 
     NNSE = Streamfall.NNSE(h_data, n_data)
@@ -110,19 +110,19 @@ function alt_obj_func(params, climate, sn, v_id, next_vid, calib_data::Dict)
     next_node = sn[next_vid]
 
     # Run next node (which will also run this node)
-    releases = calib_data["$(next_node.node_id)_extractions"]
+    releases = calib_data["$(next_node.name)_extractions"]
     Streamfall.run_node!(sn, next_vid, climate; extraction=releases)
 
     # Alias data as necessary
-    if next_node.node_id == "406000"
+    if next_node.name == "406000"
         n_data = next_node.level
-        h_data = calib_data[next_node.node_id]
-    elseif this_node.node_id == "406000"
+        h_data = calib_data[next_node.name]
+    elseif this_node.name == "406000"
         n_data = this_node.level
-        h_data = calib_data[this_node.node_id]
+        h_data = calib_data[this_node.name]
     else
         n_data = this_node.outflow
-        h_data = calib_data[this_node.node_id]
+        h_data = calib_data[this_node.name]
     end
 
     split_NmKGE = Streamfall.naive_split_metric(h_data, n_data; n_members=365, metric=Streamfall.NmKGE, comb_method=mean)

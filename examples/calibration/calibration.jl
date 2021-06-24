@@ -36,7 +36,7 @@ function calibrate(sn, v_id, climate, calib_data)
     res = bboptimize(opt)
 
     bs = best_candidate(res)
-    @info "Calibrated $(v_id) ($(this_node.node_id)), with score: $(best_fitness(res))"
+    @info "Calibrated $(v_id) ($(this_node.name)), with score: $(best_fitness(res))"
     @info "Best Params:" collect(bs)
 
     # Update node with calibrated parameters

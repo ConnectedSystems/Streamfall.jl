@@ -15,9 +15,8 @@ end
 Extract data for a given node from climate object.
 """
 function subcatchment_data(node::NetworkNode, climate::Climate)::DataFrame
-    node_id = node.node_id
     data = climate.climate_data
-    cols = filter(x -> occursin(node_id, string(x)), names(data))
+    cols = filter(x -> occursin(node.name, string(x)), names(data))
 
     return data[:, cols]
 end
@@ -30,19 +29,19 @@ Extract climate related data for a given time step.
 """
 function climate_values(node::NetworkNode, climate::Climate, 
                         timestep::Union{Nothing, Int}=nothing)
-    node_id = node.node_id
+    node_name = node.name
 
     data = climate.climate_data
 
-    rain_col = filter(x -> occursin(node_id, x)
+    rain_col = filter(x -> occursin(node_name, x)
                         & occursin(climate.rainfall_id, x),
                         names(data))[1]
-    et_col = filter(x -> occursin(node_id, x)
+    et_col = filter(x -> occursin(node_name, x)
                       & occursin(climate.et_id, x),
                       names(data))[1]
 
     if isempty(rain_col) | isempty(et_col)
-        throw(ArgumentError("No climate data found for $(node.node_id) at time step: $(timestep)"))
+        throw(ArgumentError("No climate data found for $(node_name) at time step: $(timestep)"))
     end
 
     if isnothing(timestep)
