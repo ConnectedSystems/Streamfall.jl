@@ -284,8 +284,7 @@ function Base.show(io::IO, sn::StreamfallNetwork)
     println("-"^17, "\n")
 
     vs = vertices(sn.g)
-    # indent_level = get(io, :profile_tree_level, 0)+2
-    # io_context = IOContext(io, profile_tree_level=indent_level)
+
     for nid in vs
         println(io, "Node $(nid) : \n")
         show(io, sn[nid])
@@ -300,9 +299,7 @@ end
 Simple plot of stream network.
 """
 function plot_network(sn::StreamfallNetwork; as_html=false)
-    g = sn.g
-    num_nodes = nv(g)
-    node_names = ["$(sn[nid].name)" for nid in 1:num_nodes]
+    node_names = ["$(n.name)" for n in sn]
 
     if as_html
         plot_func = gplothtml
@@ -310,13 +307,30 @@ function plot_network(sn::StreamfallNetwork; as_html=false)
         plot_func = gplot
     end
 
-    plot_func(g, nodelabel=node_names)
+    plot_func(sn.g, nodelabel=node_names)
 end
 
 
-function save_figure(sn::StreamfallNetwork, fn::String; kwargs...)
+"""
+    save_figure(sn::StreamfallNetwork, fn::String)
+
+Save a figure of the network in SVG format.
+"""
+function save_figure(sn::StreamfallNetwork, fn::String)
     draw(SVG(fn, 16cm, 16cm), plot_network(sn))
 end
+
+
+function Base.iterate(sn::StreamfallNetwork, state=1)
+    if state >= length(sn)
+        return nothing
+    end
+
+    return (sn[state], state+1)
+end
+
+
+Base.length(sn::StreamfallNetwork) = nv(sn.g)
 
 
 
