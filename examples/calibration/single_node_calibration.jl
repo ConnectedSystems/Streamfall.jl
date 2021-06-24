@@ -21,7 +21,7 @@ climate_data = obs_data[:, ["Date", "leaf_river_P", "leaf_river_ET"]]
 climate = Climate(climate_data, "_P", "_ET")
 
 # This will set node parameters to the optimal values found
-metric = (x, y) -> 1.0 - Streamfall.NNSE(x, y)
+metric = (obs, sim) -> 1.0 - Streamfall.NNSE(obs, sim)
 calibrate!(sn, climate, hist_streamflow; metric=metric, MaxTime=90.0)
 
 # Save calibrated network spec to file
