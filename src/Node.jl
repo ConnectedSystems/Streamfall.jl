@@ -1,5 +1,6 @@
 using DataFrames
-using MetaGraphs
+using PrettyTables
+import MetaGraphs
 
 
 abstract type NetworkNode end
@@ -94,4 +95,17 @@ function extract_node_spec(node::NetworkNode)
     )
 
     return spec
+end
+
+
+Base.show(io::IO, ::MIME"text/plain", n::NetworkNode) = show(io, n)
+function Base.show(io::IO, n::NetworkNode)
+    println(io, "Name: $(n.name) [$(typeof(n).name)]")
+    println(io, "Area: $(n.area)")
+
+    param_names, x0, bounds = param_info(n; with_level=false)
+    lb, ub = zip(bounds...)
+    details = hcat(param_names, x0, [lb...], [ub...])
+
+    pretty_table(io, details, ["Parameter", "Value", "Lower Bound", "Upper Bound"])
 end

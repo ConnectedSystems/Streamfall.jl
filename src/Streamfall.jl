@@ -246,6 +246,6 @@ export find_inlets_and_outlets, inlets, outlets, create_network, create_node
 export climate_values, get_node, get_node_id, get_prop, set_prop!
 export param_info, update_params!, sim_length, reset!
 export run_catchment!, run_basin!, run_node!, run_node_with_temp!
-export calibrate!
+export calibrate!, plot_network, save_figure
 
 end  # end module
