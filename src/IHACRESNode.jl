@@ -47,6 +47,31 @@ Base.@kwdef mutable struct BilinearNode{A <: Union{Param, Real}} <: IHACRESNode
 end
 
 
+# function prep_state!(node::IHACRESNode, sim_length::Int64)
+#     ini_storage = node.storage[1]
+#     node.storage = fill(0.0, sim_length+1)
+#     node.storage[1] = ini_storage
+
+#     ini_qs = node.quick_store[1]
+#     node.quick_store = fill(0.0, sim_length+1)
+#     node.quick_store[1] = ini_qs
+
+#     ini_ss = node.slow_store[1]
+#     node.slow_store = fill(0.0, sim_length+1)
+#     node.slow_store[1] = ini_ss
+
+#     node.outflow = fill(0.0, sim_length)
+#     node.effective_rainfall = fill(0.0, sim_length)
+#     node.et = fill(0.0, sim_length)
+#     node.inflow = fill(0.0, sim_length)
+#     node.level = fill(0.0, sim_length)
+
+#     ini_gw = node.gw_store[1]
+#     node.gw_store = fill(0.0, sim_length+1)
+#     node.gw_store[1] = ini_gw
+# end
+
+
 function BilinearNode(name::String, spec::Dict)
         
     n = BilinearNode{Param}(; name=name, area=spec["area"])
@@ -100,8 +125,8 @@ end
 Create a IHACRES node that adopts the bilinear CMD module.
 """
 function BilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
-                    a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
-                    store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
+                      a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
+                      store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
     n = BilinearNode{Param}(; name=name, area=area)
     update_params!(n, d, d2, e, f, a, b, s_coef, alpha)
 
@@ -270,15 +295,16 @@ Run node for a given time step.
 function run_node!(s_node::BilinearNode,
                    rain::Float64,
                    evap::Float64,
-                   inflow::Float64,
-                   ext::Float64,
-                   gw_exchange::Float64,
-                   timestep::Union{Int, Nothing})::Tuple{Float64, Float64}
-    if !isnothing(timestep)
-        current_store = s_node.storage[timestep]
-        quick_store = s_node.quick_store[timestep]
-        slow_store = s_node.slow_store[timestep]
-        gw_store = s_node.gw_store[timestep]
+                   timestep::Union{Int64, Nothing};
+                   inflow::Float64=0.0,
+                   ext::Float64=0.0,
+                   gw_exchange::Float64=0.0)::Tuple{Float64, Float64}
+    ts = timestep
+    if !isnothing(ts)
+        current_store = s_node.storage[ts]
+        quick_store = s_node.quick_store[ts]
+        slow_store = s_node.slow_store[ts]
+        gw_store = s_node.gw_store[ts]
     else
         current_store = nothing
         quick_store = nothing

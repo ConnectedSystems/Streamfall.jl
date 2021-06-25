@@ -25,8 +25,16 @@ Base.@kwdef mutable struct SimpleGR4JNode{A <: Union{Param, Real}} <: GR4JNode
 end
 
 
+# function prep_state!(node::HyModNode, sim_length::Int64)
+#     node.UH1 = fill(undef, sim_length)
+#     node.UH2 = fill(undef, sim_length)
+#     node.outflow = fill(undef, sim_length)
+# end
+
+
 function run_node!(node::GR4JNode, climate::Climate)
     timesteps = sim_length(climate)
+    # prep_state!(node, sim_length)
     for ts in 1:timesteps
         run_node!(node, climate, ts)
     end

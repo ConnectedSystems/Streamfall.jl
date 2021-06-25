@@ -11,6 +11,44 @@ abstract type NetworkNode end
 end
 
 
+Base.@kwdef mutable struct GenericNode <: NetworkNode
+    @network_node
+end
+
+
+function GenericNode(name::String, spec::Dict)
+    mod_spec = copy(spec)
+    delete!(mod_spec, "node_type")
+    delete!(mod_spec, "name")
+    delete!(mod_spec, "area")
+    delete!(mod_spec, "func")
+    n = GenericNode(; name=name, area=spec["area"], mod_spec...)
+
+    return n
+end
+
+
+Base.@kwdef mutable struct GenericDirectNode <: NetworkNode
+    @network_node
+
+    outflow = []
+end
+
+
+function GenericDirectNode(name::String, spec::Dict)
+    mod_spec = copy(spec)
+    area = spec["area"]
+    delete!(mod_spec, "node_type")
+    delete!(mod_spec, "name")
+    delete!(mod_spec, "area")
+    delete!(mod_spec, "func")
+    n = GenericDirectNode(; name=name, area=area, mod_spec...)
+
+    return n
+end
+
+
+
 """
     param_info(node::NetworkNode)
 

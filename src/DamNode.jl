@@ -168,6 +168,16 @@ function update_volume(volume, node_inflow, gamma, rain, evap, area, extractions
 end
 
 
+function run_node!(node::DamNode, climate::Climate; 
+                   inflow=nothing, extraction=nothing, exchange=nothing)
+    timesteps = sim_length(climate)
+    for ts in timesteps
+        run_node!(node, climate, ts; 
+                  inflow=inflow, extraction=extraction, exchange=exchange)
+    end
+end
+
+
 """
     run_node!(node::DamNode, climate::Climate, ts::Int; 
               inflow=nothing, extraction=nothing, exchange=nothing)
@@ -197,7 +207,9 @@ function run_node!(node::DamNode, climate::Climate, ts::Int;
     ex = timestep_value(ts, node_name, "exchange", exchange)
     in_flow = timestep_value(ts, node_name, "inflow", inflow)
 
-    return run_node!(node, rain, et, in_flow, wo, ex)
+    vol = node.volume[ts]
+
+    return run_node!(node, rain, et, vol, in_flow, wo, ex)
 end
 
 
@@ -218,32 +230,11 @@ Calculate outflow for the dam node for a single time step.
 function run_node!(node::DamNode, 
                    rain::Float64,
                    et::Float64,
+                   vol::Float64,
                    inflow::Float64,
                    extractions::Float64,
-                   gw_flux::Float64=0.0)
-
-    volume = storage(node)
-    dam_area = node.calc_dam_area(volume)
-    discharge = node.calc_dam_discharge(volume, node.max_storage)
-
-    updated_store = update_volume(volume, inflow, gw_flux, rain, et,
-                                  dam_area, extractions, discharge, node.max_storage)
-    outflow = node.calc_dam_outflow(discharge, extractions)
-
-    update_state(node, updated_store, rain, et, dam_area, discharge, outflow)
-
-    return outflow, level(node)
-end
-
-
-function run_node!(node::DamNode, 
-                   rain::Float64,
-                   et::Float64,
-                   inflow::Float64,
-                   extractions::Float64,
-                   gw_flux::Float64,
-                   timestep::Union{Int, Nothing})
-    volume = node.storage[timestep]
+                   gw_flux::Float64)
+    volume = vol
     dam_area = node.calc_dam_area(volume)
     discharge = node.calc_dam_discharge(volume, node.max_storage)
 

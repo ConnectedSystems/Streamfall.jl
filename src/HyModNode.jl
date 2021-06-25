@@ -59,82 +59,61 @@ function SimpleHyModNode(name::String, area::Float64, sm_max::Float64, B::Float6
 end
 
 
-function run_node!(node::SimpleHyModNode, climate; extraction=nothing, exchange=nothing)
-    timesteps = sim_length(climate)
-    for ts in 1:timesteps
-        run_node!(node, climate, ts; extraction=extraction, exchange=exchange)
-    end
+# function prep_state!(node::HyModNode, sim_length::Int64)
+#     node.Sm = fill(0.0, sim_length+1)
+#     node.Sf1 = fill(0.0, sim_length+1)
+#     node.Sf3 = fill(0.0, sim_length+1)
+#     node.Ss1 = fill(0.0, sim_length+1)
 
-    return node.outflow
+#     node.outflow = fill(0.0, sim_length)
+# end
+
+
+function run_node!(node::HyModNode, climate;
+                   inflow=nothing, extraction=nothing, exchange=nothing)
+    timesteps = sim_length(climate)
+    # prep_state!(node, timesteps)
+
+    for ts in 1:timesteps
+        run_node!(node, climate, ts;
+                  inflow=inflow, extraction=extraction, exchange=exchange)
+    end
 end
 
 
-function run_node!(node::HyModNode, climate, ts; extraction=nothing, exchange=nothing)::Float64
+"""
+    run_node!(node::HyModNode, climate::Climate, timestep::Int,
+              inflow::Float64, extraction::Float64, exchange::Float64)
+
+Run given HyMod node for a time step.
+"""
+function run_node!(node::SimpleHyModNode, climate::Climate, timestep::Int;
+                   inflow=nothing, extraction=nothing, exchange=nothing)::Float64
+    ts = timestep
     P, ET = climate_values(node, climate, ts)
+    in_flow = timestep_value(ts, node.name, "inflow", inflow)
     ext = timestep_value(ts, node.name, "extraction", extraction)
     flux = timestep_value(ts, node.name, "exchange", exchange)
 
     Sm = node.Sm[ts]
-    Sm_max = node.Sm_max
-    B = node.B
-    alpha = node.alpha
-    Kf = node.Kf
-    Ks = node.Ks
-
     Sf1 = node.Sf1[ts]
     Sf2 = node.Sf2[ts]
     Sf3 = node.Sf3[ts]
     Ss1 = node.Ss1[ts]
 
-    tmp_Q = run_hymod(node, P, ET, Sm, Sm_max, B, alpha, Kf, Ks, Sf1, Sf2, Sf3, Ss1)
-    Q_t1 = tmp_Q - ext + flux
+    flow = run_hymod!(node, P, ET, Sm, Sf1, Sf2, Sf3, Ss1, in_flow, ext, flux)
 
-    update_states(node, Sm_t1, Sf1_t1, Sf2_t1, Sf3_t1, Ss1_t1, Q_t1)
-
-    return Q_t1
+    return flow
 end
 
 
-"""
-    run_node!(node::HyModNode, rain::Float64, evap::Float64, 
-              inflow::Float64, extraction::Float64, exchange::Float64,
-              timestep::Int)
-
-Run given HyMod node for a time step (or last known state if not provided).
-"""
-function run_node!(node::HyModNode, rain::Float64, evap::Float64, 
-                   inflow::Float64, extraction::Float64, exchange::Float64, timestep=nothing)
-    ext = extraction
-    flux = exchange
-    ts = timestep
-    if isnothing(ts)
-        Sm = node.Sm[end]
-        Sf1 = node.Sf1[end]
-        Sf2 = node.Sf2[end]
-        Sf3 = node.Sf3[end]
-        Ss1 = node.Ss1[end]
-    else
-        Sm = node.Sm[ts]
-        Sf1 = node.Sf1[ts]
-        Sf2 = node.Sf2[ts]
-        Sf3 = node.Sf3[ts]
-        Ss1 = node.Ss1[ts]
-    end
-
+function run_hymod!(node::SimpleHyModNode, P, ET, Sm, Sf1, Sf2, Sf3, Ss1, inflow, ext, flux)
     Sm_max = node.Sm_max
     B = node.B
     alpha = node.alpha
     Kf = node.Kf
     Ks = node.Ks
 
-    tmp_Q = run_hymod(node, rain, evap, Sm, Sm_max, B, alpha, Kf, Ks, Sf1, Sf2, Sf3, Ss1)
-    Q_t1 = inflow + tmp_Q - ext + flux
-
-    return Q_t1
-end
-
-
-function run_hymod(node::HyModNode, P, ET, Sm, Sm_max, B, alpha, Kf, Ks, Sf1, Sf2, Sf3, Ss1)
     # Calculate fluxes
     Peff = P*(1 - max(1.0 - Sm/Sm_max,0.0)^B) # PDM model Moore 1985
     Evap = min(ET*(Sm/Sm_max), Sm)
@@ -151,8 +130,7 @@ function run_hymod(node::HyModNode, P, ET, Sm, Sm_max, B, alpha, Kf, Ks, Sf1, Sf
     Sf3_t1 = Sf3 + Qf2 - Qf3
     Ss1_t1 = Ss1 + (1-alpha)*Peff - Qs1
 
-    Q_t1 = (Qs1 + Qf3)
-
+    Q_t1 = inflow + (Qs1 + Qf3) - ext + flux
     update_states(node, Sm_t1, Sf1_t1, Sf2_t1, Sf3_t1, Ss1_t1, Q_t1)
 
     return Q_t1

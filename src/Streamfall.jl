@@ -41,6 +41,8 @@ end
     end
 end
 
+# macro set_size(arr, len)
+
 
 include("Network.jl")
 include("Node.jl")
@@ -165,7 +167,8 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
     flux = timestep_value(ts, node_name, "exchange", exchange)
 
     # Get previous state relative to given time step.
-    return run_node!(node, rain, et, inflow, ext, flux, ts)
+    # run_node!(node, climate)
+    return run_node!(node, rain, et, ts; inflow, ext, flux)
 end
 
 
@@ -175,10 +178,11 @@ end
 Run scenario for an entire catchment/basin.
 """
 function run_basin!(sn::StreamfallNetwork, climate::Climate;
-                    extraction=nothing, exchange=nothing)
+                    inflow=nothing, extraction=nothing, exchange=nothing)
     _, outlets = find_inlets_and_outlets(sn)
     for outlet in outlets
-        run_node!(sn, outlet, climate; extraction=extraction, exchange=exchange)
+        run_node!(sn, outlet, climate;
+                  inflow=inflow, extraction=extraction, exchange=exchange)
     end
 end
 
@@ -198,11 +202,11 @@ Run model for all time steps, recursing upstream as needed.
 - `extraction::DataFrame` : water orders for each time step (defaults to nothing)
 - `exchange::DataFrame` : exchange with groundwater system at each time step (defaults to nothing)
 """
-function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate; extraction=nothing, exchange=nothing)::Nothing
-    timesteps = sim_length(climate)
-    for ts in (1:timesteps)
-        run_node!(sn, node_id, climate, ts; extraction=extraction, exchange=exchange)
-    end
+function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate; 
+                   inflow=nothing, extraction=nothing, exchange=nothing)
+    func = MetaGraphs.get_prop(sn.mg, node_id, :nfunc)
+    func(sn[node_id], climate; 
+         inflow=inflow, extraction=extraction, exchange=exchange)
 end
 
 
@@ -221,8 +225,10 @@ Run a specific node, and only that node, for all time steps.
 """
 function run_node!(node::NetworkNode, climate; inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
+    # prep_state!(node, timesteps)
+
     node_name = node.name
-    for ts in (1:timesteps)
+    for ts in 1:timesteps
         rain, et = climate_values(node, climate, ts)
         ext = timestep_value(ts, node_name, "extraction", extraction)
         flux = timestep_value(ts, node_name, "exchange", exchange)
@@ -240,6 +246,7 @@ include("calibration.jl")
 
 
 export @def
+export NetworkNode, GenericNode, GenericDirectNode
 export IHACRES, IHACRESNode, BilinearNode, ExpuhNode, DamNode, Climate
 export HyModNode, SimpleHyModNode
 export find_inlets_and_outlets, inlets, outlets, create_network, create_node

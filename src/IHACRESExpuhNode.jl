@@ -115,15 +115,15 @@ end
 Run given IHACRES ExpuhNode for a time step based on last known state.
 """
 function run_node!(s_node::ExpuhNode, 
-            rain::Float64, 
-            evap::Float64, 
-            inflow::Float64, 
-            ext::Float64,
-            gw_exchange::Float64=0.0;
-            current_store=nothing,
-            quick_store=nothing,
-            slow_store=nothing,
-            )::Tuple
+                   rain::Float64, 
+                   evap::Float64, 
+                   inflow::Float64, 
+                   ext::Float64,
+                   gw_exchange::Float64=0.0;
+                   current_store=nothing,
+                   quick_store=nothing,
+                   slow_store=nothing,
+                )::Tuple
 
     if !isnothing(current_store)
         s_node.storage[end] = current_store

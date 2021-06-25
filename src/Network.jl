@@ -131,9 +131,20 @@ function create_node(mg::MetaGraph, node_name::String, details::Dict, nid::Int)
             throw(ArgumentError("Unsupported node type: $(node_type)"))
         end
 
+        # Set function for node if specified
+        if haskey(details, "func")
+            if details["func"] isa Function
+                func = details["func"]
+            else
+                func = eval(Symbol(details["func"]))
+            end
+        else
+            func = run_node!
+        end
+
         set_props!(mg, nid, Dict(:name=>node_name,
-                                 :node=>n,
-                                 :nfunc=>run_node!))
+                                :node=>n,
+                                :nfunc=>func))
         
         this_id = nid
         nid = nid + 1
@@ -168,24 +179,28 @@ function create_network(name::String, network::Dict)::StreamfallNetwork
 
         this_id, nid = create_node(mg, n_name, details, nid)
 
-        inlets = details["inlets"]
-        in_id = nid
-        if !isnothing(inlets)
-            for inlet in inlets
-                in_id, nid = create_node(mg, string(inlet), network[inlet], nid)
-                add_edge!(g, in_id, this_id)
+        if haskey(details, "inlets")
+            inlets = details["inlets"]
+            in_id = nid
+            if !isnothing(inlets)
+                for inlet in inlets
+                    in_id, nid = create_node(mg, string(inlet), network[inlet], nid)
+                    add_edge!(g, in_id, this_id)
+                end
             end
         end
 
-        outlets = details["outlets"]
-        out_id = in_id
-        if !isnothing(outlets)
-            msg = "Streamfall currently only supports a single outlet. ($(length(outlets)))"
-            @assert length(outlets) <= 1 || throw(ArgumentError(msg))
+        if haskey(details, "outlets")
+            outlets = details["outlets"]
+            out_id = in_id
+            if !isnothing(outlets)
+                msg = "Streamfall currently only supports a single outlet. ($(length(outlets)))"
+                @assert length(outlets) <= 1 || throw(ArgumentError(msg))
 
-            for outlet in outlets
-                out_id, nid = create_node(mg, string(outlet), network[outlet], nid)
-                add_edge!(g, this_id, out_id)
+                for outlet in outlets
+                    out_id, nid = create_node(mg, string(outlet), network[outlet], nid)
+                    add_edge!(g, this_id, out_id)
+                end
             end
         end
     end
