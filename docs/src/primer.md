@@ -85,7 +85,7 @@ Streamfall nodes hold parameter information including their usual bounds/ranges.
 These can be examined like so:
 
 ```julia
-x0, bounds = param_info(node)
+param_names, x0, bounds = param_info(node)
 ```
 
 where `x0` are the current values.

@@ -28,7 +28,7 @@ function calibrate(sn, v_id, climate, calib_data)
     opt_func = x -> obj_func(x, climate, sn, v_id, calib_data)
 
     # Get node parameters (default values and bounds)
-    x0, param_bounds = param_info(this_node; with_level=false)
+    param_names, x0, param_bounds = param_info(this_node; with_level=false)
     opt = bbsetup(opt_func; SearchRange=param_bounds,
                   Method=:adaptive_de_rand_1_bin_radiuslimited,
                   MaxTime=300.0,  # time in seconds to spend

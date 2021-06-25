@@ -29,6 +29,9 @@ using Streamfall
 network_spec = YAML.load_file("network.yml")
 sn = create_network("Example Network", network_spec)
 
+# Show figure of network
+plot_network(sn)
+
 # Prepare associated observations
 date_format = "YYYY-mm-dd"
 obs_data = DataFrame!(CSV.File("example_data.csv",
@@ -47,19 +50,27 @@ obs_streamflow = obs_data[:, ["Date", "node1_streamflow"]]
 calibrate!(sn, climate, obs_streamflow; MaxTime=180.0)
 
 # Run stream network
+# There is also `run_catchment!()` which does the same thing
 run_basin!(sn, climate)
 
-# Compare "goodness-of-fit"
+# Get a specific node in network
 node = sn[1]  # get node 1
+
+# Could also get node by name
+# node = sn["node1"]
+
+# Compare "goodness-of-fit"
 Streamfall.RMSE(obs_streamflow, node.outflow)
 
 # Save calibrated network spec to file
-Streamfall.save_network_spec(sn, "example_calibrated.yml")
+Streamfall.save_network_spec(sn, "calibrated_example.yml")
 ```
 
 ### More information
 
-Stream networks are specified in YAML files, with connectivity defined as a single item or a list of entries:
+Stream networks are specified as Dictionaries, with an entry for each node.
+
+An example spec from a YAML file is shown here, with connectivity between nodes defined by their names.
 
 ```yaml
 
