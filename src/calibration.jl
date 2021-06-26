@@ -32,16 +32,9 @@ function obj_func(params, climate, sn, v_id, calib_data; extractor::Function, me
     fluxes = nothing
     try
         ext = calib_data[:, "$(node.name)_extractions"]
-    catch e
-        if !isa(e, ArgumentError)
-            throw(e)
-        end
-    end
-
-    try
         fluxes = calib_data[:, "$(node.name)_exchange"]
     catch e
-        if !isa(e, ArgumentError)
+        if !isa(e, ArgumentError) && !isa(e, KeyError)
             throw(e)
         end
     end
@@ -69,7 +62,7 @@ Calibrate a given node using the BlackBoxOptim package.
 - `sn::StreamfallNetwork` : Network
 - `v_id::Int` : node identifier
 - `climate::Climate` : Climate data
-- `calib_data::Dict` : calibration data for target node by its id
+- `calib_data::Union{Dict, DataFrame}` : calibration data for target node by its id
 - `extractor::Function` : Calibration extraction method, define a custom one to change behavior
 - `metric::Function` : Optimization function to use. Defaults to RMSE.
 """
