@@ -133,10 +133,12 @@ function create_node(mg::MetaGraph, node_name::String, details::Dict, nid::Int)
 
         # Set function for node if specified
         if haskey(details, "func")
-            if details["func"] isa Function
-                func = details["func"]
-            else
-                func = eval(Symbol(details["func"]))
+            func_spec = details["func"]
+            if func_spec isa Function
+                func = func_spec
+            elseif func_spec isa String
+                # func = eval(Symbol(func_spec))
+                func = eval(Meta.parse(func_spec))
             end
         else
             func = run_node!
