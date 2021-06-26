@@ -1,7 +1,7 @@
 name = "Streamfall"
 uuid = "09d4d480-e905-4803-959d-af438f1c2811"
 authors = ["ConnectedSystems"]
-version = "0.1.0"
+version = "0.1.9"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
