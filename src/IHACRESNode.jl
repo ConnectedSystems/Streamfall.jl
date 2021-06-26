@@ -339,6 +339,21 @@ function param_info(node::IHACRESNode; with_level::Bool = false)::Tuple
 end
 
 
+function run_node_with_temp!(node::BilinearNode, climate::Climate;
+                    inflow=nothing, extraction=nothing, exchange=nothing)
+    timesteps = sim_length(climate)
+    for ts in 1:timesteps
+        P, T = climate_values(node, climate, ts)
+        i = timestep_value(ts, node.name, "_inflow")
+        ext = timestep_value(ts, node.name, "_extraction")
+        flux = timestep_value(ts, node.name, "_exchange")
+        run_node_with_temp!(node, P, T, i, ext, flux)
+    end
+
+    return node.outflow, node.level
+end
+
+
 """
     run_node_with_temp!(s_node::BilinearNode,
                         rain::Float64,
