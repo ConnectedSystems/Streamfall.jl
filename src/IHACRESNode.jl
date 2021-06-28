@@ -77,19 +77,22 @@ function BilinearNode(name::String, spec::Dict)
     n = BilinearNode{Param}(; name=name, area=spec["area"])
 
     node_params = spec["parameters"]
-    n_lparams = n.level_params
-    s_lparams = spec["level_params"]
-    node_params["level_params"] = Param[
-        Param(s_lparams[1], bounds=n_lparams[1].bounds)
-        Param(s_lparams[2], bounds=n_lparams[2].bounds)
-        Param(s_lparams[3], bounds=n_lparams[3].bounds)
-        Param(s_lparams[4], bounds=n_lparams[4].bounds)
-        Param(s_lparams[5], bounds=n_lparams[5].bounds)
-        Param(s_lparams[6], bounds=n_lparams[6].bounds)
-        Param(s_lparams[7], bounds=n_lparams[7].bounds)
-        Param(s_lparams[8], bounds=n_lparams[8].bounds)
-        Param(s_lparams[9], bounds=n_lparams[9].bounds)
-    ]
+
+    if haskey(spec, "level_params")
+        n_lparams = n.level_params
+        s_lparams = spec["level_params"]
+        node_params["level_params"] = Param[
+            Param(s_lparams[1], bounds=n_lparams[1].bounds)
+            Param(s_lparams[2], bounds=n_lparams[2].bounds)
+            Param(s_lparams[3], bounds=n_lparams[3].bounds)
+            Param(s_lparams[4], bounds=n_lparams[4].bounds)
+            Param(s_lparams[5], bounds=n_lparams[5].bounds)
+            Param(s_lparams[6], bounds=n_lparams[6].bounds)
+            Param(s_lparams[7], bounds=n_lparams[7].bounds)
+            Param(s_lparams[8], bounds=n_lparams[8].bounds)
+            Param(s_lparams[9], bounds=n_lparams[9].bounds)
+        ]
+    end
 
     node_params["storage"] = [node_params["initial_storage"]]
     delete!(node_params, "initial_storage")
@@ -105,7 +108,7 @@ function BilinearNode(name::String, spec::Dict)
             setfield!(n, s, Param(p, bounds=f.bounds))
         catch err
             msg = sprint(showerror, err, catch_backtrace())
-            if occursin("no field bounds", msg)
+            if occursin("no field bounds", string(msg))
                 setfield!(n, s, p)
             else
                 throw(err)
@@ -160,7 +163,7 @@ end
               evap::Float64,
               inflow::Float64,
               ext::Float64,
-              gw_exchange::Float64=0.0;
+              gw_exchange::Float64;
               current_store::Union{Nothing, Float64}=nothing,
               quick_store::Union{Nothing, Float64}=nothing,
               slow_store::Union{Nothing, Float64}=nothing,
@@ -285,10 +288,10 @@ end
     run_node!(s_node::BilinearNode,
               rain::Float64,
               evap::Float64,
+              timestep::Union{Int64, Nothing};
               inflow::Float64,
-              ext::Float64,
-              gw_exchange::Float64,
-              timestep::Union{Int, Nothing})::Tuple{Float64, Float64}
+              extraction::Float64,
+              exchange::Float64)::Tuple{Float64, Float64}
 
 Run node for a given time step.
 """
@@ -297,8 +300,8 @@ function run_node!(s_node::BilinearNode,
                    evap::Float64,
                    timestep::Union{Int64, Nothing};
                    inflow::Float64=0.0,
-                   ext::Float64=0.0,
-                   gw_exchange::Float64=0.0)::Tuple{Float64, Float64}
+                   extraction::Float64=0.0,
+                   exchange::Float64=0.0)::Tuple{Float64, Float64}
     ts = timestep
     if !isnothing(ts)
         current_store = s_node.storage[ts]
@@ -312,7 +315,7 @@ function run_node!(s_node::BilinearNode,
         gw_store = nothing
     end
 
-    return run_node!(s_node, rain, evap, inflow, ext, gw_exchange; 
+    return run_node!(s_node, rain, evap, inflow, extraction, exchange;
                      current_store, quick_store, slow_store, gw_store)
 end
 

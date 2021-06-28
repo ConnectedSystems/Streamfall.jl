@@ -125,6 +125,10 @@ function extract_node_spec(node::NetworkNode)
     param_names, x0, _ = param_info(node)
     params = Dict(zip(param_names, x0))
 
+    if hasfield(node, :storage)
+        params["initial_storage"] = node.storage[1]
+    end
+
     node_type = typeof(node).name
     spec = Dict(
         "node_type" => node_type,

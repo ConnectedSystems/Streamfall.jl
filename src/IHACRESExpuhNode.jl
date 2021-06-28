@@ -106,7 +106,7 @@ end
 
 """
     run_node!(s_node::ExpuhNode, rain::Float64, evap::Float64, 
-              inflow::Float64, ext::Float64, gw_exchange::Float64=0.0;
+              inflow::Float64, ext::Float64, gw_exchange::Float64;
               current_store=nothing,
               quick_store=nothing,
               slow_store=nothing,
@@ -119,7 +119,7 @@ function run_node!(s_node::ExpuhNode,
                    evap::Float64, 
                    inflow::Float64, 
                    ext::Float64,
-                   gw_exchange::Float64=0.0;
+                   gw_exchange::Float64;
                    current_store=nothing,
                    quick_store=nothing,
                    slow_store=nothing,
