@@ -164,8 +164,6 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
         end
     end
 
-    @info "Recursed upstream"
-
     ts_inflow = timestep_value(ts, node.name, "inflow", inflow)
     ts_inflow += sim_inflow
 
