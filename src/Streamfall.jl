@@ -128,10 +128,12 @@ Recurses upstream as needed.
 - `node_id::Int`
 - `climate::Climate`
 - `timestep::Int`
+- `inflow::DataFrame` : Additional inflow to consider (in ML/timestep)
 - `extraction::DataFrame` : Volume of water to be extracted (in ML/timestep)
 - `exchange::DataFrame` : Volume of flux (in ML/timestep), where negative values are losses to the groundwater system
 """
 function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int;
+                   inflow::Union{DataFrame, Nothing}=nothing,
                    extraction::Union{DataFrame, Nothing}=nothing,
                    exchange::Union{DataFrame, Nothing}=nothing)
     mg, g = sn.mg, sn.g
@@ -145,30 +147,30 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
         end
     end
     
-    inflow = 0.0
+    sim_inflow = 0.0
     ins = inneighbors(g, node_id)
     if !isempty(ins)
-        inflow = 0.0
         for i in ins
             # Get inflow from previous node
             res = run_node!(sn, i, climate, ts;
+                            inflow=nothing,
                             extraction=extraction, exchange=exchange)
             if res isa Number
-                inflow += res
+                sim_inflow += res
             elseif length(res) > 1
-                inflow += res[1]
+                # get outflow from (outflow, level)
+                sim_inflow += res[1]
             end
         end
     end
 
-    node_name = node.name
-    rain, et = climate_values(node, climate, ts)
-    ext = timestep_value(ts, node_name, "extraction", extraction)
-    flux = timestep_value(ts, node_name, "exchange", exchange)
+    @info "Recursed upstream"
 
-    # Get previous state relative to given time step.
-    # run_node!(node, climate)
-    return run_node!(node, rain, et, ts; inflow=inflow, extraction=ext, exchange=flux)
+    ts_inflow = timestep_value(ts, node.name, "inflow", inflow)
+    ts_inflow += sim_inflow
+
+    # Run for a time step, dependent on previous state
+    return run_node!(node, climate, timestep; inflow=ts_inflow, extraction=extraction, exchange=exchange)
 end
 
 
@@ -205,8 +207,11 @@ Run model for all time steps, recursing upstream as needed.
 function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate; 
                    inflow=nothing, extraction=nothing, exchange=nothing)
     func = MetaGraphs.get_prop(sn.mg, node_id, :nfunc)
-    func(sn[node_id], climate; 
-         inflow=inflow, extraction=extraction, exchange=exchange)
+    timesteps = sim_length(climate)
+    for ts in 1:timesteps
+        func(sn, node_id, climate, ts;
+            inflow=inflow, extraction=extraction, exchange=exchange)
+    end
 end
 
 

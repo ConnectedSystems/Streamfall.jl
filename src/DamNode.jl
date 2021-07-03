@@ -171,7 +171,7 @@ end
 function run_node!(node::DamNode, climate::Climate; 
                    inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
-    for ts in timesteps
+    for ts in 1:timesteps
         run_node!(node, climate, ts; 
                   inflow=inflow, extraction=extraction, exchange=exchange)
     end
@@ -197,7 +197,7 @@ function run_node!(node::DamNode, climate::Climate, timestep::Int;
     ts = timestep
     if checkbounds(Bool, node.outflow, ts)
         if node.outflow[ts] != undef
-            # already ran for this time step so no need to recurse further
+            # already ran for this time step so no need to run
             return node.outflow[ts], node.level[ts]
         end
     end
@@ -207,8 +207,7 @@ function run_node!(node::DamNode, climate::Climate, timestep::Int;
     wo = timestep_value(ts, node_name, "releases", extraction)
     ex = timestep_value(ts, node_name, "exchange", exchange)
     in_flow = timestep_value(ts, node_name, "inflow", inflow)
-
-    vol = node.volume[ts]
+    vol = node.storage[ts]
 
     return run_node!(node, rain, et, vol, in_flow, wo, ex)
 end
