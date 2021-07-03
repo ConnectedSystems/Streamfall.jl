@@ -104,7 +104,7 @@ get_node_name(mg, v_id::Int) = MetaGraphs.get_prop(mg, v_id, :name)
 """
     subcatchment_data(node::NetworkNode, data::DataFrame)
 
-Extract data for a given node from a dataframe.
+Extract all data for a given node from a dataframe.
 """
 function subcatchment_data(node::NetworkNode, data::DataFrame, partial::String=nothing)::DataFrame
     name = node.name

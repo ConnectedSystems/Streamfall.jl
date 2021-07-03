@@ -12,7 +12,7 @@ end
 """
     subcatchment_data(node::NetworkNode, climate::Climate)
 
-Extract data for a given node from climate object.
+Extract all data for a given node from climate object.
 """
 function subcatchment_data(node::NetworkNode, climate::Climate)::DataFrame
     data = climate.climate_data

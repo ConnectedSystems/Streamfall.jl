@@ -101,11 +101,21 @@ All data is expected in DataFrames with the following convention:
 - Unit of measure itself is optionally included in square brackets (`[]`)
 - In-file comments are indicated with a hash (`#`)
 
+
+Data that may be optionally provided include:
+
+- `inflow` : specifying the incoming volume of water (when running the model for a specific node)
+- `extractions` : additional extractions from the stream
+- `exchange` : additional forcing for groundwater interactions.
+
+
+These may be provided as a Dictionary of arrays with the node name as the key.
+
 More details may be found in the [Input data format](@ref) page.
 
 ### Climate data
 
-Climate data is treated as a special case of data.
+Climate data is treated as a special case of the above and is required for a scenario to run.
 Currently the expectation is that two phenomena are provided for each node (one of which is rainfall).
 
 In this example case, precipitation and evaporation are provided (marked by identifiers `_rain` and `_evap` respectively). Below is an example for a two-node system.
@@ -131,14 +141,6 @@ climate_data = DataFrame!(CSV.File(joinpath(data_path, "climate/climate_historic
 climate = Climate(climate_data, "_rain", "_evap")
 ```
 
-Climate data for the basin is a requirement.
-
-Other data that may be optionally provided include:
-
-- `extractions` : extractions from the stream
-- `exchange` : which provides additional forcing for groundwater interactions.
-- `inflow` : specifying the incoming volume of water from upstream (when running the model for a specific node)
-
 ## Running a network or node
 
 To run an entire basin network, without any dynamic interaction with "external" systems:
@@ -155,7 +157,7 @@ Individual nodes can also be run:
 ```julia
 # Run up to a point in the stream for all time steps.
 # All nodes upstream will be run as well (but not those downstream)
-node_id, node = get_gauge(sn, "406219")
+node_id, node = sn["406219"]
 run_node!(sn, node_id, climate)
 
 # Reset a node (clears stored states)
@@ -189,6 +191,12 @@ end
 
 When interactions with other socio-environmental systems are expected, it can become necessary to run each node individually as needed.
 
+Interactions with these external systems are represented as influencing:
+
+1. Inflows to a node
+2. Extraction of water from a stream
+3. Additional flux to/from the groundwater system
+
 The following pattern can be used in such a context:
 
 
@@ -198,7 +206,7 @@ this_timestep = 100
 
 # Inflow comes from upstream
 # This could be obtained by running all nodes upstream, for example
-#     node_id, node = get_gauge(sn, "406219")
+#     node_id, node = sn["406219"]
 #     run_node!(sn, node_id, climate)
 inflow = run_node!(...)
 

@@ -56,8 +56,9 @@ run_basin!(sn, climate)
 # Get a specific node in network
 node = sn[1]  # get node 1
 
-# Could also get node by name
-# node = sn["node1"]
+# Could also get node by name 
+# which will also return its position in the network:
+# nid, node = sn["node1"]
 
 # Compare "goodness-of-fit"
 Streamfall.RMSE(obs_streamflow, node.outflow)

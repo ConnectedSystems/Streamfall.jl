@@ -2,7 +2,7 @@
 
 The calibration examples all rely on the functions shown here.
 
-List of metrics provided by Streamfall can be found in [Available metrics](@ref)
+List of metrics provided by Streamfall can be found in [Included metrics](@ref)
 
 
 ## Importing shared/common packages

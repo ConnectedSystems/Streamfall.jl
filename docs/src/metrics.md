@@ -1,4 +1,4 @@
-# Available metrics
+# Included metrics
 
 ```@autodocs
 Modules = [Streamfall]
