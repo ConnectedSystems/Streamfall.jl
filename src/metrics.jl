@@ -134,7 +134,12 @@ function mKGE(obs, sim)::Float64
     if isnan(cv_s)
         cv_s = 0.0
     end
-    γ = cv_s / StatsBase.variation(obs)
+
+    cv_o = StatsBase.variation(obs)
+    if isnan(cv_o)
+        cv_o = 1.0
+    end
+    γ = cv_s / cv_o
 
     # Magnitude
     β = mean(sim) / mean(obs)
