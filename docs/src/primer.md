@@ -17,7 +17,7 @@ A single node network is shown below using a `IHACRES` model (see [ihacres_nim](
 The spec takes the following form:
 
 ```YAML
-# Node name, typically the Gauge ID
+# Node name (the Gauge ID is used here)
 410730:
     # The node type which defines which model is used for this node
     # In this case, it is the IHACRES with the bilinear formulation of the CMD module
@@ -27,21 +27,22 @@ The spec takes the following form:
     # so it has no nodes upstream (inlets) or downstream (outlets)
     inlets:
     outlets:
-    area: 130.0    # subcatchment area in km^2 (from BoM)
+    area: 130.0  # subcatchment area in km^2 (from BoM)
 
     # Model parameters (in this case, for IHACRES)
     parameters:    
-        d: 95.578  # millimeters
-        d2: 1.743  # multiplier applied to `d`
-        e: 1.047   # ET scaling factor, dimensionless
-        f: 1.315   # multiplier applied to `d` to determine effective rainfall, dimensionless
-        a: 99.134  # quickflow scaling factor
-        b: 0.259   # slowflow scaling factor
-        storage_coef: 2.9
-        alpha: 0.785  # effective rainfall scaling factor
+        d: 200.0     # millimeters
+        d2: 2.0      # multiplier applied to `d`
+        e: 1.0       # ET scaling factor, dimensionless
+        f: 0.8       # multiplier applied to `d` to determine effective rainfall, dimensionless
+        a: 0.9       # quickflow scaling factor
+        b: 0.1       # slowflow scaling factor
+        storage_coef: 2.9  # groundwater interaction factor
+        alpha: 0.95  # effective rainfall scaling factor
         initial_storage: 0.0  # initial CMD value, CMD > 0 means there is a deficit
 
     # additional node-specific parameters
+    # (unused in this example so can be ignored)
     level_params:  
         - -3.3502  # p1
         - 0.68340  # p2
@@ -63,6 +64,34 @@ network = YAML.load_file("network.yml")
 # Create network from spec, with a human-readable name.
 sn = create_network("Gingera Catchment", network)
 ```
+
+Printing the network displays a summary of the nodes:
+
+```julia-repl
+julia> sn
+
+Network Name: Gingera Catchment
+Represented Area: 130.0
+-----------------
+
+Node 1 :
+
+Name: 410730 [BilinearNode]
+Area: 130.0
+┌──────────────┬───────┬─────────────┬─────────────┐
+│    Parameter │ Value │ Lower Bound │ Upper Bound │
+├──────────────┼───────┼─────────────┼─────────────┤
+│            d │ 200.0 │        10.0 │       550.0 │
+│           d2 │   2.0 │      0.0001 │        10.0 │
+│            e │   1.0 │         0.1 │         1.5 │
+│            f │   0.8 │        0.01 │         3.0 │
+│            a │   0.9 │         0.1 │        10.0 │
+│            b │   0.1 │       0.001 │         0.1 │
+│ storage_coef │   2.9 │     1.0e-10 │        10.0 │
+│        alpha │  0.95 │      1.0e-5 │         1.0 │
+└──────────────┴───────┴─────────────┴─────────────┘
+```
+
 
 Each node will be assigned an internal node identifier based on their order and position
 in the network.
