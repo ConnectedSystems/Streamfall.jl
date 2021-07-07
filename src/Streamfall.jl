@@ -136,10 +136,9 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
                    inflow::Union{DataFrame, Nothing}=nothing,
                    extraction::Union{DataFrame, Nothing}=nothing,
                    exchange::Union{DataFrame, Nothing}=nothing)
-    mg, g = sn.mg, sn.g
     ts = timestep
 
-    node = MetaGraphs.get_prop(mg, node_id, :node)
+    node = sn[node_id]
     if checkbounds(Bool, node.outflow, ts)
         if node.outflow[ts] != undef
             # already ran for this time step so no need to recurse further
@@ -148,13 +147,14 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
     end
     
     sim_inflow = 0.0
-    ins = inneighbors(g, node_id)
+    ins = inneighbors(sn.g, node_id)
     if !isempty(ins)
         for i in ins
             # Get inflow from previous node
             res = run_node!(sn, i, climate, ts;
-                            inflow=nothing,
-                            extraction=extraction, exchange=exchange)
+                            inflow=inflow,
+                            extraction=extraction,
+                            exchange=exchange)
             if res isa Number
                 sim_inflow += res
             elseif length(res) > 1
@@ -167,8 +167,10 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
     ts_inflow = timestep_value(ts, node.name, "inflow", inflow)
     ts_inflow += sim_inflow
 
+    run_func! = get_prop(sn, node_id, :func)
+
     # Run for a time step, dependent on previous state
-    return run_node!(node, climate, timestep; inflow=ts_inflow, extraction=extraction, exchange=exchange)
+    return run_func!(node, climate, ts; inflow=ts_inflow, extraction=extraction, exchange=exchange)
 end
 
 
@@ -205,11 +207,12 @@ Run model for all time steps, recursing upstream as needed.
 function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate; 
                    inflow=nothing, extraction=nothing, exchange=nothing)
     func = MetaGraphs.get_prop(sn.mg, node_id, :nfunc)
-    timesteps = sim_length(climate)
-    for ts in 1:timesteps
-        func(sn, node_id, climate, ts;
-            inflow=inflow, extraction=extraction, exchange=exchange)
-    end
+    func(sn, node_id, climate; inflow=inflow, extraction=extraction, exchange=exchange)
+    # timesteps = sim_length(climate)
+    # for ts in 1:timesteps
+    #     func(sn, node_id, climate, ts;
+    #         inflow=inflow, extraction=extraction, exchange=exchange)
+    # end
 end
 
 

@@ -376,18 +376,39 @@ function param_info(node::IHACRESNode; with_level::Bool = false)::Tuple
 end
 
 
-function run_node_with_temp!(node::BilinearNode, climate::Climate;
-                    inflow=nothing, extraction=nothing, exchange=nothing)
+function run_node_with_temp!(sn::StreamfallNetwork, nid::Int64, climate::Climate;
+                             inflow=nothing, extraction=nothing, exchange=nothing)
+    node = sn[nid]
     timesteps = sim_length(climate)
     for ts in 1:timesteps
-        P, T = climate_values(node, climate, ts)
-        i = timestep_value(ts, node.name, "_inflow")
-        ext = timestep_value(ts, node.name, "_extraction")
-        flux = timestep_value(ts, node.name, "_exchange")
-        run_node_with_temp!(node, P, T, i, ext, flux)
+        run_node_with_temp!(node, climate, ts; 
+        inflow=inflow, extraction=extraction, exchange=exchange)
     end
 
     return node.outflow, node.level
+end
+
+
+function run_node_with_temp!(node::BilinearNode, climate::Climate;
+                             inflow=nothing, extraction=nothing, exchange=nothing)
+    timesteps = sim_length(climate)
+    for ts in 1:timesteps
+        run_node_with_temp!(node, climate, ts; 
+                            inflow=inflow, extraction=extraction, exchange=exchange)
+    end
+
+    return node.outflow, node.level
+end
+
+
+function run_node_with_temp!(node::BilinearNode, climate::Climate, timestep::Int64;
+                             inflow=nothing, extraction=nothing, exchange=nothing)
+    ts = timestep
+    P, T = climate_values(node, climate, ts)
+    i = timestep_value(ts, node.name, "_inflow", inflow)
+    ext = timestep_value(ts, node.name, "_extraction", extraction)
+    flux = timestep_value(ts, node.name, "_exchange", exchange)
+    run_node_with_temp!(node, P, T, i, ext, flux)
 end
 
 
@@ -406,15 +427,15 @@ end
 Run node with temperature data to calculate outflow and update state.
 """
 function run_node_with_temp!(s_node::BilinearNode,
-                   rain::Float64,
-                   temp::Float64,
-                   inflow::Float64,
-                   ext::Float64,
-                   gw_exchange::Float64=0.0;
-                   current_store=nothing,
-                   quick_store=nothing,
-                   slow_store=nothing,
-                   gw_store=nothing)::Tuple{Float64, Float64}
+                             rain::Float64,
+                             temp::Float64,
+                             inflow::Float64,
+                             ext::Float64,
+                             gw_exchange::Float64=0.0;
+                             current_store=nothing,
+                             quick_store=nothing,
+                             slow_store=nothing,
+                             gw_store=nothing)::Tuple{Float64, Float64}
     if !isnothing(current_store)
         s_node.storage[end] = current_store
     end
