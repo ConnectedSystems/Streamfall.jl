@@ -167,7 +167,7 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
     ts_inflow = timestep_value(ts, node.name, "inflow", inflow)
     ts_inflow += sim_inflow
 
-    run_func! = get_prop(sn, node_id, :func)
+    run_func! = get_prop(sn, node_id, :nfunc)
 
     # Run for a time step, dependent on previous state
     return run_func!(node, climate, ts; inflow=ts_inflow, extraction=extraction, exchange=exchange)
