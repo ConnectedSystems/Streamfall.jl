@@ -353,6 +353,7 @@ function run_node!(s_node::BilinearNode,
                      current_store, quick_store, slow_store, gw_store)
 end
 
+
 """
     param_info(node::IHACRESNode; with_level::Bool = true)::Tuple
 
@@ -382,7 +383,7 @@ function run_node_with_temp!(sn::StreamfallNetwork, nid::Int64, climate::Climate
     timesteps = sim_length(climate)
     for ts in 1:timesteps
         run_node_with_temp!(node, climate, ts; 
-        inflow=inflow, extraction=extraction, exchange=exchange)
+                            inflow=inflow, extraction=extraction, exchange=exchange)
     end
 
     return node.outflow, node.level

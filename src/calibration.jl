@@ -39,7 +39,8 @@ function obj_func(params, climate, sn, v_id, calib_data; extractor::Function, me
         end
     end
 
-    Streamfall.run_node!(sn, v_id, climate; extraction=ext, exchange=fluxes)
+    func! = get_prop(sn, v_id, :nfunc)
+    func!(sn, v_id, climate; extraction=ext, exchange=fluxes)
     h_data, n_data = extractor(node, calib_data)
     score = metric(h_data, n_data)
 

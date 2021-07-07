@@ -206,7 +206,7 @@ Run model for all time steps, recursing upstream as needed.
 """
 function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate; 
                    inflow=nothing, extraction=nothing, exchange=nothing)
-    func = MetaGraphs.get_prop(sn.mg, node_id, :nfunc)
+    func = get_prop(sn, v_id, :nfunc)
     func(sn, node_id, climate; inflow=inflow, extraction=extraction, exchange=exchange)
     # timesteps = sim_length(climate)
     # for ts in 1:timesteps

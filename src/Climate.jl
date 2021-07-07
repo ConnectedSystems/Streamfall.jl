@@ -32,13 +32,12 @@ function climate_values(node::NetworkNode, climate::Climate,
     node_name = node.name
 
     data = climate.climate_data
-
-    rain_col = filter(x -> occursin(node_name, x)
-                        & occursin(climate.rainfall_id, x),
-                        names(data))[1]
+    rain_col = filter(x -> occursin(node_name, x) 
+                            & occursin(climate.rainfall_id, x), 
+                            names(data))[1]
     et_col = filter(x -> occursin(node_name, x)
-                      & occursin(climate.et_id, x),
-                      names(data))[1]
+                            & occursin(climate.et_id, x),
+                            names(data))[1]
 
     if isempty(rain_col) | isempty(et_col)
         throw(ArgumentError("No climate data found for $(node_name) at time step: $(timestep)"))
