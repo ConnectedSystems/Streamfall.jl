@@ -76,3 +76,23 @@ end
     metric = (obs, sim) -> 1.0 - Streamfall.NNSE(obs, sim)
     @test calibrate!(new_sn, climate, hist_streamflow; metric=metric, MaxTime=10) isa Any
 end
+
+
+@testset "Recursing IHACRESNode upstream" begin
+
+    begin
+        include("../examples/run_nodes.jl")
+        # Ensure other methods of running a node are identical
+
+        reset!(sn)
+        run_basin!(sn, climate; extraction=hist_dam_releases)
+        @test Streamfall.RMSE(n_data, sn[dam_id].level) == 0.0
+
+
+        reset!(sn)
+        Streamfall.run_node!(sn, dam_id, climate; extraction=hist_dam_releases)
+        @test Streamfall.RMSE(n_data, sn[dam_id].level) == 0.0
+
+        @test rmse >= 0.95
+    end
+end
