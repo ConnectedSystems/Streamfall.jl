@@ -128,8 +128,6 @@ function extract_node_spec(node::NetworkNode)
         params[:initial_storage] = node.storage[1]
     end
 
-    @info "here"
-
     node_type = typeof(node)
     spec = Dict(
         "node_type" => node_type.name,
