@@ -51,11 +51,12 @@ rmse_score = Streamfall.RMSE(h_data, n_data)
 nse = round(nse_score, digits=4)
 rmse = round(rmse_score, digits=4)
 
-plot(h_data,
-     legend=:bottomleft,
-     title="Calibrated IHACRES\n(RMSE: $(rmse); NSE: $(nse))",
-     label="Historic", xlabel="Day", ylabel="Dam Level [mAHD]")
+# Displaying results and saving figure
+# plot(h_data,
+#      legend=:bottomleft,
+#      title="Calibrated IHACRES\n(RMSE: $(rmse); NSE: $(nse))",
+#      label="Historic", xlabel="Day", ylabel="Dam Level [mAHD]")
 
-display(plot!(n_data, label="IHACRES"))
+# display(plot!(n_data, label="IHACRES"))
 
-savefig("calibrated_example.png")
+# savefig("calibrated_example.png")
