@@ -151,7 +151,7 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
     if !isempty(ins)
         for i in ins
             # Get inflow from previous node
-            res = run_node!(sn, i, climate, ts;
+            res = run_node!(sn[i], climate, ts;
                             inflow=inflow,
                             extraction=extraction,
                             exchange=exchange)
@@ -195,7 +195,8 @@ run_catchment! = run_basin!
     run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate;
               extraction=nothing, exchange=nothing)::Nothing
 
-Run model for all time steps, recursing upstream as needed.
+Generic run method that runs a model attached to a given node for all time steps.
+Recurses upstream as needed.
 
 # Arguments
 - `sn::StreamfallNetwork`
@@ -206,13 +207,11 @@ Run model for all time steps, recursing upstream as needed.
 """
 function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate; 
                    inflow=nothing, extraction=nothing, exchange=nothing)
-    func = get_prop(sn, v_id, :nfunc)
-    func(sn, node_id, climate; inflow=inflow, extraction=extraction, exchange=exchange)
-    # timesteps = sim_length(climate)
-    # for ts in 1:timesteps
-    #     func(sn, node_id, climate, ts;
-    #         inflow=inflow, extraction=extraction, exchange=exchange)
-    # end
+    timesteps = sim_length(climate)
+    for ts in 1:timesteps
+        run_node!(sn, node_id, climate, ts;
+                  inflow=inflow, extraction=extraction, exchange=exchange)
+    end
 end
 
 
