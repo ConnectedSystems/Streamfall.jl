@@ -7,6 +7,8 @@ abstract type HyModNode <: NetworkNode end
 
 """
 Simple implementation of HyMod - does not include snow melt processes.
+
+Adapted with kind permission from: https://github.com/jdherman/GRA-2020-SALib
 """
 Base.@kwdef mutable struct SimpleHyModNode{A <: Union{Param, Real}} <: HyModNode
     @network_node

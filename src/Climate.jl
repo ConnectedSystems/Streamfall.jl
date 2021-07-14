@@ -32,6 +32,8 @@ function climate_values(node::NetworkNode, climate::Climate,
     node_name = node.name
 
     data = climate.climate_data
+
+    # TODO : Catch instances where data is not found (raises BoundsError)
     rain_col = filter(x -> occursin(node_name, x) 
                             & occursin(climate.rainfall_id, x), 
                             names(data))[1]

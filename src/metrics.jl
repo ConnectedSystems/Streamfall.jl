@@ -44,17 +44,61 @@ function ADJ_R2(obs, sim, p::Int64)::Float64
 end
 
 
-"""Calculate the 2009 Kling-Gupta Efficiency (KGE) metric.
+"""
+    PBIAS(obs::Vector, sim::Vector)::Float64
+
+Percent bias between `sim` and `obs`
+
+Model performance for streamflow can be determined to be 
+satisfactory if the Nash-Sutcliffe Efficiency (NSE) 
+score > 0.5, the RMSE standard deviation ratio (RSR) < 0.7
+and percent bias (PBIAS) is +/- 25% (see [1]).
+
+# References
+1. Moriasi, D.N., Arnold, J.G., Liew, M.W.V., Bingner, R.L.,
+    Harmel, R.D., Veith, T.L., 2007.
+    Model Evaluation Guidelines for Systematic Quantification
+    of Accuracy in Watershed Simulations.
+    Transactions of the ASABE 50, 885–900.
+    https://doi.org/10.13031/2013.23153
+"""
+PBIAS(obs, sim) = (sum(obs .- sim) * 100) / sum(obs)
+
+
+"""
+    RSR(obs::Vector, sim::Vector)::Float64
+
+The RMSE-observations standard deviation ratio (RSR).
+
+Varies between 0 and a large positive value, where 0
+indicates an RMSE value of 0.
+
+# References
+1. Moriasi, D.N., Arnold, J.G., Liew, M.W.V., Bingner, R.L.,
+    Harmel, R.D., Veith, T.L., 2007.
+    Model Evaluation Guidelines for Systematic Quantification
+    of Accuracy in Watershed Simulations.
+    Transactions of the ASABE 50, 885–900.
+    https://doi.org/10.13031/2013.23153
+"""
+function RSR(obs, sim)::Float64
+    rmse = RMSE(obs, sim)
+    σ_obs = std(obs)
+    rsr = rmse / σ_obs
+    return rsr
+end
+
+
+"""
+    KGE(obs::Vector, sim::Vector)::Float64
+
+Calculate the 2009 Kling-Gupta Efficiency (KGE) metric.
 
 A KGE score of 1 means perfect fit.
 A score < -0.41 indicates that the mean of observations
 provides better estimates (see Knoben et al., 2019).
 
 Note: Although similar, NSE and KGE cannot be directly compared.
-
-# Arguments
-- `obs::Vector` : observations
-- `sim::Vector` : modeled results
 
 # References
 1. Gupta, H.V., Kling, H., Yilmaz, K.K., Martinez, G.F., 2009.
@@ -76,7 +120,6 @@ function KGE(obs, sim)::Float64
     end
 
     α = std(sim) / std(obs)
-    # β = (mean(sim) - mean(obs)) / std(obs)
     β = mean(sim) / mean(obs)
 
     kge = 1 - sqrt((r - 1)^2 + (α - 1)^2 + (β - 1)^2)
@@ -286,10 +329,10 @@ end
 
 Split metrics are a meta-objective optimization approach which segments data
 into subperiods. The objective function is calculated for each subperiod and
-then recombined. The approach addresses the lack of consideration of dry years 
+then recombined. The approach addresses the lack of consideration of dry years
 with least-squares.
 
-In Fowler et al., [1] the subperiod is one year. This method is "naive" in 
+In Fowler et al., [1] the subperiod is one year. This method is "naive" in
 that the time series is partitioned into `N` chunks of `n_members` and does
 not consider date/time.
 
@@ -309,4 +352,25 @@ not consider date/time.
 function naive_split_metric(obs, sim; n_members::Int=365, metric::Function=NNSE, comb_method::Function=mean)
     scores = naive_split_metric(obs, sim, n_members, metric)
     return comb_method(scores)
+end
+
+
+"""
+    inverse_metric(obs, sim; metric, comb_method::Function=mean)
+
+A meta-objective function which combines the performance of the
+given metric as applied to the discharge and the inverse of the
+discharge.
+
+By default, the combination method is to take the mean.
+
+# References
+1. Garcia, F., Folton, N., Oudin, L., 2017.
+    Which objective function to calibrate rainfall–runoff models
+        for low-flow index simulations?
+    Hydrological Sciences Journal 62, 1149–1166.
+    https://doi.org/10.1080/02626667.2017.1308511
+"""
+function inverse_metric(obs, sim; metric, comb_method::Function=mean)
+    return comb_method([metric(obs, sim), metric(1.0 ./ obs, 1.0 ./ sim)])
 end
