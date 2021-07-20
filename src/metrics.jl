@@ -221,10 +221,12 @@ function NmKGE(obs, sim)::Float64
     return 1 / (2 - mKGE(obs, sim))
 end
 
+
 """
 Mean Inverse NmKGE
 
-Said to produce better fits for low-flow indices.
+Said to produce better fits for low-flow indices 
+compared to mKGE (see [1]).
 
 1. Garcia, F., Folton, N., Oudin, L., 2017. 
     Which objective function to calibrate rainfall–runoff 
