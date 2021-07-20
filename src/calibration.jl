@@ -1,5 +1,5 @@
 # Ensure dependent data and packages are available
-using Distributed, BlackBoxOptim
+using Distributed, BlackBoxOptim, Serialization
 
 
 function data_extraction(node, calib_data::Dict)
@@ -128,4 +128,26 @@ function calibrate!(sn::StreamfallNetwork, climate::Climate, calib_data;
     for out in outlets
         calibrate!(sn, out, climate, calib_data, extractor, metric; kwargs...)
     end
+end
+
+
+function save_calibration!(res, optobj, fn=nothing)
+    if isnothing(fn)
+        fn = "./temp" * string(rand(1:Int(1e8))) * ".tmp"
+    end
+
+    fh = open(fn, "w")
+    serialize(fh, (res, optobj))
+    close(fh)
+
+    return fn
+end
+
+
+function load_calibration(fn)
+    fh = open(fn, "r")
+    (res, optobj) = deserialize(fh)
+    close(fh)
+
+    return (res, optobj)
 end
