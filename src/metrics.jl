@@ -45,6 +45,12 @@ end
 
 
 """
+Mean Absolute Error
+"""
+MAE(obs, sim) = mean(abs.(obs .- sim))
+
+
+"""
     PBIAS(obs::Vector, sim::Vector)::Float64
 
 Percent bias between `sim` and `obs`
@@ -214,6 +220,19 @@ end
 function NmKGE(obs, sim)::Float64
     return 1 / (2 - mKGE(obs, sim))
 end
+
+"""
+Mean Inverse NmKGE
+
+Said to produce better fits for low-flow indices.
+
+1. Garcia, F., Folton, N., Oudin, L., 2017. 
+    Which objective function to calibrate rainfall–runoff 
+        models for low-flow index simulations? 
+    Hydrological Sciences Journal 62, 1149–1166. 
+    https://doi.org/10.1080/02626667.2017.1308511
+"""
+mean_NmKGE(obs, sim) = mean([Streamfall.NmKGE(obs, sim), Streamfall.NmKGE(1.0 ./ obs, 1.0 ./ sim)])
 
 
 """Calculate the non-parametric Kling-Gupta Efficiency (KGE) metric.
