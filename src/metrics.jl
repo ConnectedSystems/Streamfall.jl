@@ -228,6 +228,11 @@ Mean Inverse NmKGE
 Said to produce better fits for low-flow indices 
 compared to mKGE (see [1]).
 
+# Arguments
+- `obs::Vector` : observations
+- `sim::Vector` : modeled results
+
+# References
 1. Garcia, F., Folton, N., Oudin, L., 2017. 
     Which objective function to calibrate rainfall–runoff 
         models for low-flow index simulations? 
@@ -251,10 +256,6 @@ mean_NmKGE(obs, sim) = mean([Streamfall.NmKGE(obs, sim), Streamfall.NmKGE(1.0 ./
 
 """
 function npKGE(obs, sim)::Float64
-    r = StatsBase.corspearman(obs, sim)
-    if isnan(r)
-        r = 0.0
-    end
 
     # flow duration curves
     μ_s = mean(sim)
@@ -274,6 +275,11 @@ function npKGE(obs, sim)::Float64
         β = 0.0
     else
         β = μ_s / μ_o
+    end
+
+    r = StatsBase.corspearman(fdc_obs, fdc_sim)
+    if isnan(r)
+        r = 0.0
     end
 
     kge = 1 - sqrt((r - 1)^2 + (α - 1)^2 + (β - 1)^2)

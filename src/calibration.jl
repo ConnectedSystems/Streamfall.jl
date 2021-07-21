@@ -131,6 +131,9 @@ function calibrate!(sn::StreamfallNetwork, climate::Climate, calib_data;
 end
 
 
+"""
+Serialize calibration results and optimization object to disk.
+"""
 function save_calibration!(res, optobj, fn=nothing)
     if isnothing(fn)
         fn = "./temp" * string(rand(1:Int(1e8))) * ".tmp"
@@ -144,6 +147,9 @@ function save_calibration!(res, optobj, fn=nothing)
 end
 
 
+"""
+Deserialize calibration results and optimization object from disk.
+"""
 function load_calibration(fn)
     fh = open(fn, "r")
     (res, optobj) = deserialize(fh)
