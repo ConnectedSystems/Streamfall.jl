@@ -125,9 +125,12 @@ function calibrate!(sn::StreamfallNetwork, climate::Climate, calib_data;
                    metric::Function=Streamfall.RMSE,
                    kwargs...)
     _, outlets = find_inlets_and_outlets(sn)
+    calib_states = Dict()
     for out in outlets
-        calibrate!(sn, out, climate, calib_data, extractor, metric; kwargs...)
+        calib_states[out] = calibrate!(sn, out, climate, calib_data, extractor, metric; kwargs...)
     end
+
+    return calib_states
 end
 
 
