@@ -15,8 +15,8 @@ Base.@kwdef mutable struct SimpleGR4JNode{A <: Union{Param, Real}} <: GR4JNode
     X4::A = Param(0.2948, bounds=(0.1, 0.999))
 
     # stores
-    p_store::Float64 = 0.0
-    r_store::Float64 = 0.0
+    p_store::Array{Float64} = [0.0]
+    r_store::Array{Float64} = [0.0]
 
     UH1::Array{Array{Float64}} = []
     UH2::Array{Array{Float64}} = []
@@ -32,6 +32,41 @@ end
 # end
 
 
+function SimpleGR4JNode(name::String, spec::Dict)
+        
+    n = SimpleGR4JNode{Param}(; name=name, area=spec["area"])
+
+    node_params = spec["parameters"]
+
+    node_params["p_store"] = [node_params["initial_p_store"]]
+    node_params["r_store"] = [node_params["initial_r_store"]]
+
+    delete!(node_params, "initial_p_store")
+    delete!(node_params, "initial_r_store")
+
+    for (k, p) in node_params
+        s = Symbol(k)
+        if p isa String
+            p = eval(Meta.parse(p))
+        end
+
+        try
+            f = getfield(n, s)
+            setfield!(n, s, Param(p, bounds=f.bounds))
+        catch err
+            msg = sprint(showerror, err, catch_backtrace())
+            if occursin("no field bounds", string(msg))
+                setfield!(n, s, p)
+            else
+                throw(err)
+            end
+        end
+    end
+
+    return n
+end
+
+
 function run_node!(node::GR4JNode, climate::Climate)
     timesteps = sim_length(climate)
     # prep_state!(node, sim_length)
@@ -43,22 +78,61 @@ function run_node!(node::GR4JNode, climate::Climate)
 end
 
 
-function run_node!(node::GR4JNode, climate::Climate, timestep::Int)
+function run_node!(node::GR4JNode, climate::Climate, timestep::Int; inflow=nothing, extraction=nothing, exchange=nothing)
     P, E = climate_values(node, climate, timestep)
 
-    res = run_gr4j(P, E, node.X1, node.X2, node.X3, node.X4, node.p_store, node.r_store)
+    res = run_gr4j(P, E, node.X1, node.X2, node.X3, node.X4, node.p_store[end], node.r_store[end])
     Q, p_s, r_s, UH1, UH2 = res
+
+    ts = timestep
+    node_name = node.name
+    wo = timestep_value(ts, node_name, "releases", extraction)
+    ex = timestep_value(ts, node_name, "exchange", exchange)
+    in_flow = timestep_value(ts, node_name, "inflow", inflow)
+
+    if !isnothing(inflow)
+        Q = Q + in_flow + ex - wo
+    end
 
     update_state!(node, p_s, r_s, Q, UH1, UH2)
 end
 
 
 function update_state!(node::GR4JNode, ps, rs, q, UH1, UH2)
-    node.p_store = ps
-    node.r_store = rs
+    append!(node.p_store, ps)
+    append!(node.r_store, rs)
     append!(node.outflow, q)
     append!(node.UH1, UH1)
     append!(node.UH2, UH2)
+end
+
+
+function update_params!(node::GR4JNode, X1::Float64, X2::Float64, X3::Float64, X4::Float64)::Nothing
+    node.X1 = Param(X1, bounds=node.X1.bounds)
+    node.X2 = Param(X2, bounds=node.X2.bounds)
+    node.X3 = Param(X3, bounds=node.X3.bounds)
+    node.X4 = Param(X4, bounds=node.X4.bounds)
+
+    return nothing
+end
+
+
+"""
+    reset!(node::GR4JNode)::Nothing
+
+Reset node. Clears all states back to their initial values.
+"""
+function reset!(node::GR4JNode)::Nothing
+    # stores
+    node.p_store = [node.p_store[1]]
+    node.r_store = [node.r_store[1]]
+
+    node.UH1 = []
+    node.UH2 = []
+
+    node.outflow = []
+
+    return nothing
 end
 
 
@@ -146,6 +220,7 @@ function run_gr4j(P::Float64, E::Float64,
 
         reservoir_production = 0.0
         routed_volume = 0.0
+    end
 
     p_store = p_store - net_evap + reservoir_production
 
