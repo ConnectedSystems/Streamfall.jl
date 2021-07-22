@@ -55,8 +55,8 @@ MAE(obs, sim) = mean(abs.(obs .- sim))
 
 Percent bias between `sim` and `obs`
 
-Model performance for streamflow can be determined to be 
-satisfactory if the Nash-Sutcliffe Efficiency (NSE) 
+Model performance for streamflow can be determined to be
+satisfactory if the Nash-Sutcliffe Efficiency (NSE)
 score > 0.5, the RMSE standard deviation ratio (RSR) < 0.7
 and percent bias (PBIAS) is +/- 25% (see [1]).
 
@@ -96,13 +96,17 @@ end
 
 
 """
-    KGE(obs::Vector, sim::Vector)::Float64
+    KGE(obs::Vector, sim::Vector; scaling::Tuple=nothing)::Float64
 
 Calculate the 2009 Kling-Gupta Efficiency (KGE) metric.
 
 A KGE score of 1 means perfect fit.
 A score < -0.41 indicates that the mean of observations
 provides better estimates (see Knoben et al., 2019).
+
+The `scaling` argument expects a three-valued tuple
+which scales `r`, `α` and `β` factors respectively.
+If not specified, defaults to `1`.
 
 Note: Although similar, NSE and KGE cannot be directly compared.
 
@@ -118,8 +122,18 @@ Note: Although similar, NSE and KGE cannot be directly compared.
     Catchment hydrology/Modelling approaches.
     https://doi.org/10.5194/hess-2019-327
 
+3. Mizukami, N., Rakovec, O., Newman, A.J., Clark, M.P., Wood, A.W.,
+    Gupta, H.V., Kumar, R., 2019.
+    On the choice of calibration metrics for “high-flow”
+        estimation using hydrologic models.
+    Hydrology and Earth System Sciences 23, 2601–2614.
+    https://doi.org/10.5194/hess-23-2601-2019
 """
-function KGE(obs, sim)::Float64
+function KGE(obs, sim; scaling::Tuple=nothing)::Float64
+    if isnothing(scaling)
+        scaling = (1, 1, 1)
+    end
+
     r = Statistics.cor(obs, sim)
     if isnan(r)
         r = 0.0
@@ -128,7 +142,11 @@ function KGE(obs, sim)::Float64
     α = std(sim) / std(obs)
     β = mean(sim) / mean(obs)
 
-    kge = 1 - sqrt((r - 1)^2 + (α - 1)^2 + (β - 1)^2)
+    rs = scaling[1]
+    as = scaling[2]
+    bs = scaling[3]
+
+    kge = 1 - sqrt(rs*(r - 1)^2 + as*(α - 1)^2 + bs*(β - 1)^2)
 
     return kge
 end
@@ -152,8 +170,8 @@ end
 - `obs::Vector` : observations
 - `sim::Vector` : modeled results
 """
-function NKGE(obs, sim)::Float64
-    return 1 / (2 - KGE(obs, sim))
+function NKGE(obs, sim; scaling=nothing)::Float64
+    return 1 / (2 - KGE(obs, sim; scaling=scaling))
 end
 
 
@@ -164,6 +182,8 @@ Also known as KGE prime (KGE').
 # Arguments
 - `obs::Vector`: observations
 - `sim::Vector` : modeled results
+- `scaling::Tuple` : scaling factors in order of timing (r), magnitude (β), variability (γ). 
+                     Defaults to (1,1,1).
 
 # References
 1. Kling, H., Fuchs, M., Paulin, M., 2012.
@@ -171,7 +191,11 @@ Also known as KGE prime (KGE').
     Journal of Hydrology 424–425, 264–277.
     https://doi.org/10.1016/j.jhydrol.2012.01.011
 """
-function mKGE(obs, sim)::Float64
+function mKGE(obs, sim; scaling=nothing)::Float64
+    if isnothing(scaling)
+        scaling = (1,1,1)
+    end
+
     # Timing
     r = Statistics.cor(obs, sim)
     if isnan(r)
@@ -193,7 +217,11 @@ function mKGE(obs, sim)::Float64
     # Magnitude
     β = mean(sim) / mean(obs)
 
-    mod_kge = 1 - sqrt((r - 1)^2 + (β - 1)^2 + (γ - 1)^2)
+    rs = scaling[1]
+    βs = scaling[2]
+    γs = scaling[3]
+
+    mod_kge = 1 - sqrt(rs*(r - 1)^2 + βs*(β - 1)^2 + γs*(γ - 1)^2)
 
     return mod_kge
 end
@@ -205,8 +233,8 @@ end
 - `obs::Vector` : observations
 - `sim::Vector` : modeled results
 """
-function BmKGE(obs, sim)::Float64
-    mkge = mKGE(obs, sim)
+function BmKGE(obs, sim; scaling=nothing)::Float64
+    mkge = mKGE(obs, sim; scaling=scaling)
     return mkge / (2 - mkge)
 end
 
@@ -217,15 +245,15 @@ end
 - `obs::Vector` : observations
 - `sim::Vector` : modeled results
 """
-function NmKGE(obs, sim)::Float64
-    return 1 / (2 - mKGE(obs, sim))
+function NmKGE(obs, sim; scaling=nothing)::Float64
+    return 1 / (2 - mKGE(obs, sim; scaling=scaling))
 end
 
 
 """
 Mean Inverse NmKGE
 
-Said to produce better fits for low-flow indices 
+Said to produce better fits for low-flow indices
 compared to mKGE (see [1]).
 
 # Arguments
@@ -233,20 +261,21 @@ compared to mKGE (see [1]).
 - `sim::Vector` : modeled results
 
 # References
-1. Garcia, F., Folton, N., Oudin, L., 2017. 
-    Which objective function to calibrate rainfall–runoff 
-        models for low-flow index simulations? 
-    Hydrological Sciences Journal 62, 1149–1166. 
+1. Garcia, F., Folton, N., Oudin, L., 2017.
+    Which objective function to calibrate rainfall–runoff
+        models for low-flow index simulations?
+    Hydrological Sciences Journal 62, 1149–1166.
     https://doi.org/10.1080/02626667.2017.1308511
 """
-mean_NmKGE(obs, sim) = mean([Streamfall.NmKGE(obs, sim), Streamfall.NmKGE(1.0 ./ obs, 1.0 ./ sim)])
+mean_NmKGE(obs, sim; scaling=nothing) = mean([Streamfall.NmKGE(obs, sim; scaling=scaling), Streamfall.NmKGE(1.0 ./ obs, 1.0 ./ sim; scaling=scaling)])
 
 
 """Calculate the non-parametric Kling-Gupta Efficiency (KGE) metric.
 
 # Arguments
 - `obs::Vector` : observations
-- `sim::Vector` : modeled results
+- `sim::Vector` : modeled 
+- `scaling::Tuple` : scaling factors for timing (s), variability (α), magnitude (β)
 
 # References
 1. Pool, S., Vis, M., Seibert, J., 2018.
@@ -255,7 +284,10 @@ mean_NmKGE(obs, sim) = mean([Streamfall.NmKGE(obs, sim), Streamfall.NmKGE(1.0 ./
     https://doi.org/10.1080/02626667.2018.1552002
 
 """
-function npKGE(obs, sim)::Float64
+function npKGE(obs, sim; scaling=nothing)::Float64
+    if isnothing(scaling)
+        scaling = (1,1,1)
+    end
 
     # flow duration curves
     μ_s = mean(sim)
@@ -282,7 +314,11 @@ function npKGE(obs, sim)::Float64
         r = 0.0
     end
 
-    kge = 1 - sqrt((r - 1)^2 + (α - 1)^2 + (β - 1)^2)
+    rs = scaling[1]
+    αs = scaling[2]
+    βs = scaling[3]
+
+    kge = 1 - sqrt(rs*(r - 1)^2 + αs*(α - 1)^2 + βs*(β - 1)^2)
 
     return kge
 end
@@ -294,8 +330,8 @@ end
 - `obs::Vector` : observations
 - `sim::Vector` : modeled results
 """
-function BnpKGE(obs, sim)::Float64
-    npkge = npKGE(obs, sim)
+function BnpKGE(obs, sim; scaling=nothing)::Float64
+    npkge = npKGE(obs, sim; scaling=scaling)
     return npkge / (2 - npkge)
 end
 
@@ -306,8 +342,8 @@ end
 - `obs::Vector` : observations
 - `sim::Vector` : modeled results
 """
-function NnpKGE(obs::Array, sim::Array)::Float64
-    return 1 / (2 - npKGE(obs, sim))
+function NnpKGE(obs::Array, sim::Array; scaling=nothing)::Float64
+    return 1 / (2 - npKGE(obs, sim; scaling=scaling))
 end
 
 
