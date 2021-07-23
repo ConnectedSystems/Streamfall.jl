@@ -342,7 +342,7 @@ end
 - `obs::Vector` : observations
 - `sim::Vector` : modeled results
 """
-function NnpKGE(obs::Array, sim::Array; scaling=nothing)::Float64
+function NnpKGE(obs, sim; scaling=nothing)::Float64
     return 1 / (2 - npKGE(obs, sim; scaling=scaling))
 end
 
