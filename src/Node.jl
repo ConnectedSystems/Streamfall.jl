@@ -58,9 +58,9 @@ Extracts parameter names, values, and bounds
 """
 function param_info(node::NetworkNode; kwargs...)::Tuple
     tmp = Model(node)
-    values = collect(tmp.val)
-    bounds = collect(tmp.bounds)
-    param_names = collect(tmp.fieldname)
+    values = collect(tmp[:val])
+    bounds = collect(tmp[:bounds])
+    param_names = collect(tmp[:fieldname])
     
     return param_names, values, bounds
 end

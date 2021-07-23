@@ -361,9 +361,9 @@ Extract node parameter names, values, and bounds for IHACRESNode types.
 """
 function param_info(node::IHACRESNode; with_level::Bool = false)::Tuple
     tmp = Model(node)
-    values = collect(tmp.val)
-    bounds = collect(tmp.bounds)
-    param_names = collect(tmp.fieldname)
+    values = collect(tmp[:val])
+    bounds = collect(tmp[:bounds])
+    param_names = collect(tmp[:fieldname])
 
     if with_level
         level_param_vals = map(x->x.val, node.level_params)
