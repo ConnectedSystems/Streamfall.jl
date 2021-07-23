@@ -129,7 +129,7 @@ Note: Although similar, NSE and KGE cannot be directly compared.
     Hydrology and Earth System Sciences 23, 2601–2614.
     https://doi.org/10.5194/hess-23-2601-2019
 """
-function KGE(obs, sim; scaling::Tuple=nothing)::Float64
+function KGE(obs, sim; scaling=nothing)::Float64
     if isnothing(scaling)
         scaling = (1, 1, 1)
     end
