@@ -45,12 +45,12 @@ end
 
 
 """Find all inlets and outlets in a network."""
-function find_inlets_and_outlets(sn::StreamfallNetwork)
+function find_inlets_and_outlets(sn::StreamfallNetwork)::Tuple
     g = sn.g
     vs = vertices(g)
     num_vs::Int64 = length(vs)
 
-    ins_outs = pmap(in_or_out, repeat([g], num_vs), vs)
+    ins_outs = map(in_or_out, repeat([g], num_vs), vs)
     inlets = Int64[]
     outlets = Int64[]
     for row in ins_outs
@@ -287,7 +287,8 @@ end
 
 function save_network_spec(sn::StreamfallNetwork, fn::String)
     spec = extract_network_spec(sn)
-    write_file(fn, spec)
+    YAML.write_file(fn, spec)
+    return nothing
 end
 
 
