@@ -71,7 +71,6 @@ function calibrate!(sn, v_id, climate, calib_data,
                    extractor::Function=Streamfall.data_extraction,
                    metric::Function=Streamfall.RMSE;
                    kwargs...)
-
     # Set defaults as necessary
     defaults = (;
         MaxTime=900,

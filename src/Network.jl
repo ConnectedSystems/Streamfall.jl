@@ -287,7 +287,7 @@ end
 
 function save_network_spec(sn::StreamfallNetwork, fn::String)
     spec = extract_network_spec(sn)
-    YAML.write_file(fn, spec)
+    write_file(fn, spec)
     return nothing
 end
 
