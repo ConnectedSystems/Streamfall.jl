@@ -2,6 +2,84 @@ using Statistics
 using StatsBase
 
 
+"""
+Bounds given metric between -1.0 and 1.0, where 1.0 is perfect fit.
+
+Suitable for use with any metric that ranges from 1 to -∞.
+
+# References
+1. Mathevet, T., Michel, C., Andréassian, V., Perrin, C., 2006. 
+    A bounded version of the Nash-Sutcliffe criterion for better model 
+    assessment on large sets of basins. 
+    IAHS-AISH Publication 307, 211–219.
+    https://iahs.info/uploads/dms/13614.21--211-219-41-MATHEVET.pdf
+
+# Example
+```julia
+julia> import Streamfall: @bound, KGE
+julia> @bound KGE([1,2], [3,2])
+-0.35653767993482094
+```
+"""
+macro bound(metric)
+    tmp = :($metric)
+    return :($tmp / (2.0 - $tmp))
+end
+
+
+"""
+Normalizes given metric between 0.0 and +∞, where 0.0 is perfect fit.
+
+Suitable for use with any metric that ranges from 1 to -∞.
+
+# References
+1. Nossent, J., Bauwens, W., 2012.
+    Application of a normalized Nash-Sutcliffe efficiency to improve the 
+    accuracy of the Sobol’ sensitivity analysis of a hydrological model.
+    EGU General Assembly Conference Abstracts 237.
+
+# Example
+```julia
+julia> import Streamfall: @normalize, KGE
+julia> @normalize KGE([1,2], [3,2])
+0.1111111111111111
+```
+"""
+macro normalize(metric)
+    return :(1.0 / (2.0 - $metric))
+end
+
+
+"""
+Applies mean inverse approach to a metric.
+
+Suitable for use with any metric that ranges from 1 to -∞.
+
+If using with other macros such as `@normalize` or `@bound`, 
+these must come first.
+
+# References
+1. Garcia, F., Folton, N., Oudin, L., 2017.
+    Which objective function to calibrate rainfall–runoff
+        models for low-flow index simulations?
+    Hydrological Sciences Journal 62, 1149–1166.
+    https://doi.org/10.1080/02626667.2017.1308511
+
+# Example
+```julia
+julia> import Streamfall: @normalize, @mean_inverse, KGE
+julia> @normalize @mean_inverse KGE [1,2] [3,2]
+0.3193505947991363
+```
+"""
+macro mean_inverse(metric, obs, sim)
+    obj, o, s = eval(metric), eval(obs), eval(sim)
+    q = obj(o, s)
+    q2 = obj(1.0 ./ o, 1.0 ./ s)
+    return mean([q, q2])
+end
+
+
 """The Nash-Sutcliffe Efficiency score"""
 NSE(obs, sim) = 1.0 - sum((obs .- sim).^2) / sum((obs .- mean(obs)).^2)
 
@@ -182,7 +260,7 @@ Also known as KGE prime (KGE').
 # Arguments
 - `obs::Vector`: observations
 - `sim::Vector` : modeled results
-- `scaling::Tuple` : scaling factors in order of timing (r), magnitude (β), variability (γ). 
+- `scaling::Tuple` : scaling factors in order of timing (r), magnitude (β), variability (γ).
                      Defaults to (1,1,1).
 
 # References
@@ -274,7 +352,7 @@ mean_NmKGE(obs, sim; scaling=nothing) = mean([Streamfall.NmKGE(obs, sim; scaling
 
 # Arguments
 - `obs::Vector` : observations
-- `sim::Vector` : modeled 
+- `sim::Vector` : modeled
 - `scaling::Tuple` : scaling factors for timing (s), variability (α), magnitude (β)
 
 # References
