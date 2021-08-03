@@ -80,6 +80,33 @@ macro mean_inverse(metric, obs, sim)
 end
 
 
+"""
+Applies split meta metric approach
+
+If using with other macros such as `@normalize` or `@bound`, 
+these must come first.
+
+# References
+1. Fowler, K., Peel, M., Western, A., Zhang, L., 2018. 
+    Improved Rainfall-Runoff Calibration for Drying Climate: 
+    Choice of Objective Function. 
+    Water Resources Research 54, 3392–3408. 
+    https://doi.org/10.1029/2017WR022466
+
+# Example
+```julia
+julia> using Statistics
+julia> import Streamfall: @normalize, @split, KGE
+julia> @normalize @split KGE repeat([1,2], 365) repeat([3,2], 365) 365 mean
+0.3217309561946589
+```
+"""
+macro split(metric, obs, sim, n, agg_func=mean)
+    obj, o, s, t, func = eval(metric), eval(obs), eval(sim), eval(n), eval(agg_func)
+    return naive_split_metric(o, s; n_members=t, metric=obj, comb_method=func)
+end
+
+
 """The Nash-Sutcliffe Efficiency score"""
 NSE(obs, sim) = 1.0 - sum((obs .- sim).^2) / sum((obs .- mean(obs)).^2)
 
