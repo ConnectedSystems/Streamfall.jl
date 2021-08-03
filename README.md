@@ -3,14 +3,16 @@
 Streamfall: An experimental graph-based streamflow modelling system written in Julialang.
 
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://connectedsystems.github.io/Streamfall.jl/dev)
+[![DOI](https://zenodo.org/badge/345341654.svg)](https://zenodo.org/badge/latestdoi/345341654)
 
 Aims of the project are to leverage the Julia language and ecosystem to support:
 - Quick application and exploratory analysis
-- Use of different rainfall-runoff models in tandem [**aspiration**]
+- Use of different rainfall-runoff models in tandem [**Example under development**]
 - Modelling and assessment of interacting systems
 - Parallel scenario runs
 
-**Note:** the only model currently available is the IHACRES rainfall-runoff model, leveraging [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim).
+Streamfall now includes tentative implementations of GR4J, HyMod and IHACRES.
+The IHACRES rainfall-runoff model is implemented with [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim).
 
 [LightGraphs](https://github.com/JuliaGraphs/LightGraphs.jl) and [MetaGraphs](https://github.com/JuliaGraphs/MetaGraphs.jl) are used underneath for network traversal/analysis.
 
@@ -56,7 +58,7 @@ run_basin!(sn, climate)
 # Get a specific node in network
 node = sn[1]  # get node 1
 
-# Could also get node by name 
+# Could also get node by name
 # which will also return its position in the network:
 # nid, node = sn["node1"]
 
@@ -65,6 +67,29 @@ Streamfall.RMSE(obs_streamflow, node.outflow)
 
 # Save calibrated network spec to file
 Streamfall.save_network_spec(sn, "calibrated_example.yml")
+
+# Plot indicative figure
+plot_network(sn; as_html=true)
+```
+
+To display an overview of a node or network:
+
+```julia
+julia> node
+Name: 406219 [BilinearNode]
+Area: 1985.73
+┌──────────────┬───────────┬─────────────┬─────────────┐
+│    Parameter │     Value │ Lower Bound │ Upper Bound │
+├──────────────┼───────────┼─────────────┼─────────────┤
+│            d │   84.2802 │        10.0 │       550.0 │
+│           d2 │   2.42241 │      0.0001 │        10.0 │
+│            e │  0.812959 │         0.1 │         1.5 │
+│            f │   2.57928 │        0.01 │         3.0 │
+│            a │   5.92338 │         0.1 │        10.0 │
+│            b │ 0.0989926 │       0.001 │         0.1 │
+│ storage_coef │   1.86134 │     1.0e-10 │        10.0 │
+│        alpha │  0.727905 │      1.0e-5 │         1.0 │
+└──────────────┴───────────┴─────────────┴─────────────┘
 ```
 
 ### More information
