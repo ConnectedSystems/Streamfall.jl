@@ -28,7 +28,7 @@ end
 
 
 """
-Normalizes given metric between 0.0 and +∞, where 0.0 is perfect fit.
+Normalizes given metric between 0.0 and 1.0, where 0.0 is perfect fit.
 
 Suitable for use with any metric that ranges from 1 to -∞.
 
