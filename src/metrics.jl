@@ -205,6 +205,8 @@ end
 
 Calculate the 2009 Kling-Gupta Efficiency (KGE) metric.
 
+Decomposes NSE into correlation (`r`), relative variability (`α`), and bias (`β`) terms.
+
 A KGE score of 1 means perfect fit.
 A score < -0.41 indicates that the mean of observations
 provides better estimates (see Knoben et al., 2019).
@@ -239,12 +241,16 @@ function KGE(obs, sim; scaling=nothing)::Float64
         scaling = (1, 1, 1)
     end
 
+    # Correlation
     r = Statistics.cor(obs, sim)
     if isnan(r)
         r = 0.0
     end
 
+    # relative variance
     α = std(sim) / std(obs)
+
+    # bias
     β = mean(sim) / mean(obs)
 
     rs = scaling[1]
