@@ -152,7 +152,13 @@ end
 """
 Mean Absolute Error
 """
-MAE(obs, sim) = mean(abs.(obs .- sim))
+MAE(obs, sim) = mean(abs.(sim .- obs))
+
+
+"""
+Mean Error
+"""
+ME(obs, sim) = mean(sim .- obs)
 
 
 """
