@@ -505,19 +505,19 @@ end
 
 """Naive approach to split metrics.
 
-Split metrics are a meta-objective optimization approach which segments data
+Split metrics are a meta-objective optimization approach which "splits" data
 into subperiods. The objective function is calculated for each subperiod and
 then recombined. The approach addresses the lack of consideration of dry years
 with least-squares.
 
-In Fowler et al., [1] the subperiod is one year. This method is "naive" in
-that the time series is partitioned into `N` chunks of `n_members` and does
-not consider date/time.
+In Fowler et al., [1] the subperiod is one year. The implementation offered here
+is "naive" in that the data is partitioned into `N` chunks of `n_members` and
+does not consider date/time.
 
 # Arguments
 - `obs::Vector` : Historic observations to compare against
 - `sim::Vector` : Modeled time series
-- `n_members::Int` : number of members per chunk, defaults to 365
+- `n_members::Int` : number of members per chunk (i.e., sub-samples), defaults to 365
 - `metric::Function` : Objective function to apply, defaults to NNSE
 - `comb_method::Function` : Recombination method, defaults to `mean`
 
