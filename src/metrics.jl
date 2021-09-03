@@ -8,9 +8,9 @@ Bounds given metric between -1.0 and 1.0, where 1.0 is perfect fit.
 Suitable for use with any metric that ranges from 1 to -∞.
 
 # References
-1. Mathevet, T., Michel, C., Andréassian, V., Perrin, C., 2006. 
-    A bounded version of the Nash-Sutcliffe criterion for better model 
-    assessment on large sets of basins. 
+1. Mathevet, T., Michel, C., Andréassian, V., Perrin, C., 2006.
+    A bounded version of the Nash-Sutcliffe criterion for better model
+    assessment on large sets of basins.
     IAHS-AISH Publication 307, 211–219.
     https://iahs.info/uploads/dms/13614.21--211-219-41-MATHEVET.pdf
 
@@ -34,7 +34,7 @@ Suitable for use with any metric that ranges from 1 to -∞.
 
 # References
 1. Nossent, J., Bauwens, W., 2012.
-    Application of a normalized Nash-Sutcliffe efficiency to improve the 
+    Application of a normalized Nash-Sutcliffe efficiency to improve the
     accuracy of the Sobol’ sensitivity analysis of a hydrological model.
     EGU General Assembly Conference Abstracts 237.
 
@@ -55,7 +55,7 @@ Applies mean inverse approach to a metric.
 
 Suitable for use with any metric that ranges from 1 to -∞.
 
-If using with other macros such as `@normalize` or `@bound`, 
+If using with other macros such as `@normalize` or `@bound`,
 these must come first.
 
 # References
@@ -83,14 +83,14 @@ end
 """
 Applies split meta metric approach
 
-If using with other macros such as `@normalize` or `@bound`, 
+If using with other macros such as `@normalize` or `@bound`,
 these must come first.
 
 # References
-1. Fowler, K., Peel, M., Western, A., Zhang, L., 2018. 
-    Improved Rainfall-Runoff Calibration for Drying Climate: 
-    Choice of Objective Function. 
-    Water Resources Research 54, 3392–3408. 
+1. Fowler, K., Peel, M., Western, A., Zhang, L., 2018.
+    Improved Rainfall-Runoff Calibration for Drying Climate:
+    Choice of Objective Function.
+    Water Resources Research 54, 3392–3408.
     https://doi.org/10.1029/2017WR022466
 
 # Example
