@@ -67,9 +67,6 @@ Streamfall.RMSE(obs_streamflow, node.outflow)
 
 # Save calibrated network spec to file
 Streamfall.save_network_spec(sn, "calibrated_example.yml")
-
-# Plot indicative figure
-plot_network(sn; as_html=true)
 ```
 
 To display an overview of a node or network:
