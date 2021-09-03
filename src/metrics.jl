@@ -452,7 +452,10 @@ function NnpKGE(obs, sim; scaling=nothing)::Float64
 end
 
 
-"""Liu Mean Efficiency metric.
+"""Liu Mean Efficiency metric (LME).
+
+Reformulation of the KGE metric said to be advantageous for capturing extreme
+flow events.
 
 # Arguments
 - `obs::Vector` : observations
@@ -472,7 +475,8 @@ function LME(obs, sim)::Float64
     r = Statistics.cor(obs, sim)
     σ_s = std(sim)
     σ_o = std(obs)
-    k_1 = r * (σ_s / σ_o)
+    α = (σ_s / σ_o)
+    k_1 = r * α
 
     LME = 1 - sqrt((k_1 - 1)^2 + (β - 1)^2)
 
