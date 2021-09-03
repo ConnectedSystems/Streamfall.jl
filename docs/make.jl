@@ -17,9 +17,9 @@ makedocs(sitename="Streamfall Documentation",
         "network.md",
         "nodes.md",
         "use_methods.md",
+        "metrics.md",
         "Examples" => [
             "Calibration" => [
-                "metrics.md",
                 "calibration_setup.md",
                 "calibration.md",
             ],
