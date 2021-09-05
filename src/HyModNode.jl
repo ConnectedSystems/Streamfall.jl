@@ -6,9 +6,15 @@ abstract type HyModNode <: NetworkNode end
 
 
 """
-Simple implementation of HyMod - does not include snow melt processes.
+Simple implementation of HyMod - does not include snow melt processes (see [1]).
 
 Adapted with kind permission from: https://github.com/jdherman/GRA-2020-SALib
+
+# References
+1. Gharari, S., Hrachowitz, M., Fenicia, F., Savenije, H.H.G., 2013. 
+    An approach to identify time consistent model parameters: sub-period calibration. 
+    Hydrology and Earth System Sciences 17, 149–161. 
+    https://doi.org/10.5194/hess-17-149-2013
 """
 Base.@kwdef mutable struct SimpleHyModNode{A <: Union{Param, Real}} <: HyModNode
     @network_node
@@ -109,7 +115,7 @@ function run_node!(node::SimpleHyModNode, climate::Climate, timestep::Int;
 end
 
 
-function run_hymod!(node::SimpleHyModNode, P, ET, Sm, Sf1, Sf2, Sf3, Ss1, inflow, ext, flux)
+function run_hymod!(node::SimpleHyModNode, P, PET, Sm, Sf1, Sf2, Sf3, Ss1, inflow, ext, flux)
     Sm_max = node.Sm_max
     B = node.B
     alpha = node.alpha
@@ -117,8 +123,8 @@ function run_hymod!(node::SimpleHyModNode, P, ET, Sm, Sf1, Sf2, Sf3, Ss1, inflow
     Ks = node.Ks
 
     # Calculate fluxes
-    Peff = P*(1 - max(1.0 - Sm/Sm_max,0.0)^B) # PDM model Moore 1985
-    Evap = min(ET*(Sm/Sm_max), Sm)
+    Peff = (P*node.area)*(1 - max(1.0 - Sm/Sm_max, 0.0)^B)  # PDM model Moore 1985
+    ETa = min(PET*(Sm/Sm_max), Sm) * node.area
 
     Qf1 = Kf*Sf1
     Qf2 = Kf*Sf2
@@ -126,7 +132,7 @@ function run_hymod!(node::SimpleHyModNode, P, ET, Sm, Sf1, Sf2, Sf3, Ss1, inflow
     Qs1 = Ks*Ss1
 
     # update state variables
-    Sm_t1 = Sm + P - Peff - Evap
+    Sm_t1 = max(Sm + (P*node.area) - Peff - ETa, 0.0)
     Sf1_t1 = Sf1 + alpha*Peff - Qf1
     Sf2_t1 = Sf2 + Qf1 - Qf2
     Sf3_t1 = Sf3 + Qf2 - Qf3
