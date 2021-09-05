@@ -1,7 +1,4 @@
-# Implemented node types
-
-
-## IHACRES
+# IHACRES
 
 ```@autodocs
 Modules = [Streamfall]
@@ -15,12 +12,4 @@ Pages   = ["IHACRESNode.jl"]
 Modules = [Streamfall]
 Order   = [:function, :type]
 Pages   = ["IHACRESExpuhNode.jl"]
-```
-
-## Dam Level
-
-```@autodocs
-Modules = [Streamfall]
-Order   = [:function, :type]
-Pages   = ["DamNode.jl"]
 ```

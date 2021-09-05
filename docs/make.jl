@@ -15,7 +15,13 @@ makedocs(sitename="Streamfall Documentation",
         "index.md",
         "primer.md",
         "network.md",
-        "nodes.md",
+        "Nodes" => [
+            "Node.md",
+            "IHACRES.md",
+            "HyMod.md",
+            "GR4J.md",
+            "Dam.md"
+        ],
         "use_methods.md",
         "metrics.md",
         "Examples" => [
