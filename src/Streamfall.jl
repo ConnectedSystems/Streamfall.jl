@@ -254,7 +254,7 @@ include("calibration.jl")
 export @def
 export NetworkNode, GenericNode, GenericDirectNode
 export IHACRES, IHACRESNode, BilinearNode, ExpuhNode, DamNode, Climate
-export SimpleGR4JNode, HyModNode, SimpleHyModNode
+export create_node, SimpleGR4JNode, HyModNode, SimpleHyModNode
 export find_inlets_and_outlets, inlets, outlets, create_network, create_node
 export climate_values, get_node, get_node_id, get_prop, set_prop!
 export param_info, update_params!, sim_length, reset!
