@@ -20,13 +20,47 @@ The IHACRES rainfall-runoff model is implemented with [ihacres_nim](https://gith
 Development version of the documentation can be found [here](https://connectedsystems.github.io/Streamfall.jl/dev).
 
 
-## Quick usage example
+## Quick start (prep)
 
 ```julia
-using CSV, YAML
-using Streamfall
+using YAML, DataFrames, CSV, Plots
+using Statistics
+using Streamfall, BlackBoxOptim
 
 
+# Load observations
+date_format = "YYYY-mm-dd"
+
+# Load file which holds streamflow, precipitation and PET data
+obs_data = DataFrame!(CSV.File("example_data.csv"),
+                        comment="#",
+                        dateformat=date_format))
+
+
+Qo = obs_data[:, ["Date", "Gauge_Q"]]
+
+# Create climate data interface
+climate_data = obs_data[:, ["Date", "Gauge_P", "Gauge_PET"]]
+climate = Climate(climate_data, "_P", "_PET")
+```
+
+## Quick start (single node)
+
+```julia
+# Create a node
+hymod_node = create_node(SimpleHyModNode, "Gauge", 129.2)
+# gr4j_node = create_node(SimpleGR4JNode, "Gauge", 129.2)
+# ihacres_node = create_node(BilinearNode, "Gauge", 129.2)
+
+# Calibrate a node for 30 seconds (uses the BlackBoxOptim package)
+# Default metric used is RMSE
+calibrate!(hymod_node, climate, Qo; MaxTime=30)
+```
+
+
+## Quick start (network of nodes)
+
+```julia
 # Load and generate stream network
 network_spec = YAML.load_file("network.yml")
 sn = create_network("Example Network", network_spec)
