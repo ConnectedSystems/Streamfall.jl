@@ -1,5 +1,6 @@
 using DataFrames
 using PrettyTables
+import ModelParameters: Param
 import MetaGraphs
 
 
@@ -13,6 +14,12 @@ end
 
 Base.@kwdef mutable struct GenericNode <: NetworkNode
     @network_node
+end
+
+
+"""Create an arbitrary node."""
+function create_node(node::Type{<:NetworkNode}, name::String, area::Float64)
+    return node{Param}(; name=name, area=area)
 end
 
 
@@ -81,8 +88,8 @@ end
 Retrieve node_id and node property for a specified gauge.
 
 # Arguments
-- sn::StreamfallNetwork
-- node_name::String : name of node of interest
+- sn : Streamfall Network
+- node_name : name of node of interest
 
 # Returns
 Tuple, node position id and node object
