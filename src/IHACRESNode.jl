@@ -73,9 +73,7 @@ end
 
 
 function BilinearNode(name::String, spec::Dict)
-        
     n = BilinearNode{Param}(; name=name, area=spec["area"])
-
     node_params = spec["parameters"]
 
     if haskey(spec, "level_params")
@@ -158,7 +156,7 @@ end
 
 
 """
-    run_node!(node::DamNode, climate::Climate, timestep::Int; 
+    run_node!(node::IHACRESNode, climate::Climate, timestep::Int; 
               inflow=nothing, extraction=nothing, exchange=nothing)
 
 Run a specific node for a specified time step.
