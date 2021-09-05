@@ -68,22 +68,9 @@ sn = create_network("Example Network", network_spec)
 # Show figure of network
 plot_network(sn)
 
-# Prepare associated observations
-date_format = "YYYY-mm-dd"
-obs_data = DataFrame!(CSV.File("example_data.csv",
-                          comment="#",
-                          dateformat=date_format))
-
-# Set up climate data
-climate_data = obs_data[:, ["Date", "node1_P", "node1_ET"]]
-climate = Climate(climate_data, "_P", "_ET")
-
-# Extract streamflow observations
-obs_streamflow = obs_data[:, ["Date", "node1_streamflow"]]
-
 # Calibrate network using the BlackBoxOptim package
 # keyword arguments will be passed to the `bboptimize()` function
-calibrate!(sn, climate, obs_streamflow; MaxTime=180.0)
+calibrate!(sn, climate, Qo; MaxTime=180.0)
 
 # Run stream network
 # There is also `run_catchment!()` which does the same thing
