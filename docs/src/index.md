@@ -8,9 +8,9 @@ Aims of the project are to leverage the Julia language and ecosystem to allow/en
 - Modelling and assessment of interacting socio-environmental systems [**aspiration**]
 - Parallel scenario runs
 
-Streamfall currently includes interfaces to:
+Streamfall currently includes implementations of:
 * IHACRES, leveraging [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim)
-* HyMOD
+* HyMOD (without the snowmelt component)
 * GR4J
 
 [LightGraphs](https://github.com/JuliaGraphs/LightGraphs.jl) and [MetaGraphs](https://github.com/JuliaGraphs/MetaGraphs.jl) are used underneath for network traversal/analysis.
