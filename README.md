@@ -49,7 +49,7 @@ climate = Climate(climate_data, "_P", "_PET")
 ```julia
 # Create a node
 hymod_node = create_node(SimpleHyModNode, "Gauge", 129.2)
-# gr4j_node = create_node(SimpleGR4JNode, "Gauge", 129.2)
+# gr4j_node = create_node(GR4JNode, "Gauge", 129.2)
 # ihacres_node = create_node(BilinearNode, "Gauge", 129.2)
 
 # Calibrate a node for 30 seconds (uses the BlackBoxOptim package)
