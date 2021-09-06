@@ -2,10 +2,10 @@ using Parameters
 using ModelParameters
 
 
-abstract type GR4JNode <: NetworkNode end
+abstract type GRNJNode <: NetworkNode end
 
 
-Base.@kwdef mutable struct SimpleGR4JNode{A <: Union{Param, Real}} <: GR4JNode
+Base.@kwdef mutable struct GR4JNode{A <: Union{Param, Real}} <: GRNJNode
     @network_node
 
     # parameters
@@ -37,8 +37,8 @@ end
 # end
 
 
-function SimpleGR4JNode(name::String, spec::Dict)
-    n = SimpleGR4JNode{Param}(; name=name, area=spec["area"])
+function GR4JNode(name::String, spec::Dict)
+    n = GR4JNode{Param}(; name=name, area=spec["area"])
     node_params = spec["parameters"]
     node_params["p_store"] = [node_params["initial_p_store"]]
     node_params["r_store"] = [node_params["initial_r_store"]]
@@ -91,7 +91,7 @@ end
 
 Run given GR4J node for a time step.
 """
-function run_node!(node::SimpleGR4JNode, climate::Climate, timestep::Int; inflow=nothing, extraction=nothing, exchange=nothing)
+function run_node!(node::GR4JNode, climate::Climate, timestep::Int; inflow=nothing, extraction=nothing, exchange=nothing)
     P, E = climate_values(node, climate, timestep)
 
     res = run_gr4j(P, E, node.X1, node.X2, node.X3, node.X4, node.area, node.p_store[end], node.r_store[end])
@@ -192,14 +192,11 @@ Generated simulated streamflow for given rainfall and potential evaporation.
 - r_store : Initial state store
 
 # Returns
-- tuple of simulated outflow, and intermediate states: p_store, r_store, UH1, UH2
+- tuple of simulated outflow [ML/day], and intermediate states: p_store, r_store, UH1, UH2
 """
 function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
     nUH1 = Int(ceil(X4))
     nUH2 = Int(ceil(2.0*X4))
-
-    P = P * area
-    E = E * area
 
     uh1_ordinates = Array{Float64}(undef, nUH1)
     uh2_ordinates = Array{Float64}(undef, nUH2)
@@ -209,7 +206,6 @@ function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
     for t in 2:(nUH1+1)
         t_f = Float64(t)
         uh1_ordinates[t - 1] = s_curve(t_f, X4) - s_curve(t_f-1.0, X4)
-        # uh2_ordinates[t - 1] = s_curve(t_f, X4, uh2=true) - s_curve(t_f-1, X4, uh2=true)
     end
 
     for t in 2:(nUH2+1)
@@ -243,7 +239,7 @@ function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
 
     p_store = p_store - net_evap + reservoir_production
 
-    tmp_a = (p_store/2.25/X1)^4
+    tmp_a = (p_store / 2.25 / X1)^4
     tmp_b = (1 + tmp_a)^0.25
     percolation = p_store / tmp_b
 
@@ -270,8 +266,9 @@ function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
     R2 = r_store / tmp_b
     QR = r_store - R2
     r_store = R2
-    QD = max(0, UH2[1]*0.1+groundwater_exchange)
-    Q = (QR + QD)
+    QD = max(0.0, UH2[1]*0.1+groundwater_exchange)
+    Q = (QR + QD) * area * 1000.0 / 86.4
+    # (QR + QD) * area * 1000.0/86400.0  # m³/sec
 
     return Q, p_store, r_store, UH1, UH2
 end

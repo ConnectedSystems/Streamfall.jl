@@ -22,8 +22,8 @@ Base.@kwdef mutable struct SimpleHyModNode{A <: Union{Param, Real}} <: HyModNode
     # parameters
     Sm_max::A = Param(250.0, bounds=(1.0, 500.0))
     B::A = Param(1.0, bounds=(0.1, 2.0))
-    alpha::A = Param(0.2, bounds=(0.1, 0.999))
-    Kf::A = Param(0.5, bounds=(0.1, 0.999))
+    alpha::A = Param(0.2, bounds=(0.0, 1.0))
+    Kf::A = Param(0.5, bounds=(0.1, 0.9999))
     Ks::A = Param(0.05, bounds=(0.001, 0.1))
 
     # stores
@@ -123,8 +123,8 @@ function run_hymod!(node::SimpleHyModNode, P, PET, Sm, Sf1, Sf2, Sf3, Ss1, inflo
     Ks = node.Ks
 
     # Calculate fluxes
-    Peff = (P*node.area)*(1 - max(1.0 - Sm/Sm_max, 0.0)^B)  # PDM model Moore 1985
-    ETa = min(PET*(Sm/Sm_max), Sm) * node.area
+    Peff = P*(1 - max(1.0 - Sm/Sm_max, 0.0)^B)  # PDM model Moore 1985
+    ETa = min(PET*(Sm/Sm_max), Sm)
 
     Qf1 = Kf*Sf1
     Qf2 = Kf*Sf2
@@ -132,13 +132,14 @@ function run_hymod!(node::SimpleHyModNode, P, PET, Sm, Sf1, Sf2, Sf3, Ss1, inflo
     Qs1 = Ks*Ss1
 
     # update state variables
-    Sm_t1 = max(Sm + (P*node.area) - Peff - ETa, 0.0)
+    Sm_t1 = max(Sm + P - Peff - ETa, 0.0)
     Sf1_t1 = Sf1 + alpha*Peff - Qf1
     Sf2_t1 = Sf2 + Qf1 - Qf2
     Sf3_t1 = Sf3 + Qf2 - Qf3
     Ss1_t1 = Ss1 + (1-alpha)*Peff - Qs1
 
-    Q_t1 = inflow + (Qs1 + Qf3) - ext + flux
+    Qtmp = (Qs1 + Qf3) * node.area
+    Q_t1 = inflow + Qtmp - ext + flux
     update_states(node, Sm_t1, Sf1_t1, Sf2_t1, Sf3_t1, Ss1_t1, Q_t1)
 
     return Q_t1

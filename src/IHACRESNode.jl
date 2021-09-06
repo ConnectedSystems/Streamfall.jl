@@ -216,7 +216,7 @@ Run node with ET data to calculate outflow and update state.
 - gw_store : replacement groundwater store state value
 
 # Returns
-- float, outflow from node, stream level
+- float, outflow from node [ML/day], stream level
 """
 function run_node!(s_node::BilinearNode,
                    rain::Float64,
