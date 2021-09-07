@@ -269,7 +269,6 @@ function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
     p_store = percolation
 
     for i in 1:nUH1-1
-    for i in 1:(length(UH1)-1)
         UH1[i] = UH1[i+1] + uh1_ordinates[i]*routed_volume
     end
     UH1[end] = uh1_ordinates[end] * routed_volume
