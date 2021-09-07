@@ -43,6 +43,9 @@ node_names = ["HyMod", "GR4J", "IHACRES"]
 node_list = [hymod_node, gr4j_node, ihacres_node]
 result = pmap(opt_func, node_list)
 
+# Create comparison plot
+# Note: there is a convenience `quickplot` method, but in this case
+#       we want fine-grain control over how the plot is created.
 Qo = hist_streamflow[:, "410730_Q"]
 res_plots = []
 for ((res, opt), node, n_name) in zip(result, node_list, node_names)
