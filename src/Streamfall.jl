@@ -41,8 +41,6 @@ end
     end
 end
 
-# macro set_size(arr, len)
-
 
 include("Network.jl")
 include("Node.jl")
@@ -52,6 +50,7 @@ include("IHACRESExpuhNode.jl")
 include("GR4JNode.jl")
 include("HyModNode.jl")
 include("DamNode.jl")
+include("plotting.jl")
 
 
 
@@ -176,7 +175,7 @@ end
 
 
 """
-    run_basin!(sn::StreamfallNetwork, climate::Climate; extraction=nothing, exchange=nothing)
+    run_basin!(sn::StreamfallNetwork, climate::Climate; inflow=nothing, extraction=nothing, exchange=nothing)
 
 Run scenario for an entire catchment/basin.
 """
@@ -252,13 +251,20 @@ include("calibration.jl")
 
 
 export @def
+
+# Nodes
 export NetworkNode, GenericNode, GenericDirectNode
 export IHACRES, IHACRESNode, BilinearNode, ExpuhNode, DamNode, Climate
 export create_node, GR4JNode, HyModNode, SimpleHyModNode
+
+# Network
 export find_inlets_and_outlets, inlets, outlets, create_network, create_node
 export climate_values, get_node, get_node_id, get_prop, set_prop!
 export param_info, update_params!, sim_length, reset!
 export run_catchment!, run_basin!, run_node!, run_node_with_temp!
-export calibrate!, plot_network, save_figure
+export calibrate!
+
+# plotting methods
+export quickplot, plot_network, save_figure
 
 end  # end module
