@@ -175,8 +175,7 @@ climate = Climate(climate_data, "_rain", "_evap")
 To run an entire basin network, without any dynamic interaction with "external" systems:
 
 ```julia
-run_basin!(sn::StreamfallNetwork, climate::Climate; 
-           extraction=nothing, exchange=nothing)
+run_basin!(sn::StreamfallNetwork, climate::Climate)
 ```
 
 This will identify the final "outlet" of the stream network and recurse upstream to run all nodes.

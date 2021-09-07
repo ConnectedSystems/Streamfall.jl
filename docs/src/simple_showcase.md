@@ -1,7 +1,7 @@
 # A simple example
 
-In this example we showcase a two-node network to represent water levels at Lake Eppalock, 
-a dam in the Lower Campaspe catchment located in North-Central Victoria, Australia.
+In this example we showcase a two-node network: A dam and a gauge upstream to provide estimates of inflows.
+The dam in question is Lake Eppalock, a dam in the Lower Campaspe catchment located in North-Central Victoria, Australia.
 
 The map below shows Lake Eppalock, along with relevant gauge locations/data 
 (click the brown dots on the map to see further gauge details).
