@@ -30,6 +30,7 @@ makedocs(sitename="Streamfall Documentation",
                 "calibration.md",
             ],
             "simple_showcase.md",
+            "model_comparison.md",
             # "multisystem_showcase.md",
         ]
         
