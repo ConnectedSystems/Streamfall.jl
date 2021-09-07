@@ -268,13 +268,13 @@ function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
     routed_volume = routed_volume + (p_store-percolation)
     p_store = percolation
 
-    # Check these loops too
+    for i in 1:nUH1-1
     for i in 1:(length(UH1)-1)
         UH1[i] = UH1[i+1] + uh1_ordinates[i]*routed_volume
     end
     UH1[end] = uh1_ordinates[end] * routed_volume
 
-    for j in 1:(length(UH2)-1)
+    for j in 1:nUH2-1
         UH2[j] = UH2[j+1] + uh2_ordinates[j]*routed_volume
     end
     UH2[end] = uh2_ordinates[end] * routed_volume
@@ -289,7 +289,7 @@ function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
     QR = r_store - R2
     r_store = R2
     QD = max(0.0, UH2[1]*0.1+groundwater_exchange)
-    Q = (QR + QD) * area * 1000.0 / 86.4
+    Q = (QR + QD) * area
     # (QR + QD) * area * 1000.0/86400.0  # m³/sec
 
     return Q, p_store, r_store, UH1, UH2
