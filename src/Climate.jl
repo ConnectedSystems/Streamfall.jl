@@ -77,3 +77,10 @@ function sim_length(climate::Climate)::Int64
     return nrow(climate.climate_data)
 end
 
+
+function timesteps(climate::Climate)::Array
+    return climate.climate_data[:, :Date]
+end
+
+
+Base.length(climate::Climate) = nrow(climate.climate_data)
