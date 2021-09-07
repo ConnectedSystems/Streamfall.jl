@@ -55,6 +55,12 @@ hymod_node = create_node(SimpleHyModNode, "Gauge", 129.2)
 # Calibrate a node for 30 seconds (uses the BlackBoxOptim package)
 # Default metric used is RMSE
 calibrate!(hymod_node, climate, Qo; MaxTime=30)
+
+# Basic overview plot (shows time series and Q-Q plot)
+quickplot(Qo, hymod_node, climate, "HyMod"; burn_in=366, limit=nothing)
+
+# save figure
+savefig("quick_example.png")
 ```
 
 
