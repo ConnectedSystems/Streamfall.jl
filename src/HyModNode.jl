@@ -21,7 +21,7 @@ Base.@kwdef mutable struct SimpleHyModNode{A <: Union{Param, Real}} <: HyModNode
 
     # parameters
     Sm_max::A = Param(250.0, bounds=(1.0, 500.0))
-    B::A = Param(1.0, bounds=(0.1, 2.0))
+    B::A = Param(1.0, bounds=(0.0, 2.0))
     alpha::A = Param(0.2, bounds=(0.0, 1.0))
     Kf::A = Param(0.5, bounds=(0.1, 0.9999))
     Ks::A = Param(0.05, bounds=(0.001, 0.1))
