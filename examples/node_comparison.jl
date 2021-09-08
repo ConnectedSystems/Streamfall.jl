@@ -1,8 +1,6 @@
 using Distributed, Plots, StatsPlots
 
 
-HERE = @__DIR__
-
 if nworkers() < 3
     addprocs(3, exeflags="--project=$(Base.active_project())")
 end
