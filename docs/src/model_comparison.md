@@ -3,8 +3,7 @@
 This example showcases a comparison of models using multi-processing.
 
 ```julia
-using YAML, DataFrames, CSV, Plots, StatsPlots, Statistics
-using Streamfall, BlackBoxOptim, Distributed
+using Distributed, Plots, StatsPlots
 
 
 HERE = @__DIR__
@@ -14,7 +13,7 @@ if nworkers() < 3
 end
 
 @everywhere begin
-    using YAML, DataFrames, CSV, Plots, StatsPlots, Statistics
+    using DataFrames, CSV
     using Streamfall, BlackBoxOptim
 
     HERE = @__DIR__
@@ -48,17 +47,22 @@ node_names = ["HyMod", "GR4J", "IHACRES"]
 node_list = [hymod_node, gr4j_node, ihacres_node]
 result = pmap(opt_func, node_list)
 
+# Create comparison plot
+# Note: there is a convenience `quickplot` method, but in this case
+#       we want fine-grain control over how the plot is created.
 Qo = hist_streamflow[:, "410730_Q"]
+Qo_burn = Qo[burn_in:end]
 res_plots = []
 for ((res, opt), node, n_name) in zip(result, node_list, node_names)
     update_params!(node, best_candidate(res)...)    
     reset!(node)
     run_node!(node, climate)
 
-    tmp_plot = plot(Qo, label="Historic")
-    plot!(node.outflow, label=n_name, alpha=0.7, linestyle=:dashdot)
+    node_burn = node.outflow[burn_in:end]
+    tmp_plot = plot(Qo_burn, label="Historic")
+    plot!(node_burn, label=n_name, alpha=0.7, linestyle=:dashdot)
 
-    qq_plot = qqplot(Qo, node.outflow, markerstrokewidth=0, alpha=0.6)
+    qq_plot = qqplot(Qo_burn, node_burn, markerstrokewidth=0, alpha=0.6)
     res_plot = plot(
         tmp_plot,
         qq_plot,
