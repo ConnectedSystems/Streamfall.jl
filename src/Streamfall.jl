@@ -49,6 +49,7 @@ include("IHACRESNode.jl")
 include("IHACRESExpuhNode.jl")
 include("GR4JNode.jl")
 include("HyModNode.jl")
+include("SYMHYDNode.jl")
 include("DamNode.jl")
 include("plotting.jl")
 
@@ -255,7 +256,7 @@ export @def
 # Nodes
 export NetworkNode, GenericNode, GenericDirectNode
 export IHACRES, IHACRESNode, BilinearNode, ExpuhNode, DamNode, Climate
-export create_node, GR4JNode, HyModNode, SimpleHyModNode
+export create_node, GR4JNode, HyModNode, SimpleHyModNode, SYMHYDNode
 
 # Network
 export find_inlets_and_outlets, inlets, outlets, create_network, create_node
