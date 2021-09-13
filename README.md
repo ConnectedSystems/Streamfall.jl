@@ -19,6 +19,7 @@ The IHACRES rainfall-runoff model is implemented with [ihacres_nim](https://gith
 
 Development version of the documentation can be found [here](https://connectedsystems.github.io/Streamfall.jl/dev).
 
+> [NOTE] Streamfall is currently in its early stages and under active development. Although it is fairly usable for small networks and single node analyses, things may change drastically and unexpectedly.
 
 ## Quick start (prep)
 
@@ -36,7 +37,7 @@ obs_data = DataFrame!(CSV.File("example_data.csv"),
                         comment="#",
                         dateformat=date_format))
 
-
+# Historic observations
 Qo = obs_data[:, ["Date", "Gauge_Q"]]
 
 # Create climate data interface
@@ -47,7 +48,7 @@ climate = Climate(climate_data, "_P", "_PET")
 ## Quick start (single node)
 
 ```julia
-# Create a node
+# Create a node (node type, node_name, sub-catchment area)
 hymod_node = create_node(SimpleHyModNode, "Gauge", 129.2)
 # gr4j_node = create_node(GR4JNode, "Gauge", 129.2)
 # ihacres_node = create_node(BilinearNode, "Gauge", 129.2)
@@ -57,6 +58,7 @@ hymod_node = create_node(SimpleHyModNode, "Gauge", 129.2)
 calibrate!(hymod_node, climate, Qo; MaxTime=30)
 
 # Basic overview plot (shows time series and Q-Q plot)
+# Uses a 365 day offset (e.g., 1 year burn-in period)
 quickplot(Qo, hymod_node, climate, "HyMod"; burn_in=366, limit=nothing)
 
 # save figure
