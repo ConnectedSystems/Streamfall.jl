@@ -1,8 +1,8 @@
 using Distributed, Plots, StatsPlots
 
-
-if nworkers() < 3
-    addprocs(3, exeflags="--project=$(Base.active_project())")
+N = 4
+if nworkers() < N
+    addprocs(N, exeflags="--project=$(Base.active_project())")
 end
 
 @everywhere begin
@@ -26,18 +26,20 @@ end
 
     # Create objective function to minimize (here we use Normalized KGE')
     func = (obs, sim) -> 1.0 - Streamfall.NmKGE(obs[burn_in:end], sim[burn_in:end])
-    opt_func = (node) -> calibrate!(node, climate, hist_streamflow, Streamfall.data_extraction, func; MaxTime=120)
+    opt_func = (node) -> calibrate!(node, climate, hist_streamflow, Streamfall.data_extraction, func; MaxTime=180)
 end
 
 
 # Create individual nodes
 hymod_node = create_node(SimpleHyModNode, "410730", 129.2)
 gr4j_node = create_node(GR4JNode, "410730", 129.2)
+symhyd_node = create_node(SYMHYDNode, "410730", 129.2)
 ihacres_node = create_node(BilinearNode, "410730", 129.2)
 
+
 # Calibrate each node separately using multiprocessing
-node_names = ["HyMod", "GR4J", "IHACRES"]
-node_list = [hymod_node, gr4j_node, ihacres_node]
+node_names = ["HyMod", "GR4J", "SYMHYD", "IHACRES"]
+node_list = [hymod_node, gr4j_node, symhyd_node, ihacres_node]
 result = pmap(opt_func, node_list)
 
 # Create comparison plot
@@ -66,14 +68,11 @@ for ((res, opt), node, n_name) in zip(result, node_list, node_names)
 end
 
 combined_plot = plot(
-    plot(res_plots[1]),
-    plot(res_plots[2]),
-    plot(res_plots[3]),
-    layout=(3,1),
-    size=(900,1200),
+    [plot(rplt) for rplt in res_plots]...,
+    layout=(length(node_list),1),
+    size=(950,425*length(node_list)),
 )
 
 display(combined_plot)
 
 # savefig("multi_model_comparison.png")
-
