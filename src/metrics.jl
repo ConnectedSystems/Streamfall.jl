@@ -560,3 +560,18 @@ By default, the combination method is to take the mean.
 function inverse_metric(obs, sim; metric, comb_method::Function=mean)
     return comb_method([metric(obs, sim), metric(1.0 ./ obs, 1.0 ./ sim)])
 end
+
+
+"""
+    EV(obs, sim)
+
+Explained Variance.
+
+Represents the amount of variation in the observations which the predictions 
+are able to explain.
+"""
+function EV(obs, sim)
+    return 1.0 - (var(obs - sim) / obs)
+end
+
+
