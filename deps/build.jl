@@ -51,7 +51,7 @@ elseif endswith(target, "tar.gz")
         untar(fp, extract_path)
     end
 
-    mv(joinpath(extract_path, dir_name, "*.*"), "../", force=true)
+    mv(joinpath(extract_path, dir_name, "*.*"), joinpath(HERE, "../"), force=true)
 end
 
 rm(fn)
