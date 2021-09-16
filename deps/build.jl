@@ -9,14 +9,16 @@ extract_path = joinpath(HERE, "usr", "lib")
 mkpath(extract_path)
 
 if Sys.iswindows()
-    target = BASE_URL * "windows.zip"
+    target = "windows.zip"
 elseif Sys.islinux()
-    target = BASE_URL * "linux.tar.gz"
+    target = "linux.tar.gz"
 elseif Sys.isapple()
-    target = BASE_URL * "macos.tar.gz"
+    target = "macos.tar.gz"
 else
     throw(DomainError("Unsupported platform"))
 end
+
+target = Base.download_url(BASE_URL * target)
 
 function untar(data::IO, exdir::String)
     if isdir(exdir) == false mkdir(exdir) end
@@ -46,7 +48,7 @@ if endswith(target, "zip")
 
 elseif endswith(target, "tar.gz")
     dir_name = split(replace(target, ".tar.gz" => ""), "/")[end]
-    
+
     open(fn, "r") do fp
         untar(fp, extract_path)
     end
