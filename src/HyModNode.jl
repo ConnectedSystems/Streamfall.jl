@@ -105,6 +105,11 @@ function run_timestep!(node::SimpleHyModNode, climate::Climate, timestep::Int;
                        inflow=nothing, extraction=nothing, exchange=nothing)::Float64
     ts = timestep
     P, ET = climate_values(node, climate, ts)
+    return run_timestep!(node, P, ET, ts; inflow=inflow, extraction=extraction, exchange=exchange)
+end
+
+
+function run_timestep!(node::SimpleHyModNode, rain, et, ts; inflow=nothing, extraction=nothing, exchange=nothing)
     in_flow = timestep_value(ts, node.name, "inflow", inflow)
     ext = timestep_value(ts, node.name, "extraction", extraction)
     flux = timestep_value(ts, node.name, "exchange", exchange)
@@ -115,9 +120,7 @@ function run_timestep!(node::SimpleHyModNode, climate::Climate, timestep::Int;
     Sf3 = node.Sf3[ts]
     Ss1 = node.Ss1[ts]
 
-    flow = run_hymod!(node, P, ET, Sm, Sf1, Sf2, Sf3, Ss1, in_flow, ext, flux)
-
-    return flow
+    return run_hymod!(node, rain, et, Sm, Sf1, Sf2, Sf3, Ss1, in_flow, ext, flux)
 end
 
 

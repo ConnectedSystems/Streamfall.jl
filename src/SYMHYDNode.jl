@@ -77,7 +77,7 @@ Run SYMHYD for all time steps within a climate scenario.
 function run_node!(node::SYMHYDNode, climate::Climate; inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = length(climate)
     for ts in 1:timesteps
-        run_node!(node, climate, ts; inflow=inflow, extraction=extraction, exchange=exchange)
+        run_timestep!(node, climate, ts; inflow=inflow, extraction=extraction, exchange=exchange)
     end
 
     return node.outflow
@@ -88,13 +88,17 @@ end
 
 Run SYMHYD for a given time step
 """
-function run_node!(node::SYMHYDNode, climate::Climate, timestep::Int; inflow=nothing, extraction=extraction, exchange=nothing)
+function run_timestep!(node::SYMHYDNode, climate::Climate, timestep::Int; inflow=nothing, extraction=extraction, exchange=nothing)
     P, E = climate_values(node, climate, timestep)
 
-    res = run_symhyd(node, P, E)
+    run_timestep!(node, P, E, ts; inflow=nothing, extraction=extraction, exchange=nothing)
+end
+
+
+function run_timestep!(node::SYMHYDNode, rain, et, ts; inflow=nothing, extraction=nothing, exchange=nothing)
+    res = run_symhyd(node, rain, et)
     sm_store, gw_store, total_store, total_runoff, baseflow, event_runoff = res
 
-    ts = timestep
     node_name = node.name
     wo = timestep_value(ts, node_name, "releases", extraction)
     ex = timestep_value(ts, node_name, "exchange", exchange)

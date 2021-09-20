@@ -186,7 +186,7 @@ function run_node!(node::IHACRESNode, climate::Climate, timestep::Int;
     ex = timestep_value(ts, node_name, "exchange", exchange)
     in_flow = timestep_value(ts, node_name, "inflow", inflow)
 
-    return run_step!(node, rain, et, in_flow, wo, ex)
+    return run_timestep!(node, rain, et, in_flow, wo, ex)
 end
 
 
@@ -220,15 +220,15 @@ Run node with ET data to calculate outflow and update state.
 - float, outflow from node [ML/day], stream level
 """
 function run_step!(s_node::BilinearNode,
-                   rain::Float64,
-                   evap::Float64,
-                   inflow::Float64,
-                   ext::Float64,
-                   gw_exchange::Float64;
-                   current_store::Union{Nothing, Float64}=nothing,
-                   quick_store::Union{Nothing, Float64}=nothing,
-                   slow_store::Union{Nothing, Float64}=nothing,
-                   gw_store::Union{Nothing, Float64}=nothing)::Tuple{Float64, Float64}
+                    rain::Float64,
+                    evap::Float64,
+                    inflow::Float64,
+                    ext::Float64,
+                    gw_exchange::Float64;
+                    current_store::Union{Nothing, Float64}=nothing,
+                    quick_store::Union{Nothing, Float64}=nothing,
+                    slow_store::Union{Nothing, Float64}=nothing,
+                    gw_store::Union{Nothing, Float64}=nothing)::Tuple{Float64, Float64}
 
     if !isnothing(current_store)
         s_node.storage[end] = current_store

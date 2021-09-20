@@ -154,10 +154,14 @@ Run given GR4J node for a time step.
 function run_timestep!(node::GR4JNode, climate::Climate, timestep::Int; inflow=nothing, extraction=nothing, exchange=nothing)
     P, E = climate_values(node, climate, timestep)
 
-    res = run_gr4j(P, E, node.X1, node.X2, node.X3, node.X4, node.area, node.p_store[end], node.r_store[end])
+    run_timestep!(node, P, E, timestep; inflow=inflow, extraction=extraction, exchange=exchange)
+end
+
+
+function run_timestep!(node::GR4JNode, rain, et, ts; inflow=nothing, extraction=nothing, exchange=nothing)
+    res = run_gr4j(rain, et, node.X1, node.X2, node.X3, node.X4, node.area, node.p_store[end], node.r_store[end])
     Q, p_s, r_s, UH1, UH2 = res
 
-    ts = timestep
     node_name = node.name
     wo = timestep_value(ts, node_name, "releases", extraction)
     ex = timestep_value(ts, node_name, "exchange", exchange)

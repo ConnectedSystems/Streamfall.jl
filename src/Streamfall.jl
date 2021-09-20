@@ -232,7 +232,7 @@ function run_node!(node::NetworkNode, climate::Climate; inflow=nothing, extracti
         flux = timestep_value(ts, node_name, "exchange", exchange)
         in_flow = timestep_value(ts, node_name, "inflow", inflow)
 
-        run_node!(node, rain, et, ts; inflow=in_flow, extraction=ext, exchange=flux)
+        run_timestep!(node, rain, et, ts; inflow=in_flow, extraction=ext, exchange=flux)
     end
 
     return node.outflow, node.level

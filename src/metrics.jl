@@ -392,13 +392,13 @@ function mKGE(obs, sim; scaling=nothing)::Float64
     # Timing
     r = Statistics.cor(obs, sim)
     if isnan(r)
-        r = 1.0  # can happen if seqs are perfect (std of 0)
+        r = 0.0  # can happen if seqs are perfect (std of 0)
     end
 
     # Variability
     cv_s = StatsBase.variation(sim)
     if isnan(cv_s)
-        cv_s = 1.0
+        cv_s = 0.0
     end
 
     cv_o = StatsBase.variation(obs)
