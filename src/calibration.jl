@@ -103,8 +103,9 @@ function calibrate!(sn::StreamfallNetwork, v_id::Int64, climate::Climate, calib_
 end
 
 
+# TODO : Clean the next two methods up as they are rough duplicates.
 """
-    calibrate!(node, climate::Climate, calib_data::Union{Dict, DataFrame};
+    calibrate!(node, climate::Climate, calib_data::Array;
                metric::Function=Streamfall.RMSE,
                kwargs...)
 
@@ -117,7 +118,7 @@ Calibrate a given node using the BlackBoxOptim package.
 - `extractor::Function` : Calibration extraction method, define a custom one to change behavior
 - `metric::Function` : Optimization function to use. Defaults to RMSE.
 """
-function calibrate!(node::NetworkNode, climate::Climate, calib_data::Union{Dict, DataFrame};
+function calibrate!(node::NetworkNode, climate::Climate, calib_data::Array;
                     metric::Function=Streamfall.RMSE,
                     kwargs...)
     # Set defaults as necessary
@@ -129,6 +130,52 @@ function calibrate!(node::NetworkNode, climate::Climate, calib_data::Union{Dict,
 
     # Create context-specific optimization function
     opt_func = x -> obj_func(x, climate, node, calib_data; metric)
+
+    # Get node parameters (default values and bounds)
+    param_names, x0, param_bounds = param_info(node; with_level=false)
+    opt = bbsetup(opt_func; SearchRange=param_bounds,
+                  kwargs...)
+
+    res = bboptimize(opt)
+
+    bs = best_candidate(res)
+    @info "Calibrated ($(node.name)), with score: $(best_fitness(res))"
+    @info "Best Params:" collect(bs)
+
+    # Update node with calibrated parameters
+    update_params!(node, bs...)
+
+    return res, opt
+end
+
+
+
+"""
+    calibrate!(node, climate::Climate, calib_data::DataFrame;
+               metric::Function=Streamfall.RMSE,
+               kwargs...)
+
+Calibrate a given node using the BlackBoxOptim package.
+
+# Arguments
+- `node::NetworkNode` : Streamfall node
+- `climate` : Climate data
+- `calib_data` : calibration data for target node by its id
+- `extractor::Function` : Calibration extraction method, define a custom one to change behavior
+- `metric::Function` : Optimization function to use. Defaults to RMSE.
+"""
+function calibrate!(node::NetworkNode, climate::Climate, calib_data::DataFrame;
+                    metric::Function=Streamfall.RMSE,
+                    kwargs...)
+    # Set defaults as necessary
+    defaults = (;
+        MaxTime=900,
+        TraceInterval=30
+    )
+    kwargs = merge(defaults, kwargs)
+
+    # Create context-specific optimization function
+    opt_func = x -> obj_func(x, climate, node, calib_data[:, node.name]; metric)
 
     # Get node parameters (default values and bounds)
     param_names, x0, param_bounds = param_info(node; with_level=false)
