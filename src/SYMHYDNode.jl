@@ -7,19 +7,19 @@ const SYMHYD_SOIL_ET_CONST = 10.0
 
 """
 """
-Base.@kwdef mutable struct SYMHYDNode{A <: Union{Param, Real}} <: NetworkNode
+Base.@kwdef mutable struct SYMHYDNode{P} <: NetworkNode
     @network_node
 
     # parameters
-    baseflow_coef::A = Param(0.5, bounds=(0.0, 1.0))
-    impervious_threshold::A = Param(2.5, bounds=(0.0, 5.0))  # mm
-    infiltration_coef::A = Param(200.0, bounds=(0.0, 400.0))
-    infiltration_shape::A = Param(5.0, bounds=(0.0, 10.0))
-    interflow_coef::A = Param(0.5, bounds=(0.0, 1.0))
-    pervious_fraction::A = Param(0.5, bounds=(0.0, 1.0))
-    risc::A = Param(2.5, bounds=(0.0, 5.0))  # rainfall interception store capacity (mm)
-    recharge_coef::A = Param(0.5, bounds=(0.0, 1.0))
-    smsc::A = Param(250.0, bounds=(1.0, 500.0))  # Soil Moisture Store Capacity (mm)
+    baseflow_coef::P = Param(0.5, bounds=(0.0, 1.0))
+    impervious_threshold::P = Param(2.5, bounds=(0.0, 5.0))  # mm
+    infiltration_coef::P = Param(200.0, bounds=(0.0, 400.0))
+    infiltration_shape::P = Param(5.0, bounds=(0.0, 10.0))
+    interflow_coef::P = Param(0.5, bounds=(0.0, 1.0))
+    pervious_fraction::P = Param(0.5, bounds=(0.0, 1.0))
+    risc::P = Param(2.5, bounds=(0.0, 5.0))  # rainfall interception store capacity (mm)
+    recharge_coef::P = Param(0.5, bounds=(0.0, 1.0))
+    smsc::P = Param(250.0, bounds=(1.0, 500.0))  # Soil Moisture Store Capacity (mm)
 
     # stores
     sm_store::Array{Float64} = [0.0]
