@@ -207,6 +207,82 @@ end
 
 
 """
+    EV(obs, sim)
+
+Explained Variance.
+
+Represents the amount of variation in the observations which the predictions
+are able to explain.
+"""
+function EV(obs, sim)
+    return 1.0 - (var(obs - sim) / obs)
+end
+
+
+"""
+Relative Skill Score.
+
+Provides an indication of model performance relative to a known benchmark score.
+
+Suitable for use with least-squares approaches that provide skill scores ranging from 1 to -∞.
+
+# Arguments
+- `Sb` : Benchmark score
+- `Sm` : Model score
+
+# References
+1. Knoben, W.J.M., Freer, J.E., Woods, R.A., 2019.
+    Technical note: Inherent benchmark or not?
+        Comparing Nash-Sutcliffe and Kling-Gupta efficiency scores (preprint).
+    Catchment hydrology/Modelling approaches.
+    https://doi.org/10.5194/hess-2019-327
+"""
+function relative_skill_score(Sb::Float64, Sm::Float64)
+    return (Sm - Sb) / (1.0 - Sb)
+end
+
+
+"""
+    NSE_logbias(obs, sim; metric::Function=NSE, bias_threshold::Float64=5.0, shape::Float64=2.5)
+
+The NSE_logbias meta-metric provides a weighted combination of a least-squares approach and a
+logarithmic function of bias. The metric penalizes predictions with an overall bias above a 
+threshold (defined as 5% in [1]).
+
+It is also referred to as the Viney F score.
+
+Note: The penalty applied is non-symmetrical (or multiplicatively symmetrical) in that 
+predictions that are _double_ the observed are penalized identically to predictions that are
+_half_ the observed volume.
+
+# Arguments
+- `obs::Vector` : Historic observations to compare against
+- `sim::Vector` : Modeled time series
+- `metric::Function` : least-squares method to use, defaults to NSE
+- `bias_threshold::Float64` : Bias threshold after which the score given by `metric` is penalized, defaults to 5 (%)
+- `shape::Float64` : Exponent value controlling shape of penalization (see Figure 2 in [1]).
+
+# References
+1. Viney, N. R., Perraud, J., Vaze, J., Chiew, F.H.S., Post, D.A., Yang, A. 2009
+    The usefulness of bias constraints in model calibration for regionalisation
+        to ungauged catchments
+    18th World IMACS / MODSIM Congress, Cairns, Australia, 13 - 17 July 2009
+    Available at:
+    https://www.researchgate.net/publication/294697092_The_usefulness_of_bias_constraints_in_model_calibration_for_regionalisation_to_ungauged_catchments
+
+2. Teng, J., Potter, N.J., Chiew, F.H.S., Zhang, L., Wang, B., Vaze, J., Evans, J.P., 2015.
+    How does bias correction of regional climate model precipitation affect modelled runoff?
+    Hydrology and Earth System Sciences 19, 711–728.
+    https://doi.org/10.5194/hess-19-711-2015
+"""
+function NSE_logbias(obs, sim; metric=NSE, bias_threshold=5.0, shape=2.5)
+    E_ns = metric(obs, sim)
+    B = PBIAS(obs, sim) / 100.0
+    return E_ns - bias_threshold * abs(log(1 + B))^shape
+end
+
+
+"""
     KGE(obs::Vector, sim::Vector; scaling::Tuple=nothing)::Float64
 
 Calculate the 2009 Kling-Gupta Efficiency (KGE) metric.
@@ -215,7 +291,7 @@ Decomposes NSE into correlation (`r`), relative variability (`α`), and bias (`�
 
 A KGE score of 1 means perfect fit.
 A score < -0.41 indicates that the mean of observations
-provides better estimates (see Knoben et al., 2019).
+provides better estimates (see Knoben et al., [2]).
 
 The `scaling` argument expects a three-valued tuple
 which scales `r`, `α` and `β` factors respectively.
@@ -550,6 +626,14 @@ discharge.
 
 By default, the combination method is to take the mean.
 
+# Arguments
+- obs : observed
+- sim : modeled results
+- `metric::Function` : objective function
+- `comb_method::Function` : mean
+- ϵ : offset value to use (enables use with zero-flow time steps), defaults to 1e-6
+
+
 # References
 1. Garcia, F., Folton, N., Oudin, L., 2017.
     Which objective function to calibrate rainfall–runoff models
@@ -557,21 +641,8 @@ By default, the combination method is to take the mean.
     Hydrological Sciences Journal 62, 1149–1166.
     https://doi.org/10.1080/02626667.2017.1308511
 """
-function inverse_metric(obs, sim; metric, comb_method::Function=mean)
-    return comb_method([metric(obs, sim), metric(1.0 ./ obs, 1.0 ./ sim)])
-end
-
-
-"""
-    EV(obs, sim)
-
-Explained Variance.
-
-Represents the amount of variation in the observations which the predictions 
-are able to explain.
-"""
-function EV(obs, sim)
-    return 1.0 - (var(obs - sim) / obs)
+function inverse_metric(obs, sim, metric::Function; comb_method::Function=mean, ϵ=1e-6)
+    return comb_method([metric(obs, sim), metric(1.0 ./ (obs + ϵ), 1.0 ./ (sim + ϵ))])
 end
 
 
