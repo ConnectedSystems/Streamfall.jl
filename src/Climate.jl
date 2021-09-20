@@ -18,7 +18,7 @@ function subcatchment_data(node::NetworkNode, climate::Climate)::DataFrame
     data = climate.climate_data
     cols = filter(x -> occursin(node.name, string(x)), names(data))
 
-    return data[:, cols]
+    return data[:, vcat(["Date"], cols)]
 end
 
 
