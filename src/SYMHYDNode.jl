@@ -91,7 +91,7 @@ Run SYMHYD for a given time step
 function run_timestep!(node::SYMHYDNode, climate::Climate, timestep::Int; inflow=nothing, extraction=extraction, exchange=nothing)
     P, E = climate_values(node, climate, timestep)
 
-    run_timestep!(node, P, E, ts; inflow=nothing, extraction=extraction, exchange=nothing)
+    run_timestep!(node, P, E, ts; inflow=inflow, extraction=extraction, exchange=exchange)
 end
 
 

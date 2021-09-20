@@ -186,7 +186,7 @@ function run_node!(node::IHACRESNode, climate::Climate, timestep::Int;
     ex = timestep_value(ts, node_name, "exchange", exchange)
     in_flow = timestep_value(ts, node_name, "inflow", inflow)
 
-    return run_timestep!(node, rain, et, in_flow, wo, ex)
+    return run_timestep!(node, rain, et, ts; inflow=in_flow, extraction=wo, exchange=ex)
 end
 
 
