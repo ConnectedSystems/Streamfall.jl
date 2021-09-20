@@ -11,7 +11,8 @@ TEST_DIR = @__DIR__
         area=100.0
     )
 
-    @test run_node!(test_node, 6.0, 3.0, 50.0, 10.0, 0.0) isa Any
+    # Test direct running of a single time step
+    @test Streamfall.run_step!(test_node, 6.0, 3.0, 50.0, 10.0, 0.0) isa Any
 end
 
 
@@ -42,7 +43,7 @@ end
     quick_store = 8.46269687e+02
     slow_store = 3.67133471e+02
 
-    res = run_node!(test_node, rain, evap, inflow, extraction, gw_exchange;
+    res = run_step!(test_node, rain, evap, inflow, extraction, gw_exchange;
                     current_store=current_store, quick_store=quick_store, slow_store=slow_store)
 
     @test !any(isnan, res)

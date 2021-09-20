@@ -46,7 +46,7 @@ end
 end
 
 
-@testset "Reloading a network spec" begin
+@testset "Reloading a network spec (HyMod)" begin
     spec::Dict{String, Union{Dict{String, Any}, Any}} = Streamfall.extract_network_spec(sn)
     @test spec isa Dict
     @test haskey(spec, "leaf_river")
@@ -68,13 +68,13 @@ end
                             comment="#",
                             dateformat=date_format))
 
-    hist_streamflow = obs_data[:, ["Date", "leaf_river_outflow"]]
+    hist_streamflow = obs_data[:, "leaf_river_outflow"]
     climate_data = obs_data[:, ["Date", "leaf_river_P", "leaf_river_ET"]]
     climate = Climate(climate_data, "_P", "_ET")
 
     # Ensure reloaded spec still calibrates
     metric = (obs, sim) -> 1.0 - Streamfall.NNSE(obs, sim)
-    @test calibrate!(new_sn, climate, hist_streamflow; metric=metric, MaxTime=10) isa Any
+    @test calibrate!(new_sn, 1, climate, hist_streamflow; metric=metric, MaxTime=10) isa Any
 end
 
 
@@ -93,6 +93,7 @@ end
         Streamfall.run_node!(sn, dam_id, climate; extraction=hist_dam_releases)
         @test Streamfall.RMSE(n_data, sn[dam_id].level) == 0.0
 
-        @test rmse >= 0.95
+        # Ensure example results haven't changed much...
+        @test nse_score >= 0.95 && nse_score < 1.0 && rmse < 2.0
     end
 end

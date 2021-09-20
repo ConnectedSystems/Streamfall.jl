@@ -2,51 +2,21 @@
 using Distributed, BlackBoxOptim, Serialization
 
 
-function data_extraction(node, calib_data::Dict)
-    n_data = node.outflow
-    h_data = calib_data[node.name]
-
-    if h_data isa DataFrame
-        h_data = Array(subcatchment_data(node, h_data, "_outflow"))
-    end
-
-    return h_data, n_data
-end
-
-
-function data_extraction(node, calib_data::DataFrame)
-    n_data = node.outflow
-    h_data = Array(subcatchment_data(node, calib_data, "_outflow"))[:, 1]
-
-    return h_data, n_data
-end
-
-
 """Calibrate specified node in network."""
-function obj_func(params, climate, sn, v_id, calib_data; extractor::Function, metric::Function)
-    node = sn[v_id]
-    return obj_func(params, climate, node, calib_data; extractor=extractor, metric=metric)
+function obj_func(params, climate::Climate, sn::StreamfallNetwork, v_id::Int, calib_data::Array; 
+                  metric::Function, inflow=nothing, extraction=nothing, exchange=nothing)
+    return obj_func(params, climate, sn[v_id], calib_data; metric=metric, inflow=inflow, extraction=extraction, exchange=exchange)
 end
 
 
 """Calibrate current node."""
-function obj_func(params, climate, node, calib_data; extractor::Function, metric::Function)
+function obj_func(params, climate::Climate, node::NetworkNode, calib_data::Array; 
+                  metric::Function, inflow=nothing, extraction=nothing, exchange=nothing)
     update_params!(node, params...)
 
-    ext = nothing
-    fluxes = nothing
-    try
-        ext = calib_data[:, "$(node.name)_extractions"]
-        fluxes = calib_data[:, "$(node.name)_exchange"]
-    catch e
-        if !isa(e, ArgumentError) && !isa(e, KeyError)
-            throw(e)
-        end
-    end
-
-    run_node!(node, climate; extraction=ext, exchange=fluxes)
-    h_data, n_data = extractor(node, calib_data)
-    score = metric(h_data, n_data)
+    run_node!(node, climate; inflow=inflow, extraction=extraction, exchange=exchange)
+    n_data = node.outflow
+    score = metric(calib_data, n_data)
 
     # Reset to clear stored values
     reset!(node)
@@ -57,7 +27,6 @@ end
 
 """
     calibrate!(sn, v_id, climate, calib_data,
-               extractor::Function=Streamfall.data_extraction,
                metric::Function=Streamfall.RMSE;
                kwargs...)
 
@@ -67,14 +36,33 @@ Calibrate a given node, recursing upstream, using the BlackBoxOptim package.
 - `sn::StreamfallNetwork` : Network
 - `v_id::Int` : node identifier
 - `climate::Climate` : Climate data
-- `calib_data::Union{Dict, DataFrame}` : calibration data for target node by its id
-- `extractor::Function` : Calibration extraction method, define a custom one to change behavior
+- `calib_data::Array` : calibration data for target node by its id
 - `metric::Function` : Optimization function to use. Defaults to RMSE.
 """
-function calibrate!(sn, v_id, climate, calib_data,
-                   extractor::Function=Streamfall.data_extraction,
-                   metric::Function=Streamfall.RMSE;
-                   kwargs...)
+function calibrate!(sn::StreamfallNetwork, v_id::Int64, climate::Climate, calib_data::DataFrame;
+                    metric::Function=Streamfall.RMSE,
+                    kwargs...)
+    calibrate!(sn, v_id, climate, calib_data[:, sn[v_id].name]; metric=metric, kwargs...)
+end
+
+
+"""
+    calibrate!(sn, v_id, climate, calib_data,
+               metric::Function=Streamfall.RMSE;
+               kwargs...)
+
+Calibrate a given node, recursing upstream, using the BlackBoxOptim package.
+
+# Arguments
+- `sn::StreamfallNetwork` : Network
+- `v_id::Int` : node identifier
+- `climate::Climate` : Climate data
+- `calib_data::Array` : calibration data for target node by its id
+- `metric::Function` : Optimization function to use. Defaults to RMSE.
+"""
+function calibrate!(sn::StreamfallNetwork, v_id::Int64, climate::Climate, calib_data::Array;
+                    metric::Function=Streamfall.RMSE,
+                    kwargs...)
     # Set defaults as necessary
     defaults = (;
         MaxTime=900,
@@ -88,14 +76,14 @@ function calibrate!(sn, v_id, climate, calib_data,
     # Recurse through and calibrate all nodes upstream
     if !isempty(ins)
         for nid in ins
-            calibrate!(sn, nid, climate, calib_data, extractor, metric; kwargs...)
+            calibrate!(sn, nid, climate, calib_data; metric=metric, kwargs...)
         end
     end
 
     this_node = sn[v_id]
 
     # Create context-specific optimization function
-    opt_func = x -> obj_func(x, climate, sn, v_id, calib_data; extractor, metric)
+    opt_func = x -> obj_func(x, climate, sn, v_id, calib_data; metric)
 
     # Get node parameters (default values and bounds)
     param_names, x0, param_bounds = param_info(this_node; with_level=false)
@@ -116,24 +104,22 @@ end
 
 
 """
-    calibrate!(node, climate, calib_data,
-               extractor::Function=Streamfall.data_extraction,
-               metric::Function=Streamfall.RMSE;
+    calibrate!(node, climate::Climate, calib_data::Union{Dict, DataFrame};
+               metric::Function=Streamfall.RMSE,
                kwargs...)
 
 Calibrate a given node using the BlackBoxOptim package.
 
 # Arguments
 - `node::NetworkNode` : Streamfall node
-- `climate::Climate` : Climate data
-- `calib_data::Union{Dict, DataFrame}` : calibration data for target node by its id
+- `climate` : Climate data
+- `calib_data` : calibration data for target node by its id
 - `extractor::Function` : Calibration extraction method, define a custom one to change behavior
 - `metric::Function` : Optimization function to use. Defaults to RMSE.
 """
-function calibrate!(node, climate, calib_data,
-                   extractor::Function=Streamfall.data_extraction,
-                   metric::Function=Streamfall.RMSE;
-                   kwargs...)
+function calibrate!(node::NetworkNode, climate::Climate, calib_data::Union{Dict, DataFrame};
+                    metric::Function=Streamfall.RMSE,
+                    kwargs...)
     # Set defaults as necessary
     defaults = (;
         MaxTime=900,
@@ -142,7 +128,7 @@ function calibrate!(node, climate, calib_data,
     kwargs = merge(defaults, kwargs)
 
     # Create context-specific optimization function
-    opt_func = x -> obj_func(x, climate, node, calib_data; extractor, metric)
+    opt_func = x -> obj_func(x, climate, node, calib_data; metric)
 
     # Get node parameters (default values and bounds)
     param_names, x0, param_bounds = param_info(node; with_level=false)
@@ -164,20 +150,18 @@ end
 
 """
     calibrate!(sn::StreamfallNetwork, climate::Climate, calib_data;
-               extractor::Function=Streamfall.data_extraction,
-               metric::Function=Streamfall.RMSE;
+               metric::Function=Streamfall.RMSE,
                kwargs...)
 
 Calibrate a stream network.
 """
 function calibrate!(sn::StreamfallNetwork, climate::Climate, calib_data;
-                   extractor::Function=Streamfall.data_extraction,
                    metric::Function=Streamfall.RMSE,
                    kwargs...)
     _, outlets = find_inlets_and_outlets(sn)
     calib_states = Dict()
     for out in outlets
-        calib_states[out] = calibrate!(sn, out, climate, calib_data, extractor, metric; kwargs...)
+        calib_states[out] = calibrate!(sn, out, climate, calib_data; metric=metric, kwargs...)
     end
 
     return calib_states

@@ -16,7 +16,7 @@ obs_data = DataFrame!(CSV.File(joinpath(DATA_PATH, "leaf_river_data.csv"),
                           comment="#",
                           dateformat=date_format))
 
-hist_streamflow = obs_data[:, ["Date", "leaf_river_outflow"]]
+hist_streamflow = obs_data[:, "leaf_river_outflow"]
 climate_data = obs_data[:, ["Date", "leaf_river_P", "leaf_river_ET"]]
 climate = Climate(climate_data, "_P", "_ET")
 
