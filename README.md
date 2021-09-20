@@ -33,14 +33,14 @@ using Streamfall, BlackBoxOptim
 date_format = "YYYY-mm-dd"
 
 # Load file which holds streamflow, precipitation and PET data
-obs_data = DataFrame!(CSV.File("example_data.csv"),
+obs_data = DataFrame!(CSV.File("example_data.csv",
                         comment="#",
                         dateformat=date_format))
 
 # Historic observations
 Qo = obs_data[:, ["Date", "Gauge_Q"]]
 
-# Create climate data interface
+# Create climate data interface (all climate data are expected to have a "Date" column)
 climate_data = obs_data[:, ["Date", "Gauge_P", "Gauge_PET"]]
 climate = Climate(climate_data, "_P", "_PET")
 ```
@@ -59,7 +59,8 @@ calibrate!(hymod_node, climate, Qo; MaxTime=30)
 
 # Basic overview plot (shows time series and Q-Q plot)
 # Uses a 365 day offset (e.g., 1 year burn-in period)
-quickplot(Qo, hymod_node, climate, "HyMod"; burn_in=366, limit=nothing)
+run_node!(hymod_node, climate)
+quickplot(Qo[:, "Gauge_Q"], hymod_node, climate, "HyMod"; burn_in=366, limit=nothing)
 
 # save figure
 savefig("quick_example.png")
