@@ -2,21 +2,21 @@ using Parameters
 using ModelParameters
 
 
-Base.@kwdef mutable struct ExpuhNode{A <: Union{Param, Real}} <: IHACRESNode
+Base.@kwdef mutable struct ExpuhNode{P} <: IHACRESNode
     @network_node
     
     # https://wiki.ewater.org.au/display/SD41/IHACRES-CMD+-+SRG
-    d::A = Param(200.0, bounds=(10.0, 550.0))  # flow threshold
-    d2::A = Param(2.0, bounds=(0.0001, 10.0))   # flow threshold, multiplier applied to d
-    e::A = Param(1.0, bounds=(0.1, 1.5))  # temperature to PET conversion factor
-    f::A = Param(0.8, bounds=(0.01, 3.0))  # plant stress threshold factor (multiplicative factor of d)
-    tau_q::A = Param(1.0, bounds=(0.0, 5.0))
-    tau_s::A = Param(5, bounds=(5.0, 200.0))
-    v_s::A = Param(0.5, bounds=(0.0, 1.0))
+    d::P = Param(200.0, bounds=(10.0, 550.0))  # flow threshold
+    d2::P = Param(2.0, bounds=(0.0001, 10.0))   # flow threshold, multiplier applied to d
+    e::P = Param(1.0, bounds=(0.1, 1.5))  # temperature to PET conversion factor
+    f::P = Param(0.8, bounds=(0.01, 3.0))  # plant stress threshold factor (multiplicative factor of d)
+    tau_q::P = Param(1.0, bounds=(0.0, 5.0))
+    tau_s::P = Param(5, bounds=(5.0, 200.0))
+    v_s::P = Param(0.5, bounds=(0.0, 1.0))
 
-    storage_coef::A = Param(2.9, bounds=(0.2, 10.0))
+    storage_coef::P = Param(2.9, bounds=(0.2, 10.0))
 
-    level_params::Array{A, 1} = [
+    level_params::Array{P, 1} = [
         Param(-0.01, bounds=(-10.0, -0.01)),  # p1
         Param(0.8, bounds=(0.0, 1.5)),  # p2
         Param(4.5, bounds=(0.0, 20.0)), # p3

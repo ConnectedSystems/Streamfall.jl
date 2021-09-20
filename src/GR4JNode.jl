@@ -65,14 +65,14 @@ A four-parameter model with two stores.
     https://github.com/amacd31/gr4j
 
 """
-Base.@kwdef mutable struct GR4JNode{A <: Union{Param, Real}} <: GRNJNode
+Base.@kwdef mutable struct GR4JNode{P} <: GRNJNode
     @network_node
 
     # parameters
-    X1::A = Param(350.0, bounds=(1.0, 1500.0))
-    X2::A = Param(0.0, bounds=(-10.0, 5.0))
-    X3::A = Param(40.0, bounds=(1.0, 500.0))
-    X4::A = Param(0.5, bounds=(0.5, 10.0))
+    X1::P = Param(350.0, bounds=(1.0, 1500.0))
+    X2::P = Param(0.0, bounds=(-10.0, 5.0))
+    X3::P = Param(40.0, bounds=(1.0, 500.0))
+    X4::P = Param(0.5, bounds=(0.5, 10.0))
 
     # x1 : maximum capacity of the production store (mm) (> 0)
     # x2 : groundwater exchange coefficient (mm) (value < and > 0 possible)

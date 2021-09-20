@@ -16,15 +16,15 @@ Adapted with kind permission from: https://github.com/jdherman/GRA-2020-SALib
     Hydrology and Earth System Sciences 17, 149–161. 
     https://doi.org/10.5194/hess-17-149-2013
 """
-Base.@kwdef mutable struct SimpleHyModNode{A <: Union{Param, Real}} <: HyModNode
+Base.@kwdef mutable struct SimpleHyModNode{P} <: HyModNode
     @network_node
 
     # parameters
-    Sm_max::A = Param(250.0, bounds=(1.0, 500.0))
-    B::A = Param(1.0, bounds=(0.0, 2.0))
-    alpha::A = Param(0.2, bounds=(0.0, 1.0))
-    Kf::A = Param(0.5, bounds=(0.1, 0.9999))
-    Ks::A = Param(0.05, bounds=(0.001, 0.1))
+    Sm_max::P = Param(250.0, bounds=(1.0, 500.0))
+    B::P = Param(1.0, bounds=(0.0, 2.0))
+    alpha::P = Param(0.2, bounds=(0.0, 1.0))
+    Kf::P = Param(0.5, bounds=(0.1, 0.9999))
+    Ks::P = Param(0.05, bounds=(0.001, 0.1))
 
     # stores
     Sm::Array{Float64} = [0.0]

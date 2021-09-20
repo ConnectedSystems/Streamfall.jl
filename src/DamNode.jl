@@ -26,11 +26,11 @@ function c_dam_outflow(discharge, irrigation_extraction)
 end
 
 
-Base.@kwdef mutable struct DamNode{A <: Union{Param, Real}} <: NetworkNode
+Base.@kwdef mutable struct DamNode{P} <: NetworkNode
     @network_node
 
     max_storage::Float64
-    storage_coef::A = Param(0.5, bounds=(0.00001, 10.0))
+    storage_coef::P = Param(0.5, bounds=(0.00001, 10.0))
 
 
     # Function to use to calculate dam level from storage volume
