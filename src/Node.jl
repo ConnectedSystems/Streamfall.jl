@@ -131,7 +131,6 @@ function extract_node_spec(node::NetworkNode)
     params = Dict(zip(param_names, x0))
 
     if hasproperty(node, :storage)
-        @info node.storage[1]
         params[:initial_storage] = node.storage[1]
     end
 
