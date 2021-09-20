@@ -72,7 +72,7 @@ julia> @normalize @mean_inverse KGE [1,2] [3,2] 1e-6
 0.3193506006429825
 ```
 """
-macro mean_inverse(metric, obs, sim, ϵ=1e-8)
+macro mean_inverse(metric, obs, sim, ϵ=1e-2)
     obj, o, s, ϵ = eval(metric), eval(obs), eval(sim), eval(ϵ)
     q = obj(o, s)
     q2 = obj(1.0 ./ (o .+ ϵ), 1.0 ./ (s .+ ϵ))
@@ -453,7 +453,7 @@ compared to mKGE (see [1]).
 - `obs::Vector` : observations
 - `sim::Vector` : modeled results
 - `scaling::Tuple` : scaling factors for r, α, and β (defaults to 1.0)
-- `ϵ::Float64` : small constant to use with inverse flow to allow consideration of periods with no flow.
+- `ϵ::Float64` : small constant to use with inverse flow to allow consideration of periods with no flow. Defaults to 1e-2.
 
 # References
 1. Garcia, F., Folton, N., Oudin, L., 2017.
@@ -462,7 +462,7 @@ compared to mKGE (see [1]).
     Hydrological Sciences Journal 62, 1149–1166.
     https://doi.org/10.1080/02626667.2017.1308511
 """
-mean_NmKGE(obs, sim; scaling=nothing, ϵ=1e-6) = mean([Streamfall.NmKGE(obs, sim; scaling=scaling), Streamfall.NmKGE(1.0 ./ (obs .+ ϵ), 1.0 ./ (sim .+ ϵ); scaling=scaling)])
+mean_NmKGE(obs, sim; scaling=nothing, ϵ=1e-2) = mean([Streamfall.NmKGE(obs, sim; scaling=scaling), Streamfall.NmKGE(1.0 ./ (obs .+ ϵ), 1.0 ./ (sim .+ ϵ); scaling=scaling)])
 
 
 """Calculate the non-parametric Kling-Gupta Efficiency (KGE) metric.
@@ -631,7 +631,7 @@ By default, the combination method is to take the mean.
 - sim : modeled results
 - `metric::Function` : objective function
 - `comb_method::Function` : mean
-- ϵ : offset value to use (enables use with zero-flow time steps), defaults to 1e-6
+- ϵ : offset value to use (enables use with zero-flow time steps), defaults to 1e-2
 
 
 # References
@@ -641,7 +641,7 @@ By default, the combination method is to take the mean.
     Hydrological Sciences Journal 62, 1149–1166.
     https://doi.org/10.1080/02626667.2017.1308511
 """
-function inverse_metric(obs, sim, metric::Function; comb_method::Function=mean, ϵ=1e-6)
+function inverse_metric(obs, sim, metric::Function; comb_method::Function=mean, ϵ=1e-2)
     return comb_method([metric(obs, sim), metric(1.0 ./ (obs + ϵ), 1.0 ./ (sim + ϵ))])
 end
 
