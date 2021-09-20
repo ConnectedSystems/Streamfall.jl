@@ -268,4 +268,7 @@ export calibrate!
 # plotting methods
 export quickplot, plot_network, save_figure
 
+# data interface (climate)
+export timesteps
+
 end  # end module
