@@ -138,7 +138,7 @@ function run_node!(node::GR4JNode, climate::Climate; inflow=nothing, extraction=
     timesteps = sim_length(climate)
     # prep_state!(node, sim_length)
     for ts in 1:timesteps
-        run_node!(node, climate, ts; inflow=inflow, extraction=extraction, exchange=exchange)
+        run_timestep!(node, climate, ts; inflow=inflow, extraction=extraction, exchange=exchange)
     end
 
     return node.outflow
@@ -146,12 +146,12 @@ end
 
 
 """
-    run_node!(node::GR4JNode, climate::Climate, timestep::Int;
-              inflow::Float64, extraction::Float64, exchange::Float64)
+    run_timestep!(node::GR4JNode, climate::Climate, timestep::Int;
+                  inflow::Float64, extraction::Float64, exchange::Float64)
 
 Run given GR4J node for a time step.
 """
-function run_node!(node::GR4JNode, climate::Climate, timestep::Int; inflow=nothing, extraction=nothing, exchange=nothing)
+function run_timestep!(node::GR4JNode, climate::Climate, timestep::Int; inflow=nothing, extraction=nothing, exchange=nothing)
     P, E = climate_values(node, climate, timestep)
 
     res = run_gr4j(P, E, node.X1, node.X2, node.X3, node.X4, node.area, node.p_store[end], node.r_store[end])

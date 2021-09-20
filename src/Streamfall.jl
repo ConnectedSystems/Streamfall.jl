@@ -139,20 +139,12 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
                    exchange::Union{DataFrame, Nothing}=nothing)
     ts = timestep
 
-    node = sn[node_id]
-    if checkbounds(Bool, node.outflow, ts)
-        if node.outflow[ts] != undef
-            # already ran for this time step so no need to recurse further
-            return node.outflow[ts], node.level[ts]
-        end
-    end
-    
     sim_inflow = 0.0
     ins = inneighbors(sn.g, node_id)
     if !isempty(ins)
         for i in ins
             # Get inflow from previous node
-            res = run_node!(sn[i], climate, ts;
+            res = run_node!(sn, i, climate, timestep;
                             inflow=inflow,
                             extraction=extraction,
                             exchange=exchange)
@@ -165,13 +157,14 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
         end
     end
 
+    node = sn[node_id]
     ts_inflow = timestep_value(ts, node.name, "inflow", inflow)
     ts_inflow += sim_inflow
 
     run_func! = get_prop(sn, node_id, :nfunc)
 
     # Run for a time step, dependent on previous state
-    return run_func!(node, climate, ts; inflow=ts_inflow, extraction=extraction, exchange=exchange)
+    run_func!(node, climate, ts; inflow=ts_inflow, extraction=extraction, exchange=exchange)
 end
 
 
@@ -217,21 +210,20 @@ end
 
 
 """
-    run_node!(node::NetworkNode, climate;
+    run_node!(node::NetworkNode, climate::Climate;
               inflow=nothing, extraction=nothing, exchange=nothing)
 
 Run a specific node, and only that node, for all time steps.
 
 # Arguments
 - `node::NetworkNode` : Any Streamfall NetworkNode
-- `climate::Climate` : Climate data
+- `climate` : Climate data
 - `inflow::Union{DataFrame, Vector, Number}` : Inflow to node
 - `extraction::Union{DataFrame, Vector, Number}` : Extractions from this subcatchment
 - `exchange::Union{DataFrame, Vector, Number}` : Groundwater flux
 """
-function run_node!(node::NetworkNode, climate; inflow=nothing, extraction=nothing, exchange=nothing)
+function run_node!(node::NetworkNode, climate::Climate; inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
-    # prep_state!(node, timesteps)
 
     node_name = node.name
     for ts in 1:timesteps
@@ -257,6 +249,7 @@ export @def
 export NetworkNode, GenericNode, GenericDirectNode
 export IHACRES, IHACRESNode, BilinearNode, ExpuhNode, DamNode, Climate
 export create_node, GR4JNode, HyModNode, SimpleHyModNode, SYMHYDNode
+export run_step!, run_timestep!
 
 # Network
 export find_inlets_and_outlets, inlets, outlets, create_network, create_node

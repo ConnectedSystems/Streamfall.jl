@@ -155,9 +155,10 @@ function update_state(s_node::IHACRESNode, storage::Float64, e_rainfall::Float64
 end
 
 
+
 """
     run_node!(node::IHACRESNode, climate::Climate, timestep::Int; 
-              inflow=nothing, extraction=nothing, exchange=nothing)
+                  inflow=nothing, extraction=nothing, exchange=nothing)
 
 Run a specific node for a specified time step.
 
@@ -185,12 +186,12 @@ function run_node!(node::IHACRESNode, climate::Climate, timestep::Int;
     ex = timestep_value(ts, node_name, "exchange", exchange)
     in_flow = timestep_value(ts, node_name, "inflow", inflow)
 
-    return run_node!(node, rain, et, in_flow, wo, ex)
+    return run_step!(node, rain, et, in_flow, wo, ex)
 end
 
 
 """
-    run_node!(s_node::BilinearNode,
+    run_step!(s_node::BilinearNode,
               rain::Float64,
               evap::Float64,
               inflow::Float64,
@@ -218,7 +219,7 @@ Run node with ET data to calculate outflow and update state.
 # Returns
 - float, outflow from node [ML/day], stream level
 """
-function run_node!(s_node::BilinearNode,
+function run_step!(s_node::BilinearNode,
                    rain::Float64,
                    evap::Float64,
                    inflow::Float64,
@@ -317,23 +318,23 @@ end
 
 
 """
-    run_node!(s_node::BilinearNode,
-              rain::Float64,
-              evap::Float64,
-              timestep::Union{Int64, Nothing};
-              inflow::Float64,
-              extraction::Float64,
-              exchange::Float64)::Tuple{Float64, Float64}
+    run_timestep!(s_node::BilinearNode,
+                  rain::Float64,
+                  evap::Float64,
+                  timestep::Union{Int64, Nothing};
+                  inflow::Float64,
+                  extraction::Float64,
+                  exchange::Float64)::Tuple{Float64, Float64}
 
 Run node for a given time step.
 """
-function run_node!(s_node::BilinearNode,
-                   rain::Float64,
-                   evap::Float64,
-                   timestep::Union{Int64, Nothing};
-                   inflow::Float64=0.0,
-                   extraction::Float64=0.0,
-                   exchange::Float64=0.0)::Tuple{Float64, Float64}
+function run_timestep!(s_node::BilinearNode,
+                       rain::Float64,
+                       evap::Float64,
+                       timestep::Union{Int64, Nothing};
+                       inflow::Float64=0.0,
+                       extraction::Float64=0.0,
+                       exchange::Float64=0.0)::Tuple{Float64, Float64}
     ts = timestep
     if !isnothing(ts)
         current_store = s_node.storage[ts]
@@ -347,7 +348,7 @@ function run_node!(s_node::BilinearNode,
         gw_store = nothing
     end
 
-    return run_node!(s_node, rain, evap, inflow, extraction, exchange;
+    return run_step!(s_node, rain, evap, inflow, extraction, exchange;
                      current_store, quick_store, slow_store, gw_store)
 end
 

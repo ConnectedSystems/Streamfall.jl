@@ -77,26 +77,32 @@ end
 # end
 
 
-function run_node!(node::HyModNode, climate;
+"""
+    run_node!(node::HyModNode, climate::Climate;
+              inflow=nothing, extraction=nothing, exchange=nothing)
+
+Run given HyMod node for entire simulation period.
+"""
+function run_node!(node::HyModNode, climate::Climate;
                    inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
     # prep_state!(node, timesteps)
 
     for ts in 1:timesteps
-        run_node!(node, climate, ts;
-                  inflow=inflow, extraction=extraction, exchange=exchange)
+        run_timestep!(node, climate, ts;
+                      inflow=inflow, extraction=extraction, exchange=exchange)
     end
 end
 
 
 """
-    run_node!(node::HyModNode, climate::Climate, timestep::Int,
-              inflow::Float64, extraction::Float64, exchange::Float64)
+    run_timestep!(node::HyModNode, climate::Climate, timestep::Int,
+                  inflow::Float64, extraction::Float64, exchange::Float64)
 
 Run given HyMod node for a time step.
 """
-function run_node!(node::SimpleHyModNode, climate::Climate, timestep::Int;
-                   inflow=nothing, extraction=nothing, exchange=nothing)::Float64
+function run_timestep!(node::SimpleHyModNode, climate::Climate, timestep::Int;
+                       inflow=nothing, extraction=nothing, exchange=nothing)::Float64
     ts = timestep
     P, ET = climate_values(node, climate, ts)
     in_flow = timestep_value(ts, node.name, "inflow", inflow)
