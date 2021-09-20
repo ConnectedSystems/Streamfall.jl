@@ -246,12 +246,12 @@ end
     NSE_logbias(obs, sim; metric::Function=NSE, bias_threshold::Float64=5.0, shape::Float64=2.5)
 
 The NSE_logbias meta-metric provides a weighted combination of a least-squares approach and a
-logarithmic function of bias. The metric penalizes predictions with an overall bias above a 
+logarithmic function of bias. The metric penalizes predictions with an overall bias above a
 threshold (defined as 5% in [1]).
 
 It is also referred to as the Viney F score.
 
-Note: The penalty applied is non-symmetrical (or multiplicatively symmetrical) in that 
+Note: The penalty applied is non-symmetrical (or multiplicatively symmetrical) in that
 predictions that are _double_ the observed are penalized identically to predictions that are
 _half_ the observed volume.
 
@@ -651,3 +651,4 @@ function inverse_metric(obs, sim, metric::Function; comb_method::Function=mean, 
 end
 
 
+# 1 - sqrt(split_CV^2 + (mKGE - 1)^2)
