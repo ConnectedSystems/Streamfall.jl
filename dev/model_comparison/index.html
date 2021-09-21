@@ -43,37 +43,30 @@ node_names = [&quot;HyMod&quot;, &quot;GR4J&quot;, &quot;SYMHYD&quot;, &quot;IHA
 node_list = [hymod_node, gr4j_node, symhyd_node, ihacres_node]
 result = pmap(opt_func, node_list)
 
+
 # Create comparison plot
-# Note: there is a convenience `quickplot` method, but in this case
-#       we want fine-grain control over how the plot is created.
 Qo = hist_streamflow[:, &quot;410730_Q&quot;]
 Qo_burn = Qo[burn_in:end]
 res_plots = []
+
 for ((res, opt), node, n_name) in zip(result, node_list, node_names)
-    update_params!(node, best_candidate(res)...)    
+    update_params!(node, best_candidate(res)...)
     reset!(node)
     run_node!(node, climate)
 
     node_burn = node.outflow[burn_in:end]
-    tmp_plot = plot(Qo_burn, label=&quot;Historic&quot;)
-    plot!(node_burn, label=n_name, alpha=0.7, linestyle=:dashdot)
 
-    qq_plot = qqplot(Qo_burn, node_burn, markerstrokewidth=0, alpha=0.6)
-    res_plot = plot(
-        tmp_plot,
-        qq_plot,
-        layout=(1,2)
-    )
-
+    res_plot = quickplot(Qo, node, climate, n_name; burn_in=366)
     push!(res_plots, res_plot)
 end
 
+
 combined_plot = plot(
-    [plot(rplt) for rplt in res_plots]...,
+    [rplt for rplt in res_plots]...,
     layout=(length(node_list),1),
-    size=(950,425*length(node_list)),
+    size=(950,450*length(node_list)),
 )
 
 display(combined_plot)
 
-# savefig(&quot;multi_model_comparison.png&quot;)</code></pre><p><img src="../assets/multi_model_comparison.png" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../simple_showcase/">« A simple example</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.6 on <span class="colophon-date" title="Monday 20 September 2021 14:39">Monday 20 September 2021</span>. Using Julia version 1.6.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+# savefig(&quot;multi_model_comparison.png&quot;)</code></pre><p><img src="../assets/multi_model_comparison.png" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../simple_showcase/">« A simple example</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.6 on <span class="colophon-date" title="Tuesday 21 September 2021 02:58">Tuesday 21 September 2021</span>. Using Julia version 1.6.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
