@@ -19,11 +19,11 @@ function quickplot(node::NetworkNode, climate::Climate)
 end
 
 
-function quickplot(obs, node::NetworkNode, climate::Climate, label=""; burn_in=1, limit=nothing)
+function quickplot(obs, node::NetworkNode, climate::Climate, label="", log=true; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
     date = timesteps(climate)
     last_e = !isnothing(limit) ? limit : lastindex(obs)
     show_range = burn_in:last_e
-    return quickplot(obs[show_range], node.outflow[show_range], date[show_range], label)
+    return quickplot(obs[show_range], node.outflow[show_range], date[show_range], label, log; metric=metric)
 end
 
 
@@ -71,3 +71,12 @@ function plot_residuals(x::Array, y::Array; xlabel="", ylabel="", title="")
 
     return fig_1to1
 end
+
+
+# mass comparison plot
+# """
+# Produce a scatter plot from a DataFrame of scores.
+# """
+# function mass_plot(df)
+
+# end
