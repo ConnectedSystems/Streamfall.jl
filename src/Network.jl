@@ -137,7 +137,6 @@ function create_node(mg::MetaGraph, node_name::String, details::Dict, nid::Int)
             if func_spec isa Function
                 func = func_spec
             elseif func_spec isa String
-                # func = eval(Symbol(func_spec))
                 func = eval(Meta.parse(func_spec))
             end
         else
@@ -145,8 +144,8 @@ function create_node(mg::MetaGraph, node_name::String, details::Dict, nid::Int)
         end
 
         set_props!(mg, nid, Dict(:name=>node_name,
-                                :node=>n,
-                                :nfunc=>func))
+                                 :node=>n,
+                                 :nfunc=>func))
         
         this_id = nid
         nid = nid + 1
