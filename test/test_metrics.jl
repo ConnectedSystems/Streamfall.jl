@@ -43,6 +43,9 @@ end
 
 @testset "non-parametric Kling-Gupta" begin
     @test Streamfall.npKGE(test_seq, test_seq) == 1.0
-    @test Streamfall.npKGE(test_seq, b_seq) ≈ -0.16641030651362487
+    @test Streamfall.npKGE([10.0, 10.0, 10.0], [10.0, 10.0, 10.0]) == 1.0
+    @test Streamfall.npKGE([0.0, 0.0, 0.0], [10.0, 0.0, 0.0]) == 1.0
     @test Streamfall.npKGE(test_seq, c_seq) < 0.0
+
+    @test !isnan(Streamfall.npKGE(repeat([0], 100), repeat([0.01], 100)))
 end
