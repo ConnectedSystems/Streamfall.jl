@@ -389,10 +389,10 @@ function mKGE(obs, sim; scaling=nothing)::Float64
         scaling = (1,1,1)
     end
 
-    # Timing
+    # Timing (Pearson's correlation)
     r = Statistics.cor(obs, sim)
     if isnan(r)
-        r = 0.0  # can happen if seqs are perfect (std of 0)
+        r = 1.0  # can happen if seqs are perfect (std of 0)
     end
 
     # Variability
@@ -403,7 +403,7 @@ function mKGE(obs, sim; scaling=nothing)::Float64
 
     cv_o = StatsBase.variation(obs)
     if isnan(cv_o)
-        cv_o = 1.0
+        cv_o = 0.0
     end
 
     if cv_o == 0.0 && cv_s == 0.0
@@ -413,7 +413,11 @@ function mKGE(obs, sim; scaling=nothing)::Float64
     end
 
     # Magnitude
-    β = mean(sim) / mean(obs)
+    if mean(obs) == 0.0
+        β = mean(sim)
+    else
+        β = mean(sim) / mean(obs)
+    end
 
     rs = scaling[1]
     βs = scaling[2]
@@ -499,19 +503,26 @@ function npKGE(obs, sim; scaling=nothing)::Float64
     end
 
     μ_o = mean(obs)
-    x = length(obs) * μ_o
-    fdc_obs = sort(obs / x)
+    if μ_o == 0.0
+        fdc_obs = repeat([0.0], length(obs))
+    else
+        x = length(obs) * μ_o
+        fdc_obs = sort(obs / x)
+    end
 
     α = 1 - 0.5 * sum(abs.(fdc_sim - fdc_obs))
+
+    # Magnitude
     if μ_o == 0.0
-        β = 0.0
+        β = μ_s == 0.0 ? 1.0 : μ_s
     else
         β = μ_s / μ_o
     end
 
+    # Timing and flow dynamics
     r = StatsBase.corspearman(fdc_obs, fdc_sim)
     if isnan(r)
-        r = 0.0
+        r = 1.0  # can occur if identical sequences are used (e.g., 0 flows)
     end
 
     rs = scaling[1]
