@@ -413,10 +413,13 @@ function mKGE(obs, sim; scaling=nothing)::Float64
     end
 
     # Magnitude
-    if mean(obs) == 0.0
-        β = mean(sim)
+    μ_o = mean(obs)
+    μ_s = mean(sim)
+    if μ_o == 0.0
+        # use logistic function to indicate distance from 0 (μ_o)
+        β = 1 / exp(μ_s)
     else
-        β = mean(sim) / mean(obs)
+        β = μ_s / μ_o
     end
 
     rs = scaling[1]
@@ -660,6 +663,3 @@ By default, the combination method is to take the mean.
 function inverse_metric(obs, sim, metric::Function; comb_method::Function=mean, ϵ=1e-2)
     return comb_method([metric(obs, sim), metric(1.0 ./ (obs + ϵ), 1.0 ./ (sim + ϵ))])
 end
-
-
-# 1 - sqrt(split_CV^2 + (mKGE - 1)^2)
