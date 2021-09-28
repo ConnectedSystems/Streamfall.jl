@@ -372,6 +372,18 @@ end
 
 Also known as KGE prime (KGE').
 
+# Notes
+
+It is not recommended to apply KGE' with log-transformed flows (see [2]).
+Numerical instabilities arise as flow approaches values close to zero.
+This is possible under extreme dry conditions or by chance when sub-sampling.
+
+In cases where observations are constant or otherwise could result in zero variance or zero
+mean flow, this implementation applies a simple logistic function (ℯ⁻ˣ) to gain an 
+indication of simulated data's distance to zero.
+
+This is purely to avoid NaNs influencing subsequent calculations.
+
 # Arguments
 - `obs::Vector`: observations
 - `sim::Vector` : modeled results
@@ -383,6 +395,11 @@ Also known as KGE prime (KGE').
     Runoff conditions in the upper Danube basin under an ensemble of climate change scenarios.
     Journal of Hydrology 424–425, 264–277.
     https://doi.org/10.1016/j.jhydrol.2012.01.011
+
+2. Santos, L., Thirel, G., Perrin, C., 2018.
+    Technical note: Pitfalls in using log-transformed flows within the KGE criterion.
+    Hydrology and Earth System Sciences 22, 4583–4591.
+    https://doi.org/10.5194/hess-22-4583-2018
 """
 function mKGE(obs, sim; scaling=nothing)::Float64
     if isnothing(scaling)
@@ -408,6 +425,9 @@ function mKGE(obs, sim; scaling=nothing)::Float64
 
     if cv_o == 0.0 && cv_s == 0.0
         γ = 1.0
+    elseif cv_o == 0.0
+        # Use logistic function to indicate distance from 0
+        γ = 1.0 / exp(cv_s)
     else
         γ = cv_s / cv_o
     end
@@ -417,7 +437,7 @@ function mKGE(obs, sim; scaling=nothing)::Float64
     μ_s = mean(sim)
     if μ_o == 0.0
         # use logistic function to indicate distance from 0 (μ_o)
-        β = 1 / exp(μ_s)
+        β = 1.0 / exp(μ_s)
     else
         β = μ_s / μ_o
     end
@@ -426,7 +446,7 @@ function mKGE(obs, sim; scaling=nothing)::Float64
     βs = scaling[2]
     γs = scaling[3]
 
-    mod_kge = 1 - sqrt(rs*(r - 1)^2 + βs*(β - 1)^2 + γs*(γ - 1)^2)
+    mod_kge = 1.0 - sqrt(rs*(r - 1)^2 + βs*(β - 1)^2 + γs*(γ - 1)^2)
 
     return mod_kge
 end
