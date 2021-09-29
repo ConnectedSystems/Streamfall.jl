@@ -382,7 +382,7 @@ In cases where observations are constant or otherwise could result in zero varia
 mean flow, this implementation applies a simple logistic function (ℯ⁻ˣ) to gain an 
 indication of simulated data's distance to zero.
 
-This is purely to avoid NaNs influencing subsequent calculations.
+This is to avoid NaNs influencing subsequent calculations.
 
 # Arguments
 - `obs::Vector`: observations
