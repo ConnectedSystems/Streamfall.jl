@@ -26,7 +26,7 @@ end
 
     # Create objective function to minimize (here we use Normalized KGE')
     func = (obs, sim) -> 1.0 - Streamfall.NmKGE(obs[burn_in:end], sim[burn_in:end])
-    opt_func = (node) -> calibrate!(node, climate, hist_streamflow, func; MaxTime=180)
+    opt_func = (node) -> calibrate!(node, climate, hist_streamflow[:, "410730_Q"]; metric=func, MaxTime=180)
 end
 
 
