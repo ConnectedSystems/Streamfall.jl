@@ -409,7 +409,8 @@ function mKGE(obs, sim; scaling=nothing)::Float64
     # Timing (Pearson's correlation)
     r = Statistics.cor(obs, sim)
     if isnan(r)
-        r = 1.0  # can happen if seqs are perfect (std of 0)
+        # can happen if obs or sim is a constant (std of 0)
+        r = all(obs .== sim) ? 1.0 : 0.0
     end
 
     # Variability
