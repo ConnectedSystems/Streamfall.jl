@@ -136,7 +136,7 @@ function extract_node_spec(node::NetworkNode)
 
     node_type = typeof(node)
     spec = Dict(
-        "node_type" => node_type.name,
+        "node_type" => string(nameof(node_type)),
         "area" => area,
         "parameters" => params
     )
@@ -147,7 +147,8 @@ end
 
 Base.show(io::IO, ::MIME"text/plain", n::NetworkNode) = show(io, n)
 function Base.show(io::IO, n::NetworkNode)
-    println(io, "Name: $(n.name) [$(typeof(n).name)]")
+    ntype_name = nameof(typeof(n))
+    println(io, "Name: $(n.name) [$(ntype_name)]")
     println(io, "Area: $(n.area)")
 
     param_names, x0, bounds = param_info(n; with_level=false)
