@@ -1,6 +1,6 @@
 using Tar, CodecZlib, ZipFile
 
-const IHACRES_VERSION = v"0.1.0"
+const IHACRES_VERSION = v"0.4.0"
 const BASE_URL = "https://github.com/ConnectedSystems/ihacres_nim/releases/download/v$(IHACRES_VERSION)/ihacres_nim_"
 const HERE = @__DIR__
 
@@ -57,4 +57,3 @@ elseif endswith(target, "tar.gz")
 end
 
 rm(fn)
-
