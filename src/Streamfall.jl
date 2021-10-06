@@ -51,8 +51,6 @@ include("GR4JNode.jl")
 include("HyModNode.jl")
 include("SYMHYDNode.jl")
 include("DamNode.jl")
-include("plotting.jl")
-
 
 
 function timestep_value(timestep::Int, gauge_id::String, col_partial::String,
@@ -242,6 +240,9 @@ end
 include("metrics.jl")
 include("calibration.jl")
 
+include("Analysis/Analysis.jl")
+include("plotting.jl")
+
 
 export @def
 
@@ -263,5 +264,8 @@ export quickplot, plot_network, save_figure
 
 # data interface (climate)
 export timesteps
+
+# Analysis
+export Analysis
 
 end  # end module
