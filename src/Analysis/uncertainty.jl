@@ -162,11 +162,9 @@ tuple:
      - whisker_range : Mean range indicated by max_section - min_section
      - weighted : weights (0 to 1) indicating relative to `threshold * std(x_section)`
 """
-function temporal_uncertainty(dates, obs, sim; period::Function=monthday, func::Function=Streamfall.ME, threshold::Float64=1.5)
+function temporal_uncertainty(dates, obs, sim; period::Function=monthday, func::Function=ME, threshold::Float64=1.5)
 
     x_section, min_section, max_section, whisker_range = temporal_uncertainty(dates, obs, sim, period, func)
-
-    std_tol_thres = threshold * std(x_section)
 
     # Increase weight on observations with lower uncertainty
     weights = 1.0 .- (abs.(x_section) ./ (threshold * std(x_section))).^2
@@ -174,7 +172,7 @@ function temporal_uncertainty(dates, obs, sim; period::Function=monthday, func::
 
     # Increase weight on observations that are more uncertain
     # abs_xsect = abs.(x_section)
-    # weights = abs_xsect ./ (abs_xsect .+ std_tol_thres)
+    # weights = abs_xsect ./ (abs_xsect .+ (threshold * std(x_section)))
 
     weighted = fill(1.0, length(obs))
     doy = Dates.dayofyear.(dates)
