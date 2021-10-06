@@ -687,3 +687,32 @@ By default, the combination method is to take the mean.
 function inverse_metric(obs, sim, metric::Function; comb_method::Function=mean, ϵ=1e-2)
     return comb_method([metric(obs, sim), metric(1.0 ./ (obs + ϵ), 1.0 ./ (sim + ϵ))])
 end
+
+
+"""
+Allows comparison of any model compared against a pre-defined benchmark, assuming both scores were obtained with
+the same objective function.
+
+Positive values indicate a model is better than the benchmark, and negative values indicate a model performs worse.
+
+# Extended help
+It is noted in Knoben et al., [1] that the skill score should always be contextualized with the original benchmark
+value. Interpreting skill scores by themselves may become difficult if the benchmark score is already quite high.
+A small improvement of no real practical value could be misconstrued as a large improvement.
+As an example, if the benchmark has an KGE score of 0.999 and its counterpart 0.9995, then a skill score of 0.5 will
+be reported.
+
+# References
+1. Knoben, W.J.M., Freer, J.E., Woods, R.A., 2019. 
+    Technical note: Inherent benchmark or not? Comparing Nash-Sutcliffe and Kling-Gupta efficiency scores (preprint). 
+    Catchment hydrology/Modelling approaches. 
+    https://doi.org/10.5194/hess-2019-327
+
+2. Towner, J., Cloke, H.L., Zsoter, E., Flamig, Z., Hoch, J.M., Bazo, J., Coughlan de Perez, E., Stephens, E.M., 2019. 
+    Assessing the performance of global hydrological models for capturing peak river flows in the Amazon basin. 
+    Hydrology and Earth System Sciences 23, 3057–3080. 
+    https://doi.org/10.5194/hess-23-3057-2019
+"""
+function skill_score(model_score, benchmark_score)
+    return (model_score - benchmark_score) / (1.0 - benchmark_score)
+end
