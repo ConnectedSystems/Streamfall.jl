@@ -1,6 +1,8 @@
 using Plots, StatsPlots
 using Plots.Measures
-using DataFrames, Dates, Statistics
+using DataFrames, Dates, Statistics, Distributions
+import StatsBase: ecdf
+import Bootstrap: bootstrap, BalancedSampling
 
 
 function quickplot(node::NetworkNode)
@@ -36,7 +38,13 @@ function quickplot(obs::Array, sim::Array, xticklabels::Array, label="Modeled", 
     metric_name = String(Symbol(metric))
 
     label = "$(label) ($(metric_name): $(score))"
-    fig = plot(xticklabels, obs, label="Observed", legend=:best, ylabel="Streamflow", xlabel="Date")
+    fig = plot(xticklabels, obs, 
+                label="Observed", 
+                legend=:best, 
+                ylabel="Streamflow", 
+                xlabel="Date",
+                fg_legend=:transparent,
+                bg_legend=:transparent)
     plot!(xticklabels, sim, label=label, alpha=0.7)
 
     if log
@@ -47,12 +55,16 @@ function quickplot(obs::Array, sim::Array, xticklabels::Array, label="Modeled", 
 
     qqfig = qqplot(obs, sim, legend=false, markerstrokewidth=0, alpha=0.7, xlabel="Observed", ylabel="Modeled")
 
+    # tick limits explicitly specified as workaround for known bug:
+    # https://discourse.julialang.org/t/plotting-log-log-plot-how-do-i-resolve-a-no-strict-ticks-warning/67510
     if log
         xaxis!(qqfig, :log)
+        # xlims!(minimum(sim)-10, maximum(sim)+10)
         yaxis!(qqfig, :log)
+        # ylims!(minimum(sim)-10, maximum(sim)+10)
     end
 
-    combined = plot(fig, qqfig, size=(800, 400), left_margin=5mm)
+    combined = plot(fig, qqfig, size=(800, 400), left_margin=10mm, layout=(1,2))
 
     return combined
 end
@@ -98,7 +110,7 @@ Filters out leap days.
 - `func::Function` : Function to apply to each month-day grouping
 - `period::Function` : Method from `Dates` package to group (defaults to `month`)
 """
-function temporal_cross_section(dates, obs, sim; ylabel=nothing, func::Function=Streamfall.ME, period::Function=month)
+function temporal_cross_section(dates, obs, sim; title="", ylabel=nothing, func::Function=Streamfall.ME, period::Function=monthday)
     df = DataFrame(Date=dates, Observed=obs, Modeled=sim)
     sp = sort(unique(period.(dates)))
 
@@ -108,17 +120,18 @@ function temporal_cross_section(dates, obs, sim; ylabel=nothing, func::Function=
     x_section = fill(0.0, length(sp))
     min_section = fill(0.0, length(sp))
     max_section = fill(0.0, length(sp))
-    med_section = fill(0.0, length(sp))
     for (i, obs_i) in enumerate(sp)
         obs_g = df[in([obs_i]).(period.(df.Date)), :]
         obs_gi = obs_g.Observed
         sim_gi = obs_g.Modeled
 
         tmp = func.([[x] for x in obs_gi], [[x] for x in sim_gi])
-        min_section[i] = minimum(tmp)
-        max_section[i] = maximum(tmp)
-        med_section[i] = median(tmp)
-        x_section[i] = mean(tmp)
+
+        Q1, Q2, Q3 = quantile(tmp, [0.25, 0.5, 0.75])
+        IQR_lim = 1.5*(Q3 - Q1)
+        min_section[i] = Q1 - IQR_lim
+        max_section[i] = Q3 + IQR_lim
+        x_section[i] = Q2
     end
 
     if isnothing(ylabel)
@@ -126,19 +139,22 @@ function temporal_cross_section(dates, obs, sim; ylabel=nothing, func::Function=
     end
 
     xlabels = join.(sp, "-")
+    mean_ind = round(mean(x_section), digits=2)
+    whisker_range = round(mean(max_section .- x_section), digits=2)
     fig = plot(xlabels, x_section,
                ribbon=(x_section .- min_section, max_section .- x_section),
-               label="Mean $(ylabel)",
+               label="$(ylabel): [Mean: $(mean_ind) (± $(whisker_range))]",
                xlabel=nameof(period),
+               ylabel=ylabel,
                legend=:bottomleft,
                legendfont=Plots.font(12),
                fg_legend=:transparent,
                bg_legend=:transparent,
-               ylabel=ylabel,
                left_margin=5mm,
                bottom_margin=5mm,
+               title=title,
+               # yaxis=:log,
                size=(850, 400))
-    scatter!(xlabels, med_section, markerstrokewidth=0, markersize=4, alpha=0.4, label="Median")
 
     return fig
 end
