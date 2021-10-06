@@ -134,7 +134,7 @@ function R2(obs, sim)::Float64
 end
 
 
-"""Determine adjusted R^2
+"""Adjusted R^2
 
 # Arguments
 - `obs::Vector` : observations
@@ -251,7 +251,8 @@ threshold (defined as 5% in [1]).
 
 It is also referred to as the Viney F score.
 
-Note: The penalty applied is non-symmetrical (or multiplicatively symmetrical) in that
+# Extended help
+The penalty applied is non-symmetrical (or multiplicatively symmetrical) in that
 predictions that are _double_ the observed are penalized identically to predictions that are
 _half_ the observed volume.
 
@@ -372,17 +373,19 @@ end
 
 Also known as KGE prime (KGE').
 
-# Notes
+# Extended help
 
 It is not recommended to apply KGE' with log-transformed flows (see [2]).
 Numerical instabilities arise as flow approaches values close to zero.
 This is possible under extreme dry conditions or by chance when sub-sampling.
 
-In cases where observations are constant or otherwise could result in zero variance or zero
+In cases where observations are constant or otherwise displays zero variance or zero
 mean flow, this implementation applies a simple logistic function (ℯ⁻ˣ) to gain an 
 indication of simulated data's distance to zero.
 
-This is to avoid NaNs influencing subsequent calculations.
+This is to:
+- avoid NaNs influencing subsequent calculations 
+- allow use with split methods which may partition streamflows into periods of 0 flows.
 
 # Arguments
 - `obs::Vector`: observations
