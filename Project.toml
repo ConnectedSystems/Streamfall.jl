@@ -6,6 +6,7 @@ version = "0.1.9"
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
+Bootstrap = "e28b5b4c-05e8-5b66-bc03-6f0c0a0a06e0"
 BoxCoxTrans = "4c24c29e-1bf7-59e2-a6c7-e500a6482ce4"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 Cairo = "159f3aea-2a34-519c-b102-8c37f9878175"
