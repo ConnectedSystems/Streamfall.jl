@@ -211,7 +211,7 @@ end
 
 Explained Variance.
 
-Represents the amount of variation in the observations which the predictions
+Indicates the amount of variation in the observations which the predictions
 are able to explain.
 """
 function EV(obs, sim)

@@ -160,7 +160,7 @@ tuple:
      - min_section : Q1 - 1.5*IQR of metric value for period
      - max_section : Q3 + 1.5*IQR of metric value for period
      - whisker_range : Mean range indicated by max_section - min_section
-     - weighted : weights (0 to 1) indicating relative to `threshold * std(x_section)`
+     - weighted : weights (0 to 1) relative to `threshold * std(x_section)`
 """
 function temporal_uncertainty(dates, obs, sim; period::Function=monthday, func::Function=ME, threshold::Float64=1.5)
 
