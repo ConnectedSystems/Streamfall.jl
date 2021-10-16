@@ -21,6 +21,22 @@ Development version of the documentation can be found [here](https://connectedsy
 
 > [NOTE] Streamfall is currently in its early stages and under active development. Although it is fairly usable for small networks and single node analyses, things may change drastically and unexpectedly.
 
+## Development
+
+To build locally:
+
+```bash
+$ julia --project=.
+julia>] build
+```
+
+To run tests:
+
+```bash
+julia>] test
+```
+
+
 ## Quick start (prep)
 
 ```julia
@@ -33,9 +49,9 @@ using Streamfall, BlackBoxOptim
 date_format = "YYYY-mm-dd"
 
 # Load file which holds streamflow, precipitation and PET data
-obs_data = DataFrame!(CSV.File("example_data.csv",
-                        comment="#",
-                        dateformat=date_format))
+obs_data = CSV.File("example_data.csv",
+                    comment="#",
+                    dateformat=date_format) |> DataFrame
 
 # Historic observations
 Qo = obs_data[:, ["Date", "Gauge_Q"]]
@@ -165,9 +181,9 @@ network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
 sn = create_network("Example Network", network)
 
 # Load climate data - in this case from a CSV file with data for all nodes.
-climate_data = DataFrame!(CSV.File("../test/data/campaspe/climate/climate_historic.csv",
-                          comment="#",
-                          dateformat="YYYY-mm-dd"))
+climate_data = CSV.File("../test/data/campaspe/climate/climate_historic.csv",
+                        comment="#",
+                        dateformat="YYYY-mm-dd") |> DataFrame
 
 # Indicate which columns are precipitation and evaporation data based on partial identifiers
 climate = Climate(climate_data, "_rain", "_evap")
