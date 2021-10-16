@@ -19,9 +19,9 @@ end
 
     # Load observations
     date_format = "YYYY-mm-dd"
-    obs_data = DataFrame!(CSV.File(joinpath(DATA_PATH, "climate/CAMELS-AUS_410730.csv"),
-                            comment="#",
-                            dateformat=date_format))
+    obs_data = CSV.File(joinpath(DATA_PATH, "climate/CAMELS-AUS_410730.csv"),
+                        comment="#",
+                        dateformat=date_format) |> DataFrame
 
     hist_streamflow = obs_data[:, ["Date", "410730_Q"]]
     climate_data = obs_data[:, ["Date", "410730_P", "410730_PET"]]

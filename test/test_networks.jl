@@ -64,9 +64,9 @@ end
 
     # Load climate data
     date_format = "YYYY-mm-dd"
-    obs_data = DataFrame!(CSV.File(joinpath(DATA_PATH, "leaf_river_data.csv"),
-                            comment="#",
-                            dateformat=date_format))
+    obs_data = CSV.File(joinpath(DATA_PATH, "leaf_river_data.csv"),
+                        comment="#",
+                        dateformat=date_format) |> DataFrame
 
     hist_streamflow = obs_data[:, "leaf_river_outflow"]
     climate_data = obs_data[:, ["Date", "leaf_river_P", "leaf_river_ET"]]

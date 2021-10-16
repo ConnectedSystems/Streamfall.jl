@@ -162,9 +162,9 @@ Date, 406214_rain, 406214_evap, 406219_rain, 406219_evap
 ```julia
 # Load data from CSV
 date_format = "YYYY-mm-dd"
-climate_data = DataFrame!(CSV.File(joinpath(data_path, "climate/climate_historic.csv"),
-                          comment="#",
-                          dateformat=date_format))
+climate_data = CSV.File(joinpath(data_path, "climate/climate_historic.csv"),
+                        comment="#",
+                        dateformat=date_format) |> DataFrame
 
 # Create a climate object, specifying which identifiers to use.
 climate = Climate(climate_data, "_rain", "_evap")

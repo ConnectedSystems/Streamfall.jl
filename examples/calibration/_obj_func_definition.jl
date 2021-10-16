@@ -17,14 +17,14 @@ Random.seed!(101)
 network = YAML.load_file(joinpath(DATA_PATH, "campaspe_network.yml"))
 sn = create_network("Example Network", network)
 
-climate_data = DataFrame!(CSV.File(joinpath(DATA_PATH, "climate/climate_historic.csv"),
-                            comment="#",
-                            dateformat="YYYY-mm-dd"))
+climate_data = CSV.File(joinpath(DATA_PATH, "climate/climate_historic.csv"),
+                        comment="#",
+                        dateformat="YYYY-mm-dd") |> DataFrame
 
-hist_dam_levels = DataFrame!(CSV.File(joinpath(DATA_PATH, "dam/historic_levels_for_fit.csv"), 
-                             dateformat="YYYY-mm-dd"))
-hist_dam_releases = DataFrame!(CSV.File(joinpath(DATA_PATH, "dam/historic_releases.csv"), 
-                               dateformat="YYYY-mm-dd"))
+hist_dam_levels = CSV.File(joinpath(DATA_PATH, "dam/historic_levels_for_fit.csv"), 
+                           dateformat="YYYY-mm-dd") |> DataFrame
+hist_dam_releases = CSV.File(joinpath(DATA_PATH, "dam/historic_releases.csv"), 
+                             dateformat="YYYY-mm-dd") |> DataFrame
 
 climate_data, hist_dam_levels, hist_dam_releases = Streamfall.align_time_frame(climate_data, 
                                                                                hist_dam_levels, 
