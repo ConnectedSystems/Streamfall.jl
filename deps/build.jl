@@ -1,6 +1,6 @@
 using Tar, CodecZlib, ZipFile
 
-const IHACRES_VERSION = v"0.4.0"
+const IHACRES_VERSION = v"0.4.1"
 const BASE_URL = "https://github.com/ConnectedSystems/ihacres_nim/releases/download/v$(IHACRES_VERSION)/ihacres_nim_"
 const HERE = @__DIR__
 
@@ -47,13 +47,13 @@ if endswith(target, "zip")
     close(zarchive)
 
 elseif endswith(target, "tar.gz")
-    dir_name = split(replace(target, ".tar.gz" => ""), "/")[end]
+    # dir_name = split(replace(target, ".tar.gz" => ""), "/")[end]
 
     open(fn, "r") do fp
-        untar(fp, extract_path)
+        untar(fp, abspath(extract_path))
     end
 
-    mv(joinpath(extract_path, dir_name, "*.*"), joinpath(HERE, "../"), force=true)
+    # mv(joinpath(extract_path, dir_name, "*.*"), joinpath(HERE, "../"), force=true)
 end
 
 rm(fn)
