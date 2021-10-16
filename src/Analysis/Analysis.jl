@@ -1,3 +1,3 @@
 module Analysis
-    include("Uncertainty.jl")
+    include("uncertainty.jl")
 end
