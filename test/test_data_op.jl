@@ -10,9 +10,9 @@ climate_data = joinpath(here, "data/campaspe/climate/climate_historic.csv")
 dam_data_loc = joinpath(here, "data/campaspe/dam")
 
 # Read in test data
-climate_data = DataFrame!(CSV.File(climate_data, comment="#", dateformat="YYYY-mm-dd"))
-hist_dam_levels = DataFrame!(CSV.File(joinpath(dam_data_loc, "historic_levels_for_fit.csv"), dateformat="YYYY-mm-dd"))
-hist_dam_releases = DataFrame!(CSV.File(joinpath(dam_data_loc, "historic_releases.csv"), dateformat="YYYY-mm-dd"))
+climate_data = CSV.File(climate_data, comment="#", dateformat="YYYY-mm-dd") |> DataFrame
+hist_dam_levels = CSV.File(joinpath(dam_data_loc, "historic_levels_for_fit.csv"), dateformat="YYYY-mm-dd") |> DataFrame
+hist_dam_releases = CSV.File(joinpath(dam_data_loc, "historic_releases.csv"), dateformat="YYYY-mm-dd") |> DataFrame
 
 
 @testset "Min/max date finding" begin
