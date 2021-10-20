@@ -110,7 +110,7 @@ Filters out leap days.
 - `func::Function` : Function to apply to each month-day grouping
 - `period::Function` : Method from `Dates` package to group (defaults to `month`)
 """
-function temporal_cross_section(dates, obs, sim; title="", ylabel=nothing, func::Function=Streamfall.ME, period::Function=monthday)
+function temporal_cross_section(dates, obs, sim; title="", ylabel=nothing, label=nothing, func::Function=Streamfall.ME, period::Function=monthday)
     df = DataFrame(Date=dates, Observed=obs, Modeled=sim)
     sp = sort(unique(period.(dates)))
 
@@ -138,12 +138,16 @@ function temporal_cross_section(dates, obs, sim; title="", ylabel=nothing, func:
         ylabel = nameof(func)
     end
 
+    if isnothing(label)
+        label = ylabel
+    end
+
     xlabels = join.(sp, "-")
     mean_ind = round(mean(x_section), digits=2)
     whisker_range = round(mean(max_section .- x_section), digits=2)
     fig = plot(xlabels, x_section,
                ribbon=(x_section .- min_section, max_section .- x_section),
-               label="$(ylabel): [Mean: $(mean_ind) (± $(whisker_range))]",
+               label="$(label): [Mean: $(mean_ind) (± $(whisker_range))]",
                xlabel=nameof(period),
                ylabel=ylabel,
                legend=:bottomleft,
