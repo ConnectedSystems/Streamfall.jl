@@ -83,7 +83,7 @@ function calibrate!(sn::StreamfallNetwork, v_id::Int64, climate::Climate, calib_
     this_node = sn[v_id]
 
     # Create context-specific optimization function
-    opt_func = x -> obj_func(x, climate, sn, v_id, calib_data; metric)
+    opt_func = x -> obj_func(x, climate, sn, v_id, calib_data; metric=metric)
 
     # Get node parameters (default values and bounds)
     param_names, x0, param_bounds = param_info(this_node; with_level=false)
@@ -128,8 +128,10 @@ function calibrate!(node::NetworkNode, climate::Climate, calib_data::Array;
     )
     kwargs = merge(defaults, kwargs)
 
+    # reset!(node)
+
     # Create context-specific optimization function
-    opt_func = x -> obj_func(x, climate, node, calib_data; metric)
+    opt_func = x -> obj_func(x, climate, node, calib_data; metric=metric)
 
     # Get node parameters (default values and bounds)
     param_names, x0, param_bounds = param_info(node; with_level=false)
@@ -174,8 +176,10 @@ function calibrate!(node::NetworkNode, climate::Climate, calib_data::DataFrame;
     )
     kwargs = merge(defaults, kwargs)
 
+    # reset!(node)
+
     # Create context-specific optimization function
-    opt_func = x -> obj_func(x, climate, node, calib_data[:, node.name]; metric)
+    opt_func = x -> obj_func(x, climate, node, calib_data[:, node.name]; metric=metric)
 
     # Get node parameters (default values and bounds)
     param_names, x0, param_bounds = param_info(node; with_level=false)
