@@ -51,6 +51,8 @@ function quickplot(obs::Array, sim::Array, xticklabels::Array, label="Modeled", 
         # Add small constant in case of 0-flow
         obs = obs .+ 1e-2
         sim = sim .+ 1e-2
+
+        yaxis!(fig, :log)
     end
 
     qqfig = qqplot(obs, sim, legend=false, markerstrokewidth=0, alpha=0.7, xlabel="Observed", ylabel="Modeled")
