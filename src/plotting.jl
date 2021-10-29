@@ -4,7 +4,6 @@ using DataFrames, Dates, Statistics, Distributions
 import StatsBase: ecdf
 import Bootstrap: bootstrap, BalancedSampling
 
-
 function quickplot(node::NetworkNode)
     fig = plot(node.outflow)
     return fig
@@ -23,10 +22,14 @@ end
 
 
 function quickplot(obs, node::NetworkNode, climate::Climate, label="", log=true; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
+    return quickplot(obs, node.outflow, climate, label, log; burn_in=burn_in, limit=limit, metric=metric)
+end
+
+function quickplot(obs::Array, sim::Array, climate::Climate, label="", log=true; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
     date = timesteps(climate)
     last_e = !isnothing(limit) ? limit : lastindex(obs)
     show_range = burn_in:last_e
-    return quickplot(obs[show_range], node.outflow[show_range], date[show_range], label, log; metric=metric)
+    return quickplot(obs[show_range], sim[show_range], date[show_range], label, log; metric=metric)
 end
 
 
@@ -36,6 +39,12 @@ function quickplot(obs::Array, sim::Array, xticklabels::Array, label="Modeled", 
 
     score = round(metric(obs, sim), digits=4)
     metric_name = String(Symbol(metric))
+
+    if log
+        # Add small constant in case of 0-flow
+        obs = obs .+ 1e-2
+        sim = sim .+ 1e-2
+    end
 
     label = "$(label) ($(metric_name): $(score))"
     fig = plot(xticklabels, obs, 
@@ -48,10 +57,7 @@ function quickplot(obs::Array, sim::Array, xticklabels::Array, label="Modeled", 
     plot!(xticklabels, sim, label=label, alpha=0.7)
 
     if log
-        # Add small constant in case of 0-flow
-        obs = obs .+ 1e-2
-        sim = sim .+ 1e-2
-
+        # modify yaxis
         yaxis!(fig, :log)
     end
 
@@ -61,9 +67,12 @@ function quickplot(obs::Array, sim::Array, xticklabels::Array, label="Modeled", 
     # https://discourse.julialang.org/t/plotting-log-log-plot-how-do-i-resolve-a-no-strict-ticks-warning/67510
     if log
         xaxis!(qqfig, :log)
-        # xlims!(minimum(sim)-10, maximum(sim)+10)
         yaxis!(qqfig, :log)
-        # ylims!(minimum(sim)-10, maximum(sim)+10)
+        # tmp = Base.log.(obs)
+        # xlims!(minimum(tmp), maximum(tmp))
+
+        # tmp = Base.log.(sim)
+        # ylims!(minimum(tmp), maximum(tmp))
     end
 
     combined = plot(fig, qqfig, size=(800, 400), left_margin=10mm, layout=(1,2))
@@ -135,13 +144,13 @@ function temporal_cross_section(dates, obs, sim; title="", ylabel=nothing, label
 
         tmp = func.([[x] for x in obs_gi], [[x] for x in sim_gi])
 
-        lower, q05, q95, upper = quantile(tmp, [0.0, 0.05, 0.95, 1.0])
-        min_section[i] = lower
-        max_section[i] = upper
+        ab_min, q05, med, q95, ab_max = quantile(tmp, [0.0, 0.05, 0.5, 0.95, 1.0])
+        min_section[i] = ab_min
+        max_section[i] = ab_max
 
         low_section[i] = q05
         upp_section[i] = q95
-        x_section[i] = mean(tmp)
+        x_section[i] = med
 
         mae_section[i] = Streamfall.MAE(obs_gi, sim_gi)
     end
@@ -160,17 +169,15 @@ function temporal_cross_section(dates, obs, sim; title="", ylabel=nothing, label
     end
 
     xlabels = join.(sp, "-")
-    mean_ind = round(mean(x_section), digits=2)
-    # whisker_range = round(mean(max_section .- x_section), digits=2)
+    med_ind = round(median(x_section), digits=2)
     whisker_range = upp_section .- low_section
 
-    # abs_range = max_section .- min_section
     cv = round(std(whisker_range) / mean(whisker_range), digits=2)
 
-    mae_ind = round(mean(mae_section), digits=2)
+    mae_ind = round(median(mae_section), digits=2)
     fig = plot(xlabels, x_section,
                ribbon=(x_section .- low_section, upp_section .- x_section),
-               label="$(label)\n[Mean: $(mean_ind) | Mean MAE: $(mae_ind) | CVᵣ: $(cv)]",
+               label="$(label)\n[Median: $(med_ind) | Median MAE: $(mae_ind) | CVᵣ: $(cv)]",
                xlabel=nameof(period),
                ylabel=ylabel,
                legend=:bottomleft,
