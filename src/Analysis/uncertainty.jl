@@ -1,6 +1,6 @@
 using Dates
 using Statistics, DataFrames, Bootstrap
-import ..ME
+import ..ME, ..MAE
 
 
 """
@@ -27,23 +27,31 @@ function temporal_uncertainty(dates, obs, period::Function)
     x_section = fill(0.0, length(sp))
     min_section = fill(0.0, length(sp))
     max_section = fill(0.0, length(sp))
+    mad_section = fill(0.0, length(sp))
     for (i, obs_i) in enumerate(sp)
         obs_g = df[in([obs_i]).(period.(df.Date)), :]
         obs_gi = obs_g.Observed
 
-        Q1, Q2, Q3 = quantile(obs_gi, [0.25, 0.5, 0.75])
-        IQR_lim = 1.5*(Q3 - Q1)
-        min_R = Q1 - IQR_lim
-        max_R = Q3 + IQR_lim
+        ab_min, lower_q, upper_q, ab_max = quantile(obs_gi, [0.0, 0.05, 0.95, 1.0])
+        low_section[i] = lower_q
+        upp_section[i] = upper_q
+        min_section[i] = ab_min
+        max_section[i] = ab_max
+        mae_section[i] = MAE(obs_gi, sim_gi)
+        x_section[i] = mean(obs_gi)
 
-        min_section[i] = min_R
-        max_section[i] = max_R
-        x_section[i] = Q2
+        mad_section[i] = mean(abs.(obs_gi .- mean(obs_gi)))
     end
 
     whisker_range = round(mean(max_section .- min_section), digits=2)
 
-    return x_section, min_section, max_section, whisker_range
+    # diff_x = diff(x_section)
+    # normed_diff = (diff_x .- mean(diff_x)) ./ std(diff_x)
+    # roughness = mean(diff(normed_diff).^2 ./ 4)  # 0 = smooth, 1 = maximal roughness
+    # mean_mad = mean(mad_section)
+
+    cv = std(whisker_range) / mean(whisker_range)
+    return x_section, low_section, upp_section, whisker_range, cv, roughness
 end
 
 
@@ -67,15 +75,15 @@ tuple:
 """
 function temporal_uncertainty(dates, obs; period::Function=monthday, threshold::Float64=1.5)
 
-    x_section, min_section, max_section, whisker_range = temporal_uncertainty(dates, obs, period)
+    x_section, low_section, upp_section, whisker_range, roughness = temporal_uncertainty(dates, obs, period)
 
     # Increase weight on observations with lower uncertainty
-    weights = 1.0 .- (abs.(x_section) ./ (threshold * std(x_section))).^2
-    weights = max.(weights, 0.0)
+    # weights = 1.0 .- (abs.(x_section) ./ (threshold * std(x_section))).^2
+    # weights = max.(weights, 0.0)
 
     # Increase weight on observations that are more uncertain
-    # abs_xsect = abs.(x_section)
-    # weights = abs_xsect ./ (abs_xsect .+ (threshold * std(x_section)))
+    abs_xsect = abs.(x_section)
+    weights = abs_xsect ./ (abs_xsect .+ (threshold * std(x_section)))
 
     weighted = fill(1.0, length(obs))
     doy = Dates.dayofyear.(dates)
@@ -92,7 +100,7 @@ function temporal_uncertainty(dates, obs; period::Function=monthday, threshold::
         weighted[idx] = weights[d]
     end
 
-    return x_section, min_section, max_section, whisker_range, weighted
+    return x_section, low_section, upp_section, whisker_range, weighted, roughness
 end
 
 
@@ -110,6 +118,7 @@ tuple:
      - min_section : Q1 - 1.5*IQR of metric value for period
      - max_section : Q3 + 1.5*IQR of metric value for period
      - whisker_range : Mean range indicated by (max_section - min_section)
+     - roughness : Value 0 to 1 where 0 is smooth and 1 is maximal roughness (lower values better)
 """
 function temporal_uncertainty(dates, obs, sim, period::Function, func::Function)
     df = DataFrame(Date=dates, Observed=obs, Modeled=sim)
@@ -121,6 +130,9 @@ function temporal_uncertainty(dates, obs, sim, period::Function, func::Function)
     x_section = fill(0.0, length(sp))
     min_section = fill(0.0, length(sp))
     max_section = fill(0.0, length(sp))
+    low_section = fill(0.0, length(sp))
+    upp_section = fill(0.0, length(sp))
+    mae_section = fill(0.0, length(sp))
     for (i, obs_i) in enumerate(sp)
         obs_g = df[in([obs_i]).(period.(df.Date)), :]
         obs_gi = obs_g.Observed
@@ -128,19 +140,24 @@ function temporal_uncertainty(dates, obs, sim, period::Function, func::Function)
 
         tmp = func.([[x] for x in obs_gi], [[x] for x in sim_gi])
 
-        Q1, Q2, Q3 = quantile(tmp, [0.25, 0.5, 0.75])
-        IQR_lim = 1.5*(Q3 - Q1)
-        min_R = Q1 - IQR_lim
-        max_R = Q3 + IQR_lim
+        ab_min, lower_q, upper_q, ab_max = quantile(tmp, [0.0, 0.05, 0.95, 1.0])
 
-        min_section[i] = min_R
-        max_section[i] = max_R
-        x_section[i] = Q2
+        low_section[i] = lower_q
+        upp_section[i] = upper_q
+        min_section[i] = ab_min
+        max_section[i] = ab_max
+        mae_section[i] = MAE(obs_gi, sim_gi)
+        x_section[i] = mean(tmp)
     end
 
     whisker_range = round(mean(max_section .- min_section), digits=2)
 
-    return x_section, min_section, max_section, whisker_range
+    # diff_x = diff(x_section)
+    # normed_diff = (diff_x .- mean(diff_x)) ./ std(diff_x)
+    # roughness = mean(diff(normed_diff).^2 ./ 4)  # 0 = smooth, 1 = maximal roughness
+    cv = std(whisker_range) / mean(whisker_range)
+
+    return x_section, low_section, upp_section, whisker_range, cv
 end
 
 
@@ -164,15 +181,18 @@ tuple:
 """
 function temporal_uncertainty(dates, obs, sim; period::Function=monthday, func::Function=ME, threshold::Float64=1.5)
 
-    x_section, min_section, max_section, whisker_range = temporal_uncertainty(dates, obs, sim, period, func)
+    x_section, min_section, max_section, whisker_range, roughness = temporal_uncertainty(dates, obs, sim, period, func)
 
     # Increase weight on observations with lower uncertainty
-    weights = 1.0 .- (abs.(x_section) ./ (threshold * std(x_section))).^2
-    weights = max.(weights, 0.0)
+    # weights = 1.0 .- (abs.(x_section) ./ (threshold * std(x_section))).^2
+    # weights = max.(weights, 0.0)
 
-    # Increase weight on observations that are more uncertain
+    # Increase weight on observations with larger error bounds
     # abs_xsect = abs.(x_section)
     # weights = abs_xsect ./ (abs_xsect .+ (threshold * std(x_section)))
+
+    # inverted standardized
+    weights = 1.0 / (x_section / (threshold * std(x_section)))
 
     weighted = fill(1.0, length(obs))
     doy = Dates.dayofyear.(dates)
@@ -189,5 +209,5 @@ function temporal_uncertainty(dates, obs, sim; period::Function=monthday, func::
         weighted[idx] = weights[d]
     end
 
-    return x_section, min_section, max_section, whisker_range, weighted
+    return x_section, min_section, max_section, whisker_range, roughness, weighted
 end

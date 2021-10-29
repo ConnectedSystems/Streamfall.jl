@@ -120,6 +120,12 @@ function temporal_cross_section(dates, obs, sim; title="", ylabel=nothing, label
     x_section = fill(0.0, length(sp))
     min_section = fill(0.0, length(sp))
     max_section = fill(0.0, length(sp))
+
+    min_section = fill(0.0, length(sp))
+    max_section = fill(0.0, length(sp))
+    low_section = fill(0.0, length(sp))
+    upp_section = fill(0.0, length(sp))
+    mae_section = fill(0.0, length(sp))
     for (i, obs_i) in enumerate(sp)
         obs_g = df[in([obs_i]).(period.(df.Date)), :]
         obs_gi = obs_g.Observed
@@ -127,12 +133,21 @@ function temporal_cross_section(dates, obs, sim; title="", ylabel=nothing, label
 
         tmp = func.([[x] for x in obs_gi], [[x] for x in sim_gi])
 
-        Q1, Q2, Q3 = quantile(tmp, [0.25, 0.5, 0.75])
-        IQR_lim = 1.5*(Q3 - Q1)
-        min_section[i] = Q1 - IQR_lim
-        max_section[i] = Q3 + IQR_lim
-        x_section[i] = Q2
+        lower, q05, q95, upper = quantile(tmp, [0.0, 0.05, 0.95, 1.0])
+        min_section[i] = lower
+        max_section[i] = upper
+
+        low_section[i] = q05
+        upp_section[i] = q95
+        x_section[i] = mean(tmp)
+
+        mae_section[i] = Streamfall.MAE(obs_gi, sim_gi)
     end
+
+    # diff_x = diff(x_section)
+    # normed_diff = (diff_x .- mean(diff_x)) ./ std(diff_x)
+    # roughness = mean(diff(normed_diff).^2 ./ 4)  # 0 = smooth, 1 = maximal roughness
+    # roughness = round(roughness, digits=2)
 
     if isnothing(ylabel)
         ylabel = nameof(func)
@@ -144,21 +159,27 @@ function temporal_cross_section(dates, obs, sim; title="", ylabel=nothing, label
 
     xlabels = join.(sp, "-")
     mean_ind = round(mean(x_section), digits=2)
-    whisker_range = round(mean(max_section .- x_section), digits=2)
+    # whisker_range = round(mean(max_section .- x_section), digits=2)
+    whisker_range = upp_section .- low_section
+
+    # abs_range = max_section .- min_section
+    cv = round(std(whisker_range) / mean(whisker_range), digits=2)
+
+    mae_ind = round(mean(mae_section), digits=2)
     fig = plot(xlabels, x_section,
-               ribbon=(x_section .- min_section, max_section .- x_section),
-               label="$(label): [Mean: $(mean_ind) (± $(whisker_range))]",
+               ribbon=(x_section .- low_section, upp_section .- x_section),
+               label="$(label)\n[Mean: $(mean_ind) | Mean MAE: $(mae_ind) | CVᵣ: $(cv)]",
                xlabel=nameof(period),
                ylabel=ylabel,
                legend=:bottomleft,
-               legendfont=Plots.font(12),
+               legendfont=Plots.font(10),
                fg_legend=:transparent,
                bg_legend=:transparent,
                left_margin=5mm,
                bottom_margin=5mm,
                title=title,
                # yaxis=:log,
-               size=(850, 400))
+               size=(1000, 350))
 
     return fig
 end
