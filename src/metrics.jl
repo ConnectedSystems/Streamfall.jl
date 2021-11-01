@@ -685,7 +685,7 @@ By default, the combination method is to take the mean.
     https://doi.org/10.1080/02626667.2017.1308511
 """
 function inverse_metric(obs, sim, metric::Function; comb_method::Function=mean, ϵ=1e-2)
-    return comb_method([metric(obs, sim), metric(1.0 ./ (obs + ϵ), 1.0 ./ (sim + ϵ))])
+    return comb_method([metric(obs, sim), metric(1.0 ./ (obs .+ ϵ), 1.0 ./ (sim .+ ϵ))])
 end
 
 

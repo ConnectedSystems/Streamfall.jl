@@ -4,6 +4,8 @@ using DataFrames, Dates, Statistics, Distributions
 import StatsBase: ecdf
 import Bootstrap: bootstrap, BalancedSampling
 
+import .Analysis: temporal_uncertainty
+
 function quickplot(node::NetworkNode)
     fig = plot(node.outflow)
     return fig
@@ -58,21 +60,14 @@ function quickplot(obs::Array, sim::Array, xticklabels::Array, label="Modeled", 
 
     if log
         # modify yaxis
-        yaxis!(fig, :log)
+        yaxis!(fig, :log10)
     end
 
     qqfig = qqplot(obs, sim, legend=false, markerstrokewidth=0, alpha=0.7, xlabel="Observed", ylabel="Modeled")
 
-    # tick limits explicitly specified as workaround for known bug:
-    # https://discourse.julialang.org/t/plotting-log-log-plot-how-do-i-resolve-a-no-strict-ticks-warning/67510
     if log
-        xaxis!(qqfig, :log)
-        yaxis!(qqfig, :log)
-        # tmp = Base.log.(obs)
-        # xlims!(minimum(tmp), maximum(tmp))
-
-        # tmp = Base.log.(sim)
-        # ylims!(minimum(tmp), maximum(tmp))
+        xaxis!(qqfig, :log10)
+        yaxis!(qqfig, :log10)
     end
 
     combined = plot(fig, qqfig, size=(800, 400), left_margin=10mm, layout=(1,2))
@@ -121,44 +116,11 @@ Filters out leap days.
 - `func::Function` : Function to apply to each month-day grouping
 - `period::Function` : Method from `Dates` package to group (defaults to `month`)
 """
-function temporal_cross_section(dates, obs, sim; title="", ylabel=nothing, label=nothing, func::Function=Streamfall.ME, period::Function=monthday)
-    df = DataFrame(Date=dates, Observed=obs, Modeled=sim)
-    sp = sort(unique(period.(dates)))
-
-    # Remove leap days (when using monthday)
-    deleteat!(sp, findall(x -> x == (2,29), sp))
-
-    x_section = fill(0.0, length(sp))
-    min_section = fill(0.0, length(sp))
-    max_section = fill(0.0, length(sp))
-
-    min_section = fill(0.0, length(sp))
-    max_section = fill(0.0, length(sp))
-    low_section = fill(0.0, length(sp))
-    upp_section = fill(0.0, length(sp))
-    mae_section = fill(0.0, length(sp))
-    for (i, obs_i) in enumerate(sp)
-        obs_g = df[in([obs_i]).(period.(df.Date)), :]
-        obs_gi = obs_g.Observed
-        sim_gi = obs_g.Modeled
-
-        tmp = func.([[x] for x in obs_gi], [[x] for x in sim_gi])
-
-        ab_min, q05, med, q95, ab_max = quantile(tmp, [0.0, 0.05, 0.5, 0.95, 1.0])
-        min_section[i] = ab_min
-        max_section[i] = ab_max
-
-        low_section[i] = q05
-        upp_section[i] = q95
-        x_section[i] = med
-
-        mae_section[i] = Streamfall.MAE(obs_gi, sim_gi)
-    end
-
-    # diff_x = diff(x_section)
-    # normed_diff = (diff_x .- mean(diff_x)) ./ std(diff_x)
-    # roughness = mean(diff(normed_diff).^2 ./ 4)  # 0 = smooth, 1 = maximal roughness
-    # roughness = round(roughness, digits=2)
+function temporal_cross_section(dates, obs, sim; 
+                                title="", ylabel=nothing, label=nothing, 
+                                func::Function=Streamfall.ME, period::Function=monthday,
+                                show_extremes::Bool=false)
+    x_section, lower, upper, min_section, max_section, whisker_range, cv_r = temporal_uncertainty(dates, obs, sim, period, func)
 
     if isnothing(ylabel)
         ylabel = nameof(func)
@@ -168,16 +130,18 @@ function temporal_cross_section(dates, obs, sim; title="", ylabel=nothing, label
         label = ylabel
     end
 
+    sp = sort(unique(period.(dates)))
+    deleteat!(sp, findall(x -> x == (2,29), sp))
     xlabels = join.(sp, "-")
     med_ind = round(median(x_section), digits=2)
-    whisker_range = upp_section .- low_section
+    # whisker_range = upp_section .- low_section
 
-    cv = round(std(whisker_range) / mean(whisker_range), digits=2)
+    cv_r = round(cv_r, digits=2)
 
-    mae_ind = round(median(mae_section), digits=2)
+    r_ind = round(mean(whisker_range), digits=2)
     fig = plot(xlabels, x_section,
-               ribbon=(x_section .- low_section, upp_section .- x_section),
-               label="$(label)\n[Median: $(med_ind) | Median MAE: $(mae_ind) | CVᵣ: $(cv)]",
+               ribbon=(x_section .+ abs.(lower), upper .- x_section),
+               label="$(label)\n[Median: $(med_ind) | Mean Range: $(r_ind) | CVᵣ: $(cv_r)]",
                xlabel=nameof(period),
                ylabel=ylabel,
                legend=:bottomleft,
@@ -189,6 +153,11 @@ function temporal_cross_section(dates, obs, sim; title="", ylabel=nothing, label
                title=title,
                # yaxis=:log,
                size=(1000, 350))
+
+    if show_extremes
+        scatter!(xlabels, max_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0)
+        scatter!(xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0)
+    end
 
     return fig
 end
