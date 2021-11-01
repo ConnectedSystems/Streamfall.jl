@@ -133,7 +133,7 @@ function temporal_cross_section(dates, obs, sim;
     sp = sort(unique(period.(dates)))
     deleteat!(sp, findall(x -> x == (2,29), sp))
     xlabels = join.(sp, "-")
-    med_ind = round(median(x_section), digits=2)
+    m_ind = round(mean(x_section), digits=2)
     # whisker_range = upp_section .- low_section
 
     cv_r = round(cv_r, digits=2)
@@ -141,7 +141,7 @@ function temporal_cross_section(dates, obs, sim;
     r_ind = round(mean(whisker_range), digits=2)
     fig = plot(xlabels, x_section,
                ribbon=(x_section .+ abs.(lower), upper .- x_section),
-               label="$(label)\n[Median: $(med_ind) | Mean Range: $(r_ind) | CVᵣ: $(cv_r)]",
+               label="$(label)\n[Mean: $(m_ind) | Mean CIᵣ: $(r_ind) | CVᵣ: $(cv_r)]",
                xlabel=nameof(period),
                ylabel=ylabel,
                legend=:bottomleft,
@@ -151,7 +151,6 @@ function temporal_cross_section(dates, obs, sim;
                left_margin=5mm,
                bottom_margin=5mm,
                title=title,
-               # yaxis=:log,
                size=(1000, 350))
 
     if show_extremes
