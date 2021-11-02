@@ -48,7 +48,7 @@ function temporal_uncertainty(dates, obs, period::Function)
     # mean_mad = mean(mad_section)
 
     cv = std(whisker_range) / mean(whisker_range)
-    return x_section, low_section, upp_section, whisker_range, cv, roughness
+    return x_section, low_section, upp_section, whisker_range, cv
 end
 
 
@@ -150,7 +150,7 @@ function temporal_uncertainty(dates, obs, sim, period::Function, func::Function)
     # roughness = mean(diff(normed_diff).^2 ./ 4)  # 0 = smooth, 1 = maximal roughness
     cv_r = std(whisker_range) / mean(whisker_range)
 
-    return x_section, low_section, upp_section, min_section, max_section, whisker_range, cv_r
+    return x_section, low_section, upp_section, min_section, max_section, whisker_range, cv_r, stderror(x_section)
 end
 
 
@@ -180,7 +180,7 @@ tuple:
 """
 function temporal_uncertainty(dates, obs, sim; period::Function=monthday, func::Function=ME, min_weight::Float64=1.0)
 
-    x_section, low_section, upp_section, min_section, max_section, whisker_range, cv_r = temporal_uncertainty(dates, obs, sim, period, func)
+    x_section, low_section, upp_section, min_section, max_section, whisker_range, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
 
     # use min-max scaling to indicate where to place greater weight
     max_range = max_section .- min_section
@@ -203,5 +203,5 @@ function temporal_uncertainty(dates, obs, sim; period::Function=monthday, func::
         weighted[idx] = weights[d]
     end
 
-    return x_section, low_section, upp_section, min_section, max_section, whisker_range, cv_r, weighted
+    return x_section, low_section, upp_section, min_section, max_section, whisker_range, cv_r, std_error, weighted
 end

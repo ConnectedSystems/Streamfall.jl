@@ -119,8 +119,8 @@ Filters out leap days.
 function temporal_cross_section(dates, obs, sim; 
                                 title="", ylabel=nothing, label=nothing, 
                                 func::Function=Streamfall.ME, period::Function=monthday,
-                                show_extremes::Bool=false)
-    x_section, lower, upper, min_section, max_section, whisker_range, cv_r = temporal_uncertainty(dates, obs, sim, period, func)
+                                show_extremes::Bool=false, kwargs...)
+    x_section, lower, upper, min_section, max_section, whisker_range, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
 
     if isnothing(ylabel)
         ylabel = nameof(func)
@@ -134,14 +134,13 @@ function temporal_cross_section(dates, obs, sim;
     deleteat!(sp, findall(x -> x == (2,29), sp))
     xlabels = join.(sp, "-")
     m_ind = round(median(x_section), digits=2)
-    whisker_range = upper .- lower
-    r_ind = round(mean(whisker_range), digits=2)
+    # whisker_range = upper .- lower
 
-    cv_r = round(cv_r, digits=2)
+    std_error = round(std_error, digits=2)
 
     fig = plot(xlabels, x_section,
                ribbon=(x_section .+ abs.(lower), upper .- x_section),
-               label="$(label)\n[Median: $(m_ind) | Mean CIᵣ: $(r_ind) | CVᵣ: $(cv_r)]",
+               label="$(label)\n[Median: $(m_ind) | SE: $(std_error)]",
                xlabel=nameof(period),
                ylabel=ylabel,
                legend=:bottomleft,
@@ -150,8 +149,8 @@ function temporal_cross_section(dates, obs, sim;
                bg_legend=:transparent,
                left_margin=5mm,
                bottom_margin=5mm,
-               title=title,
-               size=(1000, 350))
+               title=title;
+               kwargs...)  # size=(1000, 350)
 
     if show_extremes
         scatter!(xlabels, max_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0)
