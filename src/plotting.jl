@@ -134,14 +134,14 @@ function temporal_cross_section(dates, obs, sim;
     deleteat!(sp, findall(x -> x == (2,29), sp))
     xlabels = join.(sp, "-")
     m_ind = round(median(x_section), digits=2)
-    # whisker_range = upp_section .- low_section
-    # r_ind = round(median(whisker_range), digits=2)
+    whisker_range = upper .- lower
+    r_ind = round(mean(whisker_range), digits=2)
 
     cv_r = round(cv_r, digits=2)
 
     fig = plot(xlabels, x_section,
                ribbon=(x_section .+ abs.(lower), upper .- x_section),
-               label="$(label)\n[Median: $(m_ind) | Mean CIᵣ: $(whisker_range) | CVᵣ: $(cv_r)]",
+               label="$(label)\n[Median: $(m_ind) | Mean CIᵣ: $(r_ind) | CVᵣ: $(cv_r)]",
                xlabel=nameof(period),
                ylabel=ylabel,
                legend=:bottomleft,
