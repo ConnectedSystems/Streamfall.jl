@@ -133,12 +133,12 @@ function temporal_uncertainty(dates, obs, sim, period::Function, func::Function)
 
         tmp = func.([[x] for x in obs_gi], [[x] for x in sim_gi])
 
-        ab_min, lower_q, upper_q, ab_max = quantile(tmp, [0.0, 0.05, 0.95, 1.0])
+        lower_q, upper_q = quantile(tmp, [0.05, 0.95])
 
         low_section[i] = lower_q
         upp_section[i] = upper_q
-        min_section[i] = ab_min
-        max_section[i] = ab_max
+        min_section[i] = minimum(tmp)
+        max_section[i] = maximum(tmp)
         # mae_section[i] = MAE(obs_gi, sim_gi)
         x_section[i] = median(tmp)
     end
