@@ -167,8 +167,8 @@ function temporal_cross_section(dates, obs, sim;
             min_section = symlog(min_section)
             max_section = symlog(max_section)
 
-            # adjust axis label
-            ylabel = Symbol("log " * string(ylabel))
+            # adjust axis label if needed
+            ylabel = (ylabel != "") ? Symbol("log " * string(ylabel)) : ""
 
             # Remove keys 
             kwargs = Dict(kwargs)
