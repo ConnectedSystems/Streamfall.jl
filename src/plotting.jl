@@ -6,6 +6,7 @@ import Bootstrap: bootstrap, BalancedSampling
 
 import .Analysis: temporal_uncertainty
 
+
 function quickplot(node::NetworkNode)
     fig = plot(node.outflow)
     return fig
@@ -99,6 +100,17 @@ function plot_residuals(x::Array, y::Array; xlabel="", ylabel="", title="")
 end
 
 
+"""Symmetrical log values.
+
+https://discourse.julialang.org/t/symmetrical-log-plot/45709/3
+"""
+function symlog(y)
+    y = replace(y, 0=>1e-06)  # small constant to avoid 0s
+    # C = ceil(minimum(log10.(abs.(y))))
+    return sign.(y) .* (log10.(abs.(y)))  # / (10.0^C)
+end
+
+
 """
     temporal_cross_section(dates, obs, sim; ylabel=nothing, func::Function=Streamfall.ME, period::Function=month)
 
@@ -138,8 +150,34 @@ function temporal_cross_section(dates, obs, sim;
 
     std_error = round(std_error, digits=2)
 
+    arg_keys = keys(kwargs)
+    if :yscale in arg_keys || :yaxis in arg_keys
+        logscale = [:log, :log10, :log2, :ln]
+        tmp = (:yscale in arg_keys) ? kwargs[:yscale] : kwargs[:yaxis]
+
+        if tmp in logscale
+            # add small constant to allow plotting in log scale
+            # replace!(x_section, 0=>1e-06)
+            # replace!(max_section, 0=>1e-06)
+            # replace!(min_section, 0=>1e-06)
+
+            x_section = symlog(x_section)
+            lower = symlog(lower)
+            upper = symlog(upper)
+            min_section = symlog(min_section)
+            max_section = symlog(max_section)
+
+            # adjust axis label
+            ylabel = Symbol("log " * string(ylabel))
+
+            # Remove keys 
+            kwargs = Dict(kwargs)
+            delete!(kwargs, :yscale)
+            delete!(kwargs, :yaxis)
+        end
+    end
+
     fig = plot(xlabels, x_section,
-               ribbon=(x_section .+ abs.(lower), upper .- x_section),
                label="$(label)\n[Median: $(m_ind) | SE: $(std_error)]",
                xlabel=nameof(period),
                ylabel=ylabel,
@@ -152,9 +190,11 @@ function temporal_cross_section(dates, obs, sim;
                title=title;
                kwargs...)  # size=(1000, 350)
 
+    plot!(fig, xlabels, lower, fillrange=upper, color="lightblue", alpha=0.5, label="", linealpha=0)
+
     if show_extremes
-        scatter!(xlabels, max_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0)
-        scatter!(xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0)
+        scatter!(xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
+        scatter!(xlabels, max_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
     end
 
     return fig
