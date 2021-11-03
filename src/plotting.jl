@@ -132,8 +132,6 @@ function temporal_cross_section(dates, obs, sim;
                                 title="", ylabel=nothing, label=nothing, 
                                 func::Function=Streamfall.ME, period::Function=monthday,
                                 show_extremes::Bool=false, kwargs...)
-    x_section, lower, upper, min_section, max_section, whisker_range, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
-
     if isnothing(ylabel)
         ylabel = nameof(func)
     end
@@ -142,28 +140,17 @@ function temporal_cross_section(dates, obs, sim;
         label = ylabel
     end
 
-    sp = sort(unique(period.(dates)))
-    deleteat!(sp, findall(x -> x == (2,29), sp))
-    xlabels = join.(sp, "-")
-    m_ind = round(median(x_section), digits=2)
-    # whisker_range = upper .- lower
-
-    std_error = round(std_error, digits=2)
-
     arg_keys = keys(kwargs)
     if :yscale in arg_keys || :yaxis in arg_keys
         logscale = [:log, :log10]
         tmp = (:yscale in arg_keys) ? kwargs[:yscale] : kwargs[:yaxis]
 
         if tmp in logscale
-            x_section = symlog(x_section)
-            lower = symlog(lower)
-            upper = symlog(upper)
-            min_section = symlog(min_section)
-            max_section = symlog(max_section)
+            obs = symlog(obs)
+            sim = symlog(sim)
 
             # adjust axis label if needed
-            ylabel = (ylabel != "") ? Symbol("log " * string(ylabel)) : ""
+            ylabel = (ylabel != "") && !isnothing(ylabel) ? Symbol("log " * string(ylabel)) : nothing
 
             # Remove keys 
             kwargs = Dict(kwargs)
@@ -171,6 +158,16 @@ function temporal_cross_section(dates, obs, sim;
             delete!(kwargs, :yaxis)
         end
     end
+
+    x_section, lower, upper, min_section, max_section, whisker_range, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
+
+    sp = sort(unique(period.(dates)))
+    deleteat!(sp, findall(x -> x == (2,29), sp))
+    xlabels = join.(sp, "-")
+    m_ind = round(median(x_section), digits=2)
+    # whisker_range = upper .- lower
+
+    std_error = round(std_error, digits=2)
 
     fig = plot(xlabels, x_section,
                label="$(label)\n[Median: $(m_ind) | SE: $(std_error)]",
