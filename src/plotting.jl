@@ -153,9 +153,8 @@ function temporal_cross_section(dates, obs, sim;
             obs = symlog(obs)
             sim = symlog(sim)
 
-            # adjust axis label if needed
-            # ylabel = (ylabel != "") && !isnothing(ylabel) ? Symbol("log " * string(ylabel)) : ylabel
-            format_func = y -> (y != 0) ? L"%$(Int(sign(y) * 10))^%$(Int(abs(y)))" : L"0"  # %$(Int(y))
+            # Format function for y-axis tick labels (e.g., 10^x)
+            format_func = y -> (y != 0) ? L"%$(Int(sign(y) * 10))^{%$(Int(y))}" : L"0"
 
             x_section, lower, upper, min_section, max_section, whisker_range, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
             orig_x_section, _, _, _, _, _, _, orig_std_error = temporal_uncertainty(dates, orig_obs, orig_sim, period, func)
@@ -178,7 +177,7 @@ function temporal_cross_section(dates, obs, sim;
         delete!(kwargs, :yscale)
         delete!(kwargs, :yaxis)
 
-        # Convert display values from log
+        # Display values using original data instead of log-transformed data
         m_ind = round(median(orig_x_section), digits=2)
         std_error = round(orig_std_error, digits=2)
     else
