@@ -107,7 +107,7 @@ https://discourse.julialang.org/t/symmetrical-log-plot/45709/3
 function symlog(y)
     y = replace(y, 0=>1e-06)  # small constant to avoid 0s
     # C = ceil(minimum(log10.(abs.(y))))
-    return sign.(y) .* (log10.(abs.(y)))  # / (10.0^C)
+    return sign.(y) .* (log10.(abs.(y))) # / (10.0^C))
 end
 
 
@@ -152,15 +152,10 @@ function temporal_cross_section(dates, obs, sim;
 
     arg_keys = keys(kwargs)
     if :yscale in arg_keys || :yaxis in arg_keys
-        logscale = [:log, :log10, :log2, :ln]
+        logscale = [:log, :log10]
         tmp = (:yscale in arg_keys) ? kwargs[:yscale] : kwargs[:yaxis]
 
         if tmp in logscale
-            # add small constant to allow plotting in log scale
-            # replace!(x_section, 0=>1e-06)
-            # replace!(max_section, 0=>1e-06)
-            # replace!(min_section, 0=>1e-06)
-
             x_section = symlog(x_section)
             lower = symlog(lower)
             upper = symlog(upper)
@@ -193,9 +188,15 @@ function temporal_cross_section(dates, obs, sim;
     plot!(fig, xlabels, lower, fillrange=upper, color="lightblue", alpha=0.5, label="", linealpha=0)
 
     if show_extremes
-        scatter!(xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
-        scatter!(xlabels, max_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
+        scatter!(fig, xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
+        scatter!(fig, xlabels, max_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
     end
+
+    # plot!(fig, min_section, label="lowest", color="orange", alpha=0.5)
+    # plot!(fig, max_section, label="highest", color="orange", alpha=0.5)
+
+    # plot!(fig, lower, label="min q0.05", color="green", alpha=0.5)
+    # plot!(fig, upper, label="max q0.95", color="green", alpha=0.5)
 
     return fig
 end
