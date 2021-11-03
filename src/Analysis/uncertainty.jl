@@ -37,7 +37,7 @@ function temporal_uncertainty(dates, obs, period::Function)
         min_section[i] = ab_min
         max_section[i] = ab_max
         # mae_section[i] = MAE(obs_gi, sim_gi)
-        x_section[i] = mean(obs_gi)
+        x_section[i] = median(obs_gi)
     end
 
     whisker_range = round(mean(upp_section .- low_section), digits=2)
@@ -140,7 +140,7 @@ function temporal_uncertainty(dates, obs, sim, period::Function, func::Function)
         min_section[i] = ab_min
         max_section[i] = ab_max
         # mae_section[i] = MAE(obs_gi, sim_gi)
-        x_section[i] = mean(tmp)
+        x_section[i] = median(tmp)
     end
 
     whisker_range = upp_section .- low_section
