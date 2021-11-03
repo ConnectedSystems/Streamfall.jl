@@ -1,6 +1,6 @@
 using Plots, StatsPlots
 using Plots.Measures
-using DataFrames, Dates, Statistics, Distributions
+using DataFrames, Dates, Statistics, Distributions, LaTeXStrings
 import StatsBase: ecdf
 import Bootstrap: bootstrap, BalancedSampling
 
@@ -141,33 +141,50 @@ function temporal_cross_section(dates, obs, sim;
     end
 
     arg_keys = keys(kwargs)
+    format_func = y -> y
+    logscale = [:log, :log10]
+    tmp = nothing
     if :yscale in arg_keys || :yaxis in arg_keys
-        logscale = [:log, :log10]
         tmp = (:yscale in arg_keys) ? kwargs[:yscale] : kwargs[:yaxis]
 
         if tmp in logscale
+            orig_obs = collect(obs)
+            orig_sim = collect(sim)
             obs = symlog(obs)
             sim = symlog(sim)
 
             # adjust axis label if needed
-            ylabel = (ylabel != "") && !isnothing(ylabel) ? Symbol("log " * string(ylabel)) : nothing
+            # ylabel = (ylabel != "") && !isnothing(ylabel) ? Symbol("log " * string(ylabel)) : ylabel
+            format_func = y -> (y != 0) ? L"%$(Int(sign(y) * 10))^%$(Int(abs(y)))" : L"0"  # %$(Int(y))
 
-            # Remove keys 
-            kwargs = Dict(kwargs)
-            delete!(kwargs, :yscale)
-            delete!(kwargs, :yaxis)
+            x_section, lower, upper, min_section, max_section, whisker_range, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
+            orig_x_section, _, _, _, _, _, _, orig_std_error = temporal_uncertainty(dates, orig_obs, orig_sim, period, func)
+            
         end
+    else
+        x_section, lower, upper, min_section, max_section, whisker_range, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
     end
 
-    x_section, lower, upper, min_section, max_section, whisker_range, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
+    
 
     sp = sort(unique(period.(dates)))
     deleteat!(sp, findall(x -> x == (2,29), sp))
     xlabels = join.(sp, "-")
-    m_ind = round(median(x_section), digits=2)
     # whisker_range = upper .- lower
 
-    std_error = round(std_error, digits=2)
+    if tmp in logscale
+        # Remove keys 
+        kwargs = Dict(kwargs)
+        delete!(kwargs, :yscale)
+        delete!(kwargs, :yaxis)
+
+        # Convert display values from log
+        m_ind = round(median(orig_x_section), digits=2)
+        std_error = round(orig_std_error, digits=2)
+    else
+        m_ind = round(median(x_section), digits=2)
+        std_error = round(std_error, digits=2)
+    end 
 
     fig = plot(xlabels, x_section,
                label="$(label)\n[Median: $(m_ind) | SE: $(std_error)]",
@@ -179,7 +196,8 @@ function temporal_cross_section(dates, obs, sim;
                bg_legend=:transparent,
                left_margin=5mm,
                bottom_margin=5mm,
-               title=title;
+               title=title,
+               yformatter=format_func;
                kwargs...)  # size=(1000, 350)
 
     plot!(fig, xlabels, lower, fillrange=upper, color="lightblue", alpha=0.5, label="", linealpha=0)
