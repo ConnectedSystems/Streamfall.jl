@@ -150,7 +150,7 @@ function temporal_uncertainty(dates, obs, sim, period::Function, func::Function)
     # roughness = mean(diff(normed_diff).^2 ./ 4)  # 0 = smooth, 1 = maximal roughness
     cv_r = std(whisker_range) / mean(whisker_range)
 
-    return x_section, low_section, upp_section, min_section, max_section, whisker_range, cv_r, stderror(x_section)
+    return x_section, low_section, upp_section, min_section, max_section, whisker_range, cv_r, stderror(whisker_range)
 end
 
 
