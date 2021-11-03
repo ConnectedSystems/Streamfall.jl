@@ -154,17 +154,14 @@ function temporal_cross_section(dates, obs, sim;
             sim = symlog(sim)
 
             # Format function for y-axis tick labels (e.g., 10^x)
-            format_func = y -> (y != 0) ? L"%$(round(sign(y) * 10))^{%$(round(y, digits=1))}" : L"0"
+            format_func = y -> (y != 0) ? L"%$(round(sign(y) * 10))^{%$(round(abs(y), digits=1))}" : L"0"
 
             x_section, lower, upper, min_section, max_section, whisker_range, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
-            orig_x_section, _, _, _, _, _, _, orig_std_error = temporal_uncertainty(dates, orig_obs, orig_sim, period, func)
-            
+            orig_x_section, _, _, _, _, _, _, orig_std_error = temporal_uncertainty(dates, orig_obs, orig_sim, period, func) 
         end
     else
         x_section, lower, upper, min_section, max_section, whisker_range, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
     end
-
-    
 
     sp = sort(unique(period.(dates)))
     deleteat!(sp, findall(x -> x == (2,29), sp))
