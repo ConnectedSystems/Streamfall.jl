@@ -27,6 +27,8 @@ function temporal_uncertainty(dates, obs, period::Function)
     x_section = fill(0.0, length(sp))
     min_section = fill(0.0, length(sp))
     max_section = fill(0.0, length(sp))
+    low_section = fill(0.0, length(sp))
+    upp_section = fill(0.0, length(sp))
     for (i, obs_i) in enumerate(sp)
         obs_g = df[in([obs_i]).(period.(df.Date)), :]
         obs_gi = obs_g.Observed
