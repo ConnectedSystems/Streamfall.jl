@@ -13,9 +13,9 @@ Notes: Ignores leap days when using monthday subperiods.
 # Returns
 tuple: 
      - x_section : Median of observations for a given period (default: day of year)
-     - min_section : Q1 - 1.5*IQR of metric value for period
-     - max_section : Q3 + 1.5*IQR of metric value for period
-     - whisker_range : Mean range indicated by (max_section - min_section)
+     - low_section : Lower 90 percentile interval bound of metric value for period
+     - upp_section : Upper 90 percentile interval bound of metric value for period
+     - whisker_range : Mean range indicated by (upp_section - low_section)
 """
 function temporal_uncertainty(dates, obs, period::Function)
     df = DataFrame(Date=dates, Observed=obs)
@@ -67,8 +67,8 @@ Notes: Ignores leap days when using monthday periods.
 # Returns
 tuple: 
      - x_section : Median of observations for a given period (default: day of year)
-     - min_section : Q1 - 1.5*IQR of metric value for period
-     - max_section : Q3 + 1.5*IQR of metric value for period
+     - low_section : Lower 90-percentile interval bound of metric value for period
+     - upp_section : Upper 90-percentile interval bound of metric value for period
      - whisker_range : Mean range indicated by max_section - min_section
      - weighted : weights (0 to 1) indicating relative to `threshold * std(x_section)`
 """
@@ -110,6 +110,8 @@ Notes: Ignores leap days when using monthday subperiods.
 # Returns
 tuple: 
      - x_section : Median of observations for a given period (default: day of year)
+     - low_section : Lower 90 percentile interval bound for a given period
+     - upp_section : Upper 90 percentile interval bound for a given period
      - min_section : minimum score for given period
      - max_section : maximum score for given period
      - whisker_range : Mean range indicated by q0.95 - q0.05 (i.e., 95th - 5th percentile)
@@ -174,6 +176,8 @@ Notes: Ignores leap days when using monthday periods.
 # Returns
 tuple: 
      - x_section : Median of observations for a given period (default: day of year)
+     - low_section : Lower 90 percentile interval bound for a given period
+     - upp_section : Upper 90 percentile interval bound for a given period
      - min_section : minimum score for a given period
      - max_section : maximum score for a given period
      - whisker_range : Range indicated by q0.95 - q0.05 (95th - 5th quantile)
