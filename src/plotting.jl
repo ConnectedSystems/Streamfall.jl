@@ -104,8 +104,9 @@ end
 
 https://discourse.julialang.org/t/symmetrical-log-plot/45709/3
 """
-function symlog(y)
-    y = replace(y, 0=>1e-06)  # small constant to avoid 0s
+function symlog(y; alpha=0.02)
+    y = y .+ alpha  # offset with small constant to avoid 0s
+
     # C = ceil(minimum(log10.(abs.(y))))
     return sign.(y) .* (log10.(abs.(y))) # / (10.0^C))
 end
@@ -188,7 +189,7 @@ function temporal_cross_section(dates, obs;
     end
 
     fig = plot(xlabels, x_section,
-               label="$(label) μ: $(m_ind), σ: $(sd_ind)\nRange μ: $(wr_m_ind), σ: $(wr_sd_ind)",
+               label="$(label) μ: $(m_ind), σ: $(sd_ind)\nCI₉₅ μ: $(wr_m_ind), σ: $(wr_sd_ind)",
                xlabel=nameof(period),
                ylabel=ylabel,
                legend=:bottomleft,
@@ -207,12 +208,6 @@ function temporal_cross_section(dates, obs;
     #     scatter!(fig, xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
     #     scatter!(fig, xlabels, max_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
     # end
-
-    # plot!(fig, min_section, label="lowest", color="orange", alpha=0.5)
-    # plot!(fig, max_section, label="highest", color="orange", alpha=0.5)
-
-    # plot!(fig, lower, label="min q0.05", color="green", alpha=0.5)
-    # plot!(fig, upper, label="max q0.95", color="green", alpha=0.5)
 
     return fig
 end
@@ -298,7 +293,7 @@ function temporal_cross_section(dates, obs, sim;
     end
 
     fig = plot(xlabels, x_section,
-               label="$(label) μ: $(m_ind), σ: $(sd_ind)\nRange μ: $(wr_m_ind), σ: $(wr_sd_ind)",
+               label="$(label) μ: $(m_ind), σ: $(sd_ind)\nCI₉₅ μ: $(wr_m_ind), σ: $(wr_sd_ind)",
                xlabel=nameof(period),
                ylabel=ylabel,
                legend=:bottomleft,
@@ -317,12 +312,6 @@ function temporal_cross_section(dates, obs, sim;
         scatter!(fig, xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
         scatter!(fig, xlabels, max_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
     end
-
-    # plot!(fig, min_section, label="lowest", color="orange", alpha=0.5)
-    # plot!(fig, max_section, label="highest", color="orange", alpha=0.5)
-
-    # plot!(fig, lower, label="min q0.05", color="green", alpha=0.5)
-    # plot!(fig, upper, label="max q0.95", color="green", alpha=0.5)
 
     return fig
 end
