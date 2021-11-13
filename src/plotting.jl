@@ -102,13 +102,14 @@ end
 
 """Symmetrical log values.
 
+https://kar.kent.ac.uk/32810/2/2012_Bi-symmetric-log-transformation_v5.pdf
 https://discourse.julialang.org/t/symmetrical-log-plot/45709/3
 """
-function symlog(y; alpha=0.02)
-    y = y .+ alpha  # offset with small constant to avoid 0s
+function symlog(y; C=0)
+    # y = y .+ alpha  # offset with small constant to avoid 0s
 
     # C = ceil(minimum(log10.(abs.(y))))
-    return sign.(y) .* (log10.(abs.(y))) # / (10.0^C))
+    return sign.(y) .* (log10.(1 .+ abs.(y))) / (10.0^C)
 end
 
 
@@ -152,7 +153,7 @@ function temporal_cross_section(dates, obs;
             obs = symlog(obs)
 
             # Format function for y-axis tick labels (e.g., 10^x)
-            format_func = y -> (y != 0) ? L"%$(round(sign(y)) * 10)^{%$(round(abs(y), digits=1))}" : L"0"
+            format_func = y -> (y != 0) ? L"%$(Int(round(sign(y)) * 10))^{%$(round(abs(y), digits=1))}" : L"0"
 
             x_section, lower, upper, _, _ = temporal_uncertainty(dates, obs, period)
             orig_x_section, orig_l, orig_u, _, _ = temporal_uncertainty(dates, orig_obs, period)
@@ -198,11 +199,11 @@ function temporal_cross_section(dates, obs;
                bg_legend=:transparent,
                left_margin=5mm,
                bottom_margin=5mm,
-               title=title,
-               yformatter=format_func;
+               title=title;
+               # yformatter=format_func;
                kwargs...)
 
-    plot!(fig, xlabels, lower, fillrange=upper, color="lightblue", alpha=0.5, label="", linealpha=0)
+    plot!(fig, xlabels, lower, fillrange=upper, color="lightblue", alpha=0.5, label="", linealpha=0, yformatter=format_func)
 
     # if show_extremes
     #     scatter!(fig, xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
@@ -252,19 +253,22 @@ function temporal_cross_section(dates, obs, sim;
         tmp = (:yscale in arg_keys) ? kwargs[:yscale] : kwargs[:yaxis]
 
         if tmp in logscale
-            orig_obs = copy(obs)
-            orig_sim = copy(sim)
-            obs = symlog(obs)
-            sim = symlog(sim)
-
             # Format function for y-axis tick labels (e.g., 10^x)
-            format_func = y -> (y != 0) ? L"%$(round(sign(y)) * 10)^{%$(round(abs(y), digits=1))}" : L"0"
+            format_func = y -> (y != 0) ? L"%$(Int(round(sign(y)) * 10))^{%$(round(abs(y), digits=1))}" : L"0"
 
-            x_section, lower, upper, min_section, max_section, _, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
-            orig_x_section, orig_l, orig_u, _, _, _, _, _ = temporal_uncertainty(dates, orig_obs, orig_sim, period, func) 
+            orig_x_section, orig_l, orig_u, orig_min, orig_max, _, _, _ = temporal_uncertainty(dates, obs, sim, period, func)
+
+            x_section = symlog(orig_x_section)
+            lower = symlog(orig_l)
+            upper = symlog(orig_u)
+            min_section = symlog(orig_min)
+            max_section = symlog(orig_max)
+
+            # x_section, lower, upper, min_section, max_section, _, _, _ = temporal_uncertainty(dates, obs, sim, period, func)
+            # orig_x_section, orig_l, orig_u, _, _, _, _, _ = temporal_uncertainty(dates, orig_obs, orig_sim, period, func)
         end
     else
-        x_section, lower, upper, min_section, max_section, _, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
+        x_section, lower, upper, min_section, max_section, _, _, _ = temporal_uncertainty(dates, obs, sim, period, func)
     end
 
     sp = sort(unique(period.(dates)))
@@ -303,11 +307,16 @@ function temporal_cross_section(dates, obs, sim;
                bg_legend=:transparent,
                left_margin=5mm,
                bottom_margin=5mm,
-               title=title,
-               yformatter=format_func;
+               title=title;
+               # yformatter=format_func,
                kwargs...)  # size=(1000, 350)
 
-    plot!(fig, xlabels, lower, fillrange=upper, color="lightblue", alpha=0.5, label="", linealpha=0)
+    plot!(fig, xlabels, lower, fillrange=upper, color="lightblue", alpha=0.6, label="", linealpha=0, yformatter=format_func)
+
+    # tmp_plot = plot(Streamfall.symlog(orig_x_section), yformatter=format_func)
+    # plot!(Streamfall.symlog(orig_l), yformatter=format_func, label="lower")
+    # plot!(Streamfall.symlog(orig_u), yformatter=format_func, label="upper")
+    # plot!(tmp_plot, Streamfall.symlog(orig_l), fillrange=Streamfall.symlog(orig_u), color="lightblue", alpha=0.5, label="", linealpha=0, yformatter=format_func)
 
     if show_extremes
         scatter!(fig, xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
