@@ -260,17 +260,16 @@ function temporal_cross_section(dates, obs, sim;
             # Format function for y-axis tick labels (e.g., 10^x)
             format_func = y -> (y != 0) ? L"%$(round(sign(y)) * 10)^{%$(round(abs(y), digits=1))}" : L"0"
 
-            x_section, lower, upper, min_section, max_section, whisker_range, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
-            orig_x_section, orig_l, orig_u, _, _, orig_wr, _, _ = temporal_uncertainty(dates, orig_obs, orig_sim, period, func) 
+            x_section, lower, upper, min_section, max_section, _, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
+            orig_x_section, orig_l, orig_u, _, _, _, _, _ = temporal_uncertainty(dates, orig_obs, orig_sim, period, func) 
         end
     else
-        x_section, lower, upper, min_section, max_section, whisker_range, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
+        x_section, lower, upper, min_section, max_section, _, cv_r, std_error = temporal_uncertainty(dates, obs, sim, period, func)
     end
 
     sp = sort(unique(period.(dates)))
     deleteat!(sp, findall(x -> x == (2,29), sp))
     xlabels = join.(sp, "-")
-    # whisker_range = upper .- lower
 
     if !isnothing(tmp) & (tmp in logscale)
         # Remove keys 
@@ -282,12 +281,14 @@ function temporal_cross_section(dates, obs, sim;
         m_ind = round(mean(orig_x_section), digits=2)
         sd_ind = round(std(orig_x_section, corrected=false), digits=2)
 
-        wr_m_ind = round(mean(orig_wr), digits=2)
-        wr_sd_ind = round(std(orig_wr, corrected=false), digits=2)
+        whisker_range = orig_u .- orig_l
+        wr_m_ind = round(mean(whisker_range), digits=2)
+        wr_sd_ind = round(std(whisker_range, corrected=false), digits=2)
     else
         m_ind = round(mean(x_section), digits=2)
         sd_ind = round(std(x_section, corrected=false), digits=2)
 
+        whisker_range = upper .- lower
         wr_m_ind = round(mean(whisker_range), digits=2)
         wr_sd_ind = round(std(whisker_range, corrected=false), digits=2)
     end
