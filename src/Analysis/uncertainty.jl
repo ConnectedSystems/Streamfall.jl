@@ -137,14 +137,14 @@ function temporal_uncertainty(dates, obs, sim, period::Function, func::Function)
 
         tmp = func.([[x] for x in obs_gi], [[x] for x in sim_gi])
 
-        lower_q, upper_q = quantile(tmp, [0.025, 0.975])
+        min_tmp, lower_q, med, upper_q, max_tmp = quantile(tmp, [0.0, 0.025, 0.5, 0.975, 1.0])
 
         low_section[i] = lower_q
         upp_section[i] = upper_q
-        min_section[i] = minimum(tmp)
-        max_section[i] = maximum(tmp)
+        min_section[i] = min_tmp
+        max_section[i] = max_tmp
         # mae_section[i] = MAE(obs_gi, sim_gi)
-        x_section[i] = median(tmp)
+        x_section[i] = med
     end
 
     whisker_range = upp_section .- low_section
