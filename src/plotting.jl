@@ -105,11 +105,8 @@ end
 https://kar.kent.ac.uk/32810/2/2012_Bi-symmetric-log-transformation_v5.pdf
 https://discourse.julialang.org/t/symmetrical-log-plot/45709/3
 """
-function symlog(y; C=0)
-    # y = y .+ alpha  # offset with small constant to avoid 0s
-
-    # C = ceil(minimum(log10.(abs.(y))))
-    return sign.(y) .* (log10.(1 .+ abs.(y))) / (10.0^C)
+function symlog(y)
+    return sign.(y) .* log10.(1.0 .+ abs.(y))
 end
 
 
