@@ -13,9 +13,9 @@ Notes: Ignores leap days when using monthday subperiods.
 # Returns
 tuple: 
      - x_section : Median of observations for a given period (default: day of year)
-     - min_section : Q1 - 1.5*IQR of metric value for period
-     - max_section : Q3 + 1.5*IQR of metric value for period
-     - whisker_range : Mean range indicated by (max_section - min_section)
+     - low_section : Lower 95 percentile interval bound of metric value for period
+     - upp_section : Upper 95 percentile interval bound of metric value for period
+     - whisker_range : Mean range indicated by (upp_section - low_section)
 """
 function temporal_uncertainty(dates, obs, period::Function)
     df = DataFrame(Date=dates, Observed=obs)
@@ -27,11 +27,13 @@ function temporal_uncertainty(dates, obs, period::Function)
     x_section = fill(0.0, length(sp))
     min_section = fill(0.0, length(sp))
     max_section = fill(0.0, length(sp))
+    low_section = fill(0.0, length(sp))
+    upp_section = fill(0.0, length(sp))
     for (i, obs_i) in enumerate(sp)
         obs_g = df[in([obs_i]).(period.(df.Date)), :]
         obs_gi = obs_g.Observed
 
-        ab_min, lower_q, upper_q, ab_max = quantile(obs_gi, [0.0, 0.05, 0.95, 1.0])
+        ab_min, lower_q, upper_q, ab_max = quantile(obs_gi, [0.0, 0.025, 0.975, 1.0])
         low_section[i] = lower_q
         upp_section[i] = upper_q
         min_section[i] = ab_min
@@ -65,8 +67,8 @@ Notes: Ignores leap days when using monthday periods.
 # Returns
 tuple: 
      - x_section : Median of observations for a given period (default: day of year)
-     - min_section : Q1 - 1.5*IQR of metric value for period
-     - max_section : Q3 + 1.5*IQR of metric value for period
+     - low_section : Lower 95-percentile interval bound of metric value for period
+     - upp_section : Upper 95-percentile interval bound of metric value for period
      - whisker_range : Mean range indicated by max_section - min_section
      - weighted : weights (0 to 1) indicating relative to `threshold * std(x_section)`
 """
@@ -108,9 +110,11 @@ Notes: Ignores leap days when using monthday subperiods.
 # Returns
 tuple: 
      - x_section : Median of observations for a given period (default: day of year)
+     - low_section : Lower 95 percentile interval bound for a given period
+     - upp_section : Upper 95 percentile interval bound for a given period
      - min_section : minimum score for given period
      - max_section : maximum score for given period
-     - whisker_range : Mean range indicated by q0.95 - q0.05 (i.e., 95th - 5th percentile)
+     - whisker_range : Mean range indicated by q0.975 - q0.025 (i.e., 95 percentile confidence interval)
      - cv_r : coefficient of variation for whisker range. Indicates variability of 
 """
 function temporal_uncertainty(dates, obs, sim, period::Function, func::Function)
@@ -133,14 +137,14 @@ function temporal_uncertainty(dates, obs, sim, period::Function, func::Function)
 
         tmp = func.([[x] for x in obs_gi], [[x] for x in sim_gi])
 
-        lower_q, upper_q = quantile(tmp, [0.05, 0.95])
+        min_tmp, lower_q, med, upper_q, max_tmp = quantile(tmp, [0.0, 0.025, 0.5, 0.975, 1.0])
 
         low_section[i] = lower_q
         upp_section[i] = upper_q
-        min_section[i] = minimum(tmp)
-        max_section[i] = maximum(tmp)
+        min_section[i] = min_tmp
+        max_section[i] = max_tmp
         # mae_section[i] = MAE(obs_gi, sim_gi)
-        x_section[i] = median(tmp)
+        x_section[i] = med
     end
 
     whisker_range = upp_section .- low_section
@@ -157,12 +161,12 @@ end
 """
 Conduct temporal uncertainty analysis on observations.
 
-Calculates boxplot-like values for given subperiods (mean, q0.05, q0.95).
+Calculates boxplot-like values for given subperiods (mean, q0.025, q0.975).
 
 A temporal cross-section is taken for each temporal period (default: month-day)
 and greater weights are placed on periods of greater uncertainty.
 
-Min-max scaled range of (q0.95 - q0.05) indicates where greater weight (``w``) is placed,
+Min-max scaled range of (q0.975 - q0.025) indicates where greater weight (``w``) is placed,
 such that ``w=1+α`` for the most confident time period (i.e., lowest range) and ``w=2``
 for the least confident time period, where ``α`` is the minimum additional weight to apply
 (defaults to 0).
@@ -172,9 +176,11 @@ Notes: Ignores leap days when using monthday periods.
 # Returns
 tuple: 
      - x_section : Median of observations for a given period (default: day of year)
+     - low_section : Lower 95 percentile interval bound for a given period
+     - upp_section : Upper 95 percentile interval bound for a given period
      - min_section : minimum score for a given period
      - max_section : maximum score for a given period
-     - whisker_range : Range indicated by q0.95 - q0.05 (95th - 5th quantile)
+     - whisker_range : Range indicated by q0.975 - q0.025 (95 percentile interval)
      - cv_r : coefficient of variation across whisker_range
      - weighted : weights (1 to 2), with minimum weight of 1 + `min_weight`
 """
