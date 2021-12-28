@@ -13,7 +13,7 @@ using Statistics, DataFrames, CSV
 using Distributed, BlackBoxOptim
 
 using ModelParameters
-using LightGraphs, MetaGraphs
+using Graphs, MetaGraphs
 using YAML, Plots
 using Streamfall
 ```

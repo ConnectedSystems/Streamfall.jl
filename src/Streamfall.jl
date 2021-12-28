@@ -1,7 +1,7 @@
 module Streamfall
 
 using Statistics
-using LightGraphs, MetaGraphs, Distributed, DataFrames
+using Graphs, MetaGraphs, Distributed, DataFrames
 
 
 const MODPATH = @__DIR__
@@ -138,7 +138,8 @@ function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timest
     ts = timestep
 
     sim_inflow = 0.0
-    ins = inneighbors(sn.g, node_id)
+    ins = inneighbors(sn.mg, node_id)
+
     if !isempty(ins)
         for i in ins
             # Get inflow from previous node

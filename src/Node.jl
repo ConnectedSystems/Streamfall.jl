@@ -19,7 +19,7 @@ end
 
 """Create an arbitrary node."""
 function create_node(node::Type{<:NetworkNode}, name::String, area::Float64)
-    return node{Param}(; name=name, area=area)
+    return node{Param, Float64}(; name=name, area=area)
 end
 
 
@@ -74,8 +74,9 @@ end
 
 
 """Retrieve network node_id for a given gauge (by name)."""
-function get_node_id(mg::MetaGraph, node_name::String)::Int64
+function get_node_id(mg::MetaDiGraph, node_name::String)::Int64
     v = collect(MetaGraphs.filter_vertices(mg, :name, node_name))
+
     @assert length(v) > 0 || error("Node with name '$(node_name)' not found")
     @assert length(v) == 1 || error("Found more than 1 node with name '$(node_name)'")
     return v[1]

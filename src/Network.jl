@@ -1,13 +1,12 @@
 using Cairo, Compose
-using LightGraphs, MetaGraphs, GraphPlot
+using Graphs, MetaGraphs, GraphPlot
 using ModelParameters
 
 import YAML: write_file
 
 
 struct StreamfallNetwork
-    mg::MetaGraph
-    g::SimpleDiGraph
+    mg::MetaDiGraph
 end
 
 
@@ -46,7 +45,7 @@ end
 
 """Find all inlets and outlets in a network."""
 function find_inlets_and_outlets(sn::StreamfallNetwork)::Tuple
-    g = sn.g
+    g = sn.mg
     vs = vertices(g)
     num_vs::Int64 = length(vs)
 
@@ -69,8 +68,8 @@ function find_inlets_and_outlets(sn::StreamfallNetwork)::Tuple
 end
 
 
-inlets(sn::StreamfallNetwork, nid::Number) = inneighbors(sn.g, nid)
-outlets(sn::StreamfallNetwork, nid::Number) = outneighbors(sn.g, nid)
+inlets(sn::StreamfallNetwork, nid::Number) = inneighbors(sn.mg, nid)
+outlets(sn::StreamfallNetwork, nid::Number) = outneighbors(sn.mg, nid)
 
 
 """
@@ -79,7 +78,7 @@ outlets(sn::StreamfallNetwork, nid::Number) = outneighbors(sn.g, nid)
 Total area represented by a network.
 """
 function area(sn::StreamfallNetwork)::Float64
-    num_nodes = nv(sn.g)
+    num_nodes = nv(sn.mg)
     area = 0.0
     for nid in 1:num_nodes
         area += sn[nid].area
@@ -96,7 +95,7 @@ Find nodes which provides inflows for given node.
 """
 function inlets(sn::StreamfallNetwork, node_name::String)::Array{Int}
     nid, _ = sn[node_name]
-    return inneighbors(sn.g, nid)
+    return inneighbors(sn.mg, nid)
 end
 
 
@@ -107,16 +106,20 @@ Find node immediately downstream from given node.
 """
 function outlets(sn::StreamfallNetwork, node_name::String)::Array{Int}
     nid, _ = sn[node_name]
-    return outneighbors(sn.g, nid)
+    return outneighbors(sn.mg, nid)
 end
 
 
 """
-    create_node(mg::MetaGraph, node_name::String, details::Dict, nid::Int)
+    create_node(mg::MetaDiGraph, node_name::String, details::Dict, nid::Int)
 
 Create a node specified with given name (if it does not exist).
+
+Returns 
+- `this_id`, ID of node (if pre-existing) and 
+- `nid`, incremented node id for entire network (equal to `this_id` if exists)
 """
-function create_node(mg::MetaGraph, node_name::String, details::Dict, nid::Int)
+function create_node(mg::MetaDiGraph, node_name::String, details::Dict, nid::Int)
     details = copy(details)
 
     match = collect(MetaGraphs.filter_vertices(mg, :name, node_name))
@@ -170,8 +173,7 @@ julia> sn = create_network("Example Network", network_spec)
 """
 function create_network(name::String, network::Dict)::StreamfallNetwork
     num_nodes = length(network)
-    g = SimpleDiGraph(num_nodes)
-    mg = MetaGraph(g)
+    mg = MetaDiGraph(num_nodes)
     MetaGraphs.set_prop!(mg, :description, name)
     
     nid = 1
@@ -182,31 +184,30 @@ function create_network(name::String, network::Dict)::StreamfallNetwork
 
         if haskey(details, "inlets")
             inlets = details["inlets"]
-            in_id = nid
+
             if !isnothing(inlets)
                 for inlet in inlets
                     in_id, nid = create_node(mg, string(inlet), network[inlet], nid)
-                    add_edge!(g, in_id, this_id)
+                    add_edge!(mg, in_id => this_id)
                 end
             end
         end
 
         if haskey(details, "outlets")
             outlets = details["outlets"]
-            out_id = in_id
             if !isnothing(outlets)
                 msg = "Streamfall currently only supports a single outlet. ($(length(outlets)))"
                 @assert length(outlets) <= 1 || throw(ArgumentError(msg))
 
                 for outlet in outlets
                     out_id, nid = create_node(mg, string(outlet), network[outlet], nid)
-                    add_edge!(g, this_id, out_id)
+                    add_edge!(mg, this_id => out_id)
                 end
             end
         end
     end
 
-    sn = StreamfallNetwork(mg, g)
+    sn = StreamfallNetwork(mg)
 
     return sn
 end
@@ -218,8 +219,8 @@ end
 Reset a network.
 """
 function reset!(sn::StreamfallNetwork)::Nothing
-    mg, g = sn.mg, sn.g
-    v_ids = vertices(g)
+    mg = sn.mg
+    v_ids = vertices(mg)
     for i in v_ids
         curr_node = MetaGraphs.get_prop(mg, i, :node)
         reset!(curr_node)
@@ -300,7 +301,7 @@ function Base.show(io::IO, sn::StreamfallNetwork)
     println(io, "Represented Area: $(area(sn))")
     println("-"^17, "\n")
 
-    vs = vertices(sn.g)
+    vs = vertices(sn.mg)
 
     for nid in vs
         println(io, "Node $(nid) : \n")
@@ -324,7 +325,7 @@ function plot_network(sn::StreamfallNetwork; as_html=false)
         plot_func = gplot
     end
 
-    plot_func(sn.g, nodelabel=node_names)
+    plot_func(sn.mg, nodelabel=node_names)
 end
 
 
@@ -347,7 +348,7 @@ function Base.iterate(sn::StreamfallNetwork, state=1)
 end
 
 
-Base.length(sn::StreamfallNetwork) = nv(sn.g)
+Base.length(sn::StreamfallNetwork) = nv(sn.mg)
 
 
 
