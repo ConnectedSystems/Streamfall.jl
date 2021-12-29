@@ -5,7 +5,7 @@ using ModelParameters
 abstract type IHACRESNode <: NetworkNode end
 
 
-Base.@kwdef mutable struct BilinearNode{P} <: IHACRESNode
+Base.@kwdef mutable struct BilinearNode{P, A<:Real} <: IHACRESNode
     @network_node
 
     # https://wiki.ewater.org.au/display/SD41/IHACRES-CMD+-+SRG
@@ -35,15 +35,15 @@ Base.@kwdef mutable struct BilinearNode{P} <: IHACRESNode
         Param(150.0, bounds=(50.0, 200.0)) # ctf
     ]
 
-    storage::Array{Float64} = [100.0]
-    quick_store::Array{Float64} = [0.0]
-    slow_store::Array{Float64} = [0.0]
-    outflow::Array{Float64} = []
-    effective_rainfall::Array{Float64} = []
-    et::Array{Float64} = []
-    inflow::Array{Float64} = []
-    level::Array{Float64} = []
-    gw_store::Array{Float64} = [0.0]
+    storage::Array{A} = [100.0]
+    quick_store::Array{A} = [0.0]
+    slow_store::Array{A} = [0.0]
+    outflow::Array{A} = []
+    effective_rainfall::Array{A} = []
+    et::Array{A} = []
+    inflow::Array{A} = []
+    level::Array{A} = []
+    gw_store::Array{A} = [0.0]
 end
 
 
@@ -73,8 +73,8 @@ end
 
 
 function BilinearNode(name::String, spec::Dict)
-    n = BilinearNode{Param}(; name=name, area=spec["area"])
-    node_params = spec["parameters"]
+    n = create_node(BilinearNode, name, spec["area"])
+    node_params = copy(spec["parameters"])
 
     if haskey(spec, "level_params")
         n_lparams = n.level_params
@@ -119,16 +119,16 @@ end
 
 
 """
-    BilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
-                a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
+    BilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
+                a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
                 store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
 
 Create a IHACRES node that adopts the bilinear CMD module.
 """
-function BilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
-                      a::Float64, b::Float64, s_coef::Float64, alpha::Float64, 
+function BilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
+                      a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
                       store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
-    n = BilinearNode{Param}(; name=name, area=area)
+    n = BilinearNode(; name=name, area=area)
     update_params!(n, d, d2, e, f, a, b, s_coef, alpha)
 
     n.storage = [store]
@@ -140,8 +140,8 @@ function BilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::F
 end
 
 
-function update_state(s_node::IHACRESNode, storage::Float64, e_rainfall::Float64, et::Float64, 
-                      qflow_store::Float64, sflow_store::Float64, outflow::Float64, 
+function update_state(s_node::IHACRESNode, storage::Float64, e_rainfall::Float64, et::Float64,
+                      qflow_store::Float64, sflow_store::Float64, outflow::Float64,
                       level::Float64, gw_store::Float64)
     push!(s_node.storage, storage)
     push!(s_node.effective_rainfall, e_rainfall)
@@ -157,7 +157,7 @@ end
 
 
 """
-    run_node!(node::IHACRESNode, climate::Climate, timestep::Int; 
+    run_node!(node::IHACRESNode, climate::Climate, timestep::Int;
                   inflow=nothing, extraction=nothing, exchange=nothing)
 
 Run a specific node for a specified time step.
@@ -170,7 +170,7 @@ Run a specific node for a specified time step.
 - `extraction::DataFrame` : Time series of water orders (expects column of `_releases`)
 - `exchange::DataFrame` : Time series of groundwater flux
 """
-function run_node!(node::IHACRESNode, climate::Climate, timestep::Int; 
+function run_node!(node::IHACRESNode, climate::Climate, timestep::Int;
                    inflow=nothing, extraction=nothing, exchange=nothing)
     ts = timestep
     if checkbounds(Bool, node.outflow, ts)
@@ -381,7 +381,7 @@ function run_node_with_temp!(sn::StreamfallNetwork, nid::Int64, climate::Climate
     node = sn[nid]
     timesteps = sim_length(climate)
     for ts in 1:timesteps
-        run_node_with_temp!(node, climate, ts; 
+        run_node_with_temp!(node, climate, ts;
                             inflow=inflow, extraction=extraction, exchange=exchange)
     end
 
@@ -393,7 +393,7 @@ function run_node_with_temp!(node::BilinearNode, climate::Climate;
                              inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
     for ts in 1:timesteps
-        run_node_with_temp!(node, climate, ts; 
+        run_node_with_temp!(node, climate, ts;
                             inflow=inflow, extraction=extraction, exchange=exchange)
     end
 
@@ -469,8 +469,8 @@ function run_node_with_temp!(s_node::BilinearNode,
     (mf, e_rainfall, recharge) = interim_results
 
     et::Float64 = @ccall IHACRES.calc_ET_from_T(
-        s_node.e::Cdouble, 
-        temp::Cdouble, 
+        s_node.e::Cdouble,
+        temp::Cdouble,
         mf::Cdouble,
         s_node.f::Cdouble,
         s_node.d::Cdouble
@@ -547,15 +547,16 @@ end
 
 
 """
-    update_params!(node::BilinearNode{Param}, d::Float64, d2::Float64, e::Float64, f::Float64,
+    update_params!(node::BilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
                    a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
                    p1::Float64, p2::Float64, p3::Float64, p4::Float64, p5::Float64, p6::Float64, p7::Float64, p8::Float64, CTF::Float64)::Nothing
 
 Update all parameters.
 """
-function update_params!(node::BilinearNode{Param}, d::Float64, d2::Float64, e::Float64, f::Float64,
+function update_params!(node::BilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
                         a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
-                        p1::Float64, p2::Float64, p3::Float64, p4::Float64, p5::Float64, p6::Float64, p7::Float64, p8::Float64, CTF::Float64)::Nothing
+                        p1::Float64, p2::Float64, p3::Float64, p4::Float64, p5::Float64,
+                        p6::Float64, p7::Float64, p8::Float64, CTF::Float64)::Nothing
     node.d = Param(d, bounds=node.d.bounds::Tuple)
     node.d2 = Param(d2, bounds=node.d2.bounds::Tuple)
     node.e = Param(e, bounds=node.e.bounds::Tuple)
@@ -576,7 +577,7 @@ function update_params!(node::BilinearNode{Param}, d::Float64, d2::Float64, e::F
         Param(p7, bounds=n_lparams[7].bounds::Tuple)
         Param(p8, bounds=n_lparams[8].bounds::Tuple)
         Param(CTF, bounds=n_lparams[9].bounds::Tuple)
-    ] 
+    ]
 
     return nothing
 end

@@ -16,7 +16,7 @@ Adapted with kind permission from: https://github.com/jdherman/GRA-2020-SALib
     Hydrology and Earth System Sciences 17, 149–161. 
     https://doi.org/10.5194/hess-17-149-2013
 """
-Base.@kwdef mutable struct SimpleHyModNode{P} <: HyModNode
+Base.@kwdef mutable struct SimpleHyModNode{P, A<:Real} <: HyModNode
     @network_node
 
     # parameters
@@ -27,18 +27,19 @@ Base.@kwdef mutable struct SimpleHyModNode{P} <: HyModNode
     Ks::P = Param(0.05, bounds=(0.001, 0.1))
 
     # stores
-    Sm::Array{Float64} = [0.0]
-    Sf1::Array{Float64} = [0.0]
-    Sf2::Array{Float64} = [0.0]
-    Sf3::Array{Float64} = [0.0]
-    Ss1::Array{Float64} = [0.0]
+    Sm::Array{A} = [0.0]
+    Sf1::Array{A} = [0.0]
+    Sf2::Array{A} = [0.0]
+    Sf3::Array{A} = [0.0]
+    Ss1::Array{A} = [0.0]
 
-    outflow::Array{Float64} = []
+    outflow::Array{A} = []
 end
 
 
 function SimpleHyModNode(name::String, spec::Dict)
-    n = SimpleHyModNode{Param}(; name=name, area=spec["area"])
+    # n = SimpleHyModNode{Param}(; name=name, area=spec["area"])
+    n = create_node(SimpleHyModNode, name, spec["area"])
     node_params = spec["parameters"]
     for (p_name, p_val) in node_params
         sym = Symbol(p_name)

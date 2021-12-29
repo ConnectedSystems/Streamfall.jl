@@ -2,7 +2,7 @@ using Parameters
 using ModelParameters
 
 
-Base.@kwdef mutable struct ExpuhNode{P} <: IHACRESNode
+Base.@kwdef mutable struct ExpuhNode{P, A<:Real} <: IHACRESNode
     @network_node
     
     # https://wiki.ewater.org.au/display/SD41/IHACRES-CMD+-+SRG
@@ -28,20 +28,21 @@ Base.@kwdef mutable struct ExpuhNode{P} <: IHACRESNode
         Param(150.0, bounds=(50.0, 200.0)) # ctf
     ]
 
-    storage::Array{Float64} = [100.0]
-    quick_store::Array{Float64} = [0.0]
-    slow_store::Array{Float64} = [0.0]
-    outflow::Array{Float64} = []
-    effective_rainfall::Array{Float64} = []
-    et::Array{Float64} = []
-    inflow::Array{Float64} = []
-    level::Array{Float64} = []
-    gw_store::Array{Float64} = [0.0]
+    storage::Array{A} = [100.0]
+    quick_store::Array{A} = [0.0]
+    slow_store::Array{A} = [0.0]
+    outflow::Array{A} = []
+    effective_rainfall::Array{A} = []
+    et::Array{A} = []
+    inflow::Array{A} = []
+    level::Array{A} = []
+    gw_store::Array{A} = [0.0]
 end
 
 
 function ExpuhNode(name::String, spec::Dict)
-    n = ExpuhNode{Param}(; name=name, area=spec["area"])
+    # n = ExpuhNode{Param}(; name=name, area=spec["area"])
+    n = create_node(ExpuhNode, name, spec["area"])
 
     node_params = spec["parameters"]
     n_lparams = n.level_params

@@ -7,7 +7,7 @@ const SYMHYD_SOIL_ET_CONST = 10.0
 
 """
 """
-Base.@kwdef mutable struct SYMHYDNode{P} <: NetworkNode
+Base.@kwdef mutable struct SYMHYDNode{P, A<:Real} <: NetworkNode
     @network_node
 
     # parameters
@@ -22,14 +22,14 @@ Base.@kwdef mutable struct SYMHYDNode{P} <: NetworkNode
     smsc::P = Param(250.0, bounds=(1.0, 500.0))  # Soil Moisture Store Capacity (mm)
 
     # stores
-    sm_store::Array{Float64} = [0.0]
-    gw_store::Array{Float64} = [0.0]
-    total_store::Array{Float64} = [0.0]
+    sm_store::Array{A} = [0.0]
+    gw_store::Array{A} = [0.0]
+    total_store::Array{A} = [0.0]
 
     # outputs
-    outflow::Array{Float64} = []  # mm
-    baseflow::Array{Float64} = []  # mm
-    quickflow::Array{Float64} = []  # mm
+    outflow::Array{A} = []  # mm
+    baseflow::Array{A} = []  # mm
+    quickflow::Array{A} = []  # mm
 end
 
 
@@ -38,7 +38,8 @@ end
 Create node from spec.
 """
 function SYMHYDNode(name::String, spec::Dict)
-    n = SYMHYDNode{Param}(; name=name, area=spec["area"])
+    # n = SYMHYDNode{Param}(; name=name, area=spec["area"])
+    n = create_node(SYMHYDNode, name, spec["area"])
     node_params = spec["parameters"]
     node_params["sm_store"] = [node_params["initial_sm_store"]]
     node_params["gw_store"] = [node_params["initial_gw_store"]]

@@ -57,7 +57,7 @@ A four-parameter model with two stores.
 # References
 1. Perrin, C., Michel, C., Andréassian, V., 2003. 
     Improvement of a parsimonious model for streamflow simulation. 
-    Journal of Hydrology 279, 275–289. 
+    Journal of Hydrology 279, 275-289.
     https://doi.org/10.1016/S0022-1694(03)00225-7
 
 2. MacDonald, A. 2014. 
@@ -65,7 +65,7 @@ A four-parameter model with two stores.
     https://github.com/amacd31/gr4j
 
 """
-Base.@kwdef mutable struct GR4JNode{P} <: GRNJNode
+Base.@kwdef mutable struct GR4JNode{P, A<:Real} <: GRNJNode
     @network_node
 
     # parameters
@@ -80,13 +80,13 @@ Base.@kwdef mutable struct GR4JNode{P} <: GRNJNode
     # x4 : time base of unit hydrograph UH1 (days, > 0.5)
 
     # stores
-    p_store::Array{Float64} = [0.0]
-    r_store::Array{Float64} = [0.0]
+    p_store::Array{A} = [0.0]
+    r_store::Array{A} = [0.0]
 
-    UH1::Array{Array{Float64}} = []
-    UH2::Array{Array{Float64}} = []
+    UH1::Array{Array{A}} = []
+    UH2::Array{Array{A}} = []
 
-    outflow::Array{Float64} = []
+    outflow::Array{A} = []
 end
 
 
@@ -98,7 +98,8 @@ end
 
 
 function GR4JNode(name::String, spec::Dict)
-    n = GR4JNode{Param}(; name=name, area=spec["area"])
+    # n = GR4JNode(; name=name, area=spec["area"])
+    n = create_node(GR4JNode, name, spec["area"])
     node_params = spec["parameters"]
     node_params["p_store"] = [node_params["initial_p_store"]]
     node_params["r_store"] = [node_params["initial_r_store"]]
