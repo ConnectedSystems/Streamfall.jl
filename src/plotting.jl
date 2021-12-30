@@ -129,7 +129,7 @@ function temporal_cross_section(dates, obs;
                                 period::Function=monthday,
                                 kwargs...)  # show_extremes::Bool=false, 
     if isnothing(ylabel)
-        ylabel = ""
+        ylabel = "Median Error"
     end
 
     if isnothing(label)
