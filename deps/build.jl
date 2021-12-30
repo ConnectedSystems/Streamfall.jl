@@ -1,4 +1,4 @@
-using Tar, CodecZlib, ZipFile
+using Tar, CodecZlib, ZipFile, Downloads
 
 const IHACRES_VERSION = v"0.4.1"
 const BASE_URL = "https://github.com/ConnectedSystems/ihacres_nim/releases/download/v$(IHACRES_VERSION)/ihacres_nim_"
@@ -18,7 +18,7 @@ else
     throw(DomainError("Unsupported platform"))
 end
 
-target = Base.download_url(BASE_URL * target)
+target_url = BASE_URL * target
 
 function untar(data::IO, exdir::String)
     if isdir(exdir) == false mkdir(exdir) end
@@ -27,9 +27,9 @@ function untar(data::IO, exdir::String)
     close(tar)
 end
 
-fn = download(target, "ihacres_nim")
-if endswith(target, "zip")
-    dir_name = split(replace(target, ".zip" => ""), "/")[end]
+fn = Downloads.download(target_url, "ihacres_nim")
+if endswith(target_url, "zip")
+    dir_name = split(replace(target_url, ".zip" => ""), "/")[end]
     zarchive = ZipFile.Reader(fn)
     for f in zarchive.files
         if endswith(f.name, "/")
@@ -46,7 +46,7 @@ if endswith(target, "zip")
 
     close(zarchive)
 
-elseif endswith(target, "tar.gz")
+elseif endswith(target_url, "tar.gz")
     # dir_name = split(replace(target, ".tar.gz" => ""), "/")[end]
 
     open(fn, "r") do fp
