@@ -1,10 +1,9 @@
 using Plots, StatsPlots
 using Plots.Measures
 using DataFrames, Dates, Statistics, Distributions, LaTeXStrings
-import StatsBase: ecdf
 import Bootstrap: bootstrap, BalancedSampling
 
-import .Analysis: temporal_uncertainty
+import .Analysis: TemporalCrossSection
 
 
 function quickplot(node::NetworkNode)
@@ -111,7 +110,7 @@ end
 
 
 """
-    temporal_cross_section(dates, obs, sim; ylabel=nothing, func::Function=Streamfall.ME, period::Function=month)
+    temporal_cross_section(dates, obs; ylabel=nothing, period::Function=month)
 
 Provides indication of temporal variation and uncertainty across time, grouped by `period`.
 
@@ -123,8 +122,7 @@ Filters out leap days.
 - dates : Date of each observation
 - obs : observed data
 - ylabel : Optional replacement ylabel. Uses name of `func` if not provided.
-- `func::Function` : Function to apply to each month-day grouping
-- `period::Function` : Method from `Dates` package to group (defaults to `month`)
+- `period::Function` : Method from `Dates` package to group (defaults to `monthday`)
 """
 function temporal_cross_section(dates, obs;
                                 title="", ylabel=nothing, label=nothing, 
@@ -142,65 +140,69 @@ function temporal_cross_section(dates, obs;
     format_func = y -> y
     logscale = [:log, :log10]
     tmp = nothing
+
+    xsect_res = TemporalCrossSection(dates, obs, period)
+
     if :yscale in arg_keys || :yaxis in arg_keys
         tmp = (:yscale in arg_keys) ? kwargs[:yscale] : kwargs[:yaxis]
 
         if tmp in logscale
-            orig_obs = copy(obs)
-            obs = symlog(obs)
+            log_obs = symlog(copy(obs))
 
             # Format function for y-axis tick labels (e.g., 10^x)
             format_func = y -> (y != 0) ? L"%$(Int(round(sign(y)) * 10))^{%$(round(abs(y), digits=1))}" : L"0"
 
-            x_section, lower, upper, _, _ = temporal_uncertainty(dates, obs, period)
-            orig_x_section, orig_l, orig_u, _, _ = temporal_uncertainty(dates, orig_obs, period)
+            log_xsect_res = TemporalCrossSection(dates, log_obs, period)
+            target = log_xsect_res.cross_section
+        else
+            target = xsect_res.cross_section
         end
-    else
-        x_section, lower, upper, _, _ = temporal_uncertainty(dates, obs, period)
     end
 
-    sp = sort(unique(period.(dates)))
-    deleteat!(sp, findall(x -> x == (2,29), sp))
+    x_section = target.median
+    lower_75 = target.lower_75
+    upper_75 = target.upper_75
+    lower_95 = target.lower_95
+    upper_95 = target.upper_95
+
+    sp = target.subperiod
     xlabels = join.(sp, "-")
 
     if !isnothing(tmp) & (tmp in logscale)
-        # Remove keys 
+        # Remove keys so later plotting methods do not error
         kwargs = Dict(kwargs)
         delete!(kwargs, :yscale)
         delete!(kwargs, :yaxis)
-
-        orig_wr = orig_u .- orig_l
-
-        # Display values using original data instead of log-transformed data
-        m_ind = round(mean(orig_x_section), digits=2)
-        sd_ind = round(std(orig_x_section, corrected=false), digits=2)
-
-        wr_m_ind = round(mean(orig_wr), digits=2)
-        wr_sd_ind = round(std(orig_wr, corrected=false), digits=2)
-    else
-        m_ind = round(mean(x_section), digits=2)
-        sd_ind = round(std(x_section, corrected=false), digits=2)
-
-        whisker_range = upper .- lower
-        wr_m_ind = round(mean(whisker_range), digits=2)
-        wr_sd_ind = round(std(whisker_range, corrected=false), digits=2)
     end
 
-    fig = plot(xlabels, x_section,
-               label="$(label) μ: $(m_ind), σ: $(sd_ind)\nCI₉₅ μ: $(wr_m_ind), σ: $(wr_sd_ind)",
-               xlabel=nameof(period),
-               ylabel=ylabel,
-               legend=:bottomleft,
-               legendfont=Plots.font(10),
-               fg_legend=:transparent,
-               bg_legend=:transparent,
-               left_margin=5mm,
-               bottom_margin=5mm,
-               title=title;
-               # yformatter=format_func;
-               kwargs...)
+    xsect_df = xsect_res.cross_section
 
-    plot!(fig, xlabels, lower, fillrange=upper, color="lightblue", alpha=0.5, label="", linealpha=0, yformatter=format_func)
+    # Display indicator values using original data instead of log-transformed data
+    med = xsect_df.median
+    m_ind = round(mean(med), digits=2)
+    sd_ind = round(std(med), digits=2)
+
+    wr75_m_ind = round(xsect_res.mean_75, digits=2)
+    wr75_sd_ind = round(xsect_res.std_75, digits=2)
+    wr95_m_ind = round(xsect_res.mean_95, digits=2)
+    wr95_sd_ind = round(xsect_res.std_95, digits=2)
+
+    fig = plot(xlabels, lower_95, fillrange=upper_95, color="lightblue", alpha=0.3, label="CI₉₅ μ: $(wr95_m_ind), σ: $(wr95_sd_ind)", linealpha=0)
+    plot!(fig, xlabels, lower_75, fillrange=upper_75, color="lightblue", alpha=0.5, label="CI₇₅ μ: $(wr75_m_ind), σ: $(wr75_sd_ind)", linealpha=0)
+    plot!(fig, xlabels, x_section,
+            label="$(label) μ: $(m_ind), σ: $(sd_ind)",
+            color="black",
+            xlabel=nameof(period),
+            ylabel=ylabel,
+            legend=:bottomleft,
+            legendfont=Plots.font(10),
+            fg_legend=:transparent,
+            bg_legend=:transparent,
+            left_margin=5mm,
+            bottom_margin=5mm,
+            title=title,
+            yformatter=format_func;
+            kwargs...)
 
     # if show_extremes
     #     scatter!(fig, xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
@@ -212,9 +214,9 @@ end
 
 
 """
-    temporal_cross_section(dates, obs, sim; ylabel=nothing, func::Function=Streamfall.ME, period::Function=month)
+    temporal_cross_section(dates, obs, sim; ylabel=nothing, period::Function=month)
 
-Provides indication of predictive uncertainty across time, grouped by `period`.
+Provides indication of temporal variation and uncertainty across time, grouped by `period`.
 
 Notes:
 Assumes daily data.
@@ -223,19 +225,15 @@ Filters out leap days.
 # Arguments
 - dates : Date of each observation
 - obs : observed data
-- sim : modeled results
 - ylabel : Optional replacement ylabel. Uses name of `func` if not provided.
-- `func::Function` : Function to apply to each month-day grouping
 - `period::Function` : Method from `Dates` package to group (defaults to `month`)
 """
-function temporal_cross_section(dates, obs, sim; 
+function temporal_cross_section(dates, obs, sim;
                                 title="", ylabel=nothing, label=nothing, 
-                                func::Function=Streamfall.ME, period::Function=monthday,
-                                show_extremes::Bool=false, kwargs...)
-    metric_name = nameof(func)
-    
+                                period::Function=monthday,
+                                kwargs...)  # show_extremes::Bool=false, 
     if isnothing(ylabel)
-        ylabel = metric_name
+        ylabel = ""
     end
 
     if isnothing(label)
@@ -246,79 +244,74 @@ function temporal_cross_section(dates, obs, sim;
     format_func = y -> y
     logscale = [:log, :log10]
     tmp = nothing
+
+    xsect_res = TemporalCrossSection(dates, obs, sim)
+    target = xsect_res.cross_section
+
     if :yscale in arg_keys || :yaxis in arg_keys
         tmp = (:yscale in arg_keys) ? kwargs[:yscale] : kwargs[:yaxis]
 
         if tmp in logscale
+            log_obs = symlog(copy(obs))
+            log_sim = symlog(copy(sim))
+
             # Format function for y-axis tick labels (e.g., 10^x)
             format_func = y -> (y != 0) ? L"%$(Int(round(sign(y)) * 10))^{%$(round(abs(y), digits=1))}" : L"0"
 
-            orig_x_section, orig_l, orig_u, orig_min, orig_max, _, _, _ = temporal_uncertainty(dates, obs, sim, period, func)
-
-            x_section = symlog(orig_x_section)
-            lower = symlog(orig_l)
-            upper = symlog(orig_u)
-            min_section = symlog(orig_min)
-            max_section = symlog(orig_max)
-
-            # x_section, lower, upper, min_section, max_section, _, _, _ = temporal_uncertainty(dates, obs, sim, period, func)
-            # orig_x_section, orig_l, orig_u, _, _, _, _, _ = temporal_uncertainty(dates, orig_obs, orig_sim, period, func)
+            log_xsect_res = TemporalCrossSection(dates, log_obs, log_sim)
+            target = log_xsect_res.cross_section
         end
-    else
-        x_section, lower, upper, min_section, max_section, _, _, _ = temporal_uncertainty(dates, obs, sim, period, func)
     end
 
-    sp = sort(unique(period.(dates)))
-    deleteat!(sp, findall(x -> x == (2,29), sp))
+    x_section = target.median
+    lower_75 = target.lower_75
+    upper_75 = target.upper_75
+    lower_95 = target.lower_95
+    upper_95 = target.upper_95
+
+    sp = target.subperiod
     xlabels = join.(sp, "-")
 
     if !isnothing(tmp) & (tmp in logscale)
-        # Remove keys 
+        # Remove keys so later plotting methods do not error
         kwargs = Dict(kwargs)
         delete!(kwargs, :yscale)
         delete!(kwargs, :yaxis)
-
-        # Display values using original data instead of log-transformed data
-        m_ind = round(mean(orig_x_section), digits=2)
-        sd_ind = round(std(orig_x_section, corrected=false), digits=2)
-
-        whisker_range = orig_u .- orig_l
-        wr_m_ind = round(mean(whisker_range), digits=2)
-        wr_sd_ind = round(std(whisker_range, corrected=false), digits=2)
-    else
-        m_ind = round(mean(x_section), digits=2)
-        sd_ind = round(std(x_section, corrected=false), digits=2)
-
-        whisker_range = upper .- lower
-        wr_m_ind = round(mean(whisker_range), digits=2)
-        wr_sd_ind = round(std(whisker_range, corrected=false), digits=2)
     end
 
-    fig = plot(xlabels, x_section,
-               label="$(label) μ: $(m_ind), σ: $(sd_ind)\nCI₉₅ μ: $(wr_m_ind), σ: $(wr_sd_ind)",
-               xlabel=nameof(period),
-               ylabel=ylabel,
-               legend=:bottomleft,
-               legendfont=Plots.font(10),
-               fg_legend=:transparent,
-               bg_legend=:transparent,
-               left_margin=5mm,
-               bottom_margin=5mm,
-               title=title;
-               # yformatter=format_func,
-               kwargs...)  # size=(1000, 350)
+    xsect_df = xsect_res.cross_section
 
-    plot!(fig, xlabels, lower, fillrange=upper, color="lightblue", alpha=0.6, label="", linealpha=0, yformatter=format_func)
+    # Display indicator values using original data instead of log-transformed data
+    med = xsect_df.median
+    m_ind = round(mean(med), digits=2)
+    sd_ind = round(std(med), digits=2)
 
-    # tmp_plot = plot(Streamfall.symlog(orig_x_section), yformatter=format_func)
-    # plot!(Streamfall.symlog(orig_l), yformatter=format_func, label="lower")
-    # plot!(Streamfall.symlog(orig_u), yformatter=format_func, label="upper")
-    # plot!(tmp_plot, Streamfall.symlog(orig_l), fillrange=Streamfall.symlog(orig_u), color="lightblue", alpha=0.5, label="", linealpha=0, yformatter=format_func)
+    wr75_m_ind = round(xsect_res.mean_75, digits=2)
+    wr75_sd_ind = round(xsect_res.std_75, digits=2)
+    wr95_m_ind = round(xsect_res.mean_95, digits=2)
+    wr95_sd_ind = round(xsect_res.std_95, digits=2)
 
-    if show_extremes
-        scatter!(fig, xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
-        scatter!(fig, xlabels, max_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
-    end
+    fig = plot(xlabels, lower_95, fillrange=upper_95, color="lightblue", alpha=0.3, label="CI₉₅ μ: $(wr95_m_ind), σ: $(wr95_sd_ind)", linealpha=0)
+    plot!(fig, xlabels, lower_75, fillrange=upper_75, color="lightblue", alpha=0.5, label="CI₇₅ μ: $(wr75_m_ind), σ: $(wr75_sd_ind)", linealpha=0)
+    plot!(fig, xlabels, x_section,
+            label="$(label) μ: $(m_ind), σ: $(sd_ind)",
+            color="black",
+            xlabel=nameof(period),
+            ylabel=ylabel,
+            legend=:bottomleft,
+            legendfont=Plots.font(10),
+            fg_legend=:transparent,
+            bg_legend=:transparent,
+            left_margin=5mm,
+            bottom_margin=5mm,
+            title=title,
+            yformatter=format_func;
+            kwargs...)
+
+    # if show_extremes
+    #     scatter!(fig, xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
+    #     scatter!(fig, xlabels, max_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
+    # end
 
     return fig
 end
