@@ -51,6 +51,7 @@ include("GR4JNode.jl")
 include("HyModNode.jl")
 include("SYMHYDNode.jl")
 include("DamNode.jl")
+include("EnsembleNode.jl")
 
 
 function timestep_value(timestep::Int, gauge_id::String, col_partial::String,
@@ -251,6 +252,7 @@ export @def
 export NetworkNode, GenericNode, GenericDirectNode
 export IHACRES, IHACRESNode, BilinearNode, ExpuhNode, DamNode, Climate
 export create_node, GR4JNode, HyModNode, SimpleHyModNode, SYMHYDNode
+export EnsembleNode, BaseEnsemble
 export run_step!, run_timestep!
 
 # Network
