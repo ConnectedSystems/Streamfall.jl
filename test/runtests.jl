@@ -8,7 +8,7 @@ TEST_DIR = @__DIR__
 @testset "Bare node creation" begin
     # Test direct running of a single time step
     ihacres = create_node(BilinearNode, "IHACRES", 100.0)
-    @test Streamfall.run_timestep!(test_node, 6.0, 3.0, 1) isa Any
+    @test Streamfall.run_timestep!(ihacres, 6.0, 3.0, 1) isa Any
 
     # Expuh form does not yet support time stepping
     expuh = create_node(ExpuhNode, "Expuh", 100.0)
