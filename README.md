@@ -7,11 +7,11 @@ Streamfall: An experimental graph-based streamflow modelling system written in J
 
 Aims of the project are to leverage the Julia language and ecosystem to support:
 - Quick application and exploratory analysis
-- Use of different rainfall-runoff models in tandem [**Example under development**]
+- Use of different rainfall-runoff models and their ensembles in tandem
 - Modelling and assessment of interacting systems
 - Parallel scenario runs
 
-Streamfall now includes tentative implementations of GR4J, HyMod and IHACRES.
+Streamfall now includes tentative implementations of GR4J, HyMod, IHACRES, and SYMHYD.
 The IHACRES rainfall-runoff model is implemented with [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim).
 
 [Graphs](https://github.com/JuliaGraphs/Graphs.jl) and [MetaGraphs](https://github.com/JuliaGraphs/MetaGraphs.jl) are used underneath for network traversal/analysis.
