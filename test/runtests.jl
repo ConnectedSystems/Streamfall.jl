@@ -6,17 +6,26 @@ using Streamfall
 TEST_DIR = @__DIR__
 
 @testset "Bare node creation" begin
-    test_node = BilinearNode{Float64}(;
-        name="Test",
-        area=100.0
-    )
-
     # Test direct running of a single time step
-    @test Streamfall.run_step!(test_node, 6.0, 3.0, 50.0, 10.0, 0.0) isa Any
+    ihacres = create_node(BilinearNode, "IHACRES", 100.0)
+    @test Streamfall.run_timestep!(test_node, 6.0, 3.0, 1) isa Any
+
+    # Expuh form does not yet support time stepping
+    expuh = create_node(ExpuhNode, "Expuh", 100.0)
+    @test Streamfall.run_node!(expuh, 6.0, 3.0, 50.0, 10.0, 5.0) isa Any
+
+    gr4j = create_node(GR4JNode, "GR4J", 100.0)
+    @test Streamfall.run_timestep!(gr4j, 6.0, 3.0, 1) isa Any
+
+    hymod = create_node(SimpleHyModNode, "HyMod", 100.0)
+    @test Streamfall.run_timestep!(hymod, 6.0, 3.0, 1) isa Any
+
+    symhyd = create_node(SYMHYDNode, "SYMHYD", 100.0)
+    @test Streamfall.run_timestep!(symhyd, 6.0, 3.0, 1) isa Any
 end
 
 
-@testset "NaN outputs" begin
+@testset "Ensure no NaN outputs" begin
     test_node = BilinearNode(
         "Test",  # name/id
         1985.73,  # area
@@ -64,7 +73,7 @@ end
 end
 
 
-@testset "Interim CMD" begin
+@testset "Interim CMD (no NaN poisoning)" begin
     params = (214.6561105573191, 76.6251447, 200.0, 2.0, 0.727)
     current_store, rain, d, d2, alpha = params
 
