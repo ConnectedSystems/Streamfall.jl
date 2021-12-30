@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Example calibration · Streamfall Documentation</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.png" alt="Streamfall Documentation logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">Streamfall Documentation</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Streamfall.jl Documentation</a></li><li><a class="tocitem" href="../primer/">Primer</a></li><li><a class="tocitem" href="../network/">Defining a network</a></li><li><span class="tocitem">Nodes</span><ul><li><a class="tocitem" href="../Node/">Generic node methods</a></li><li><a class="tocitem" href="../IHACRES/">IHACRES</a></li><li><a class="tocitem" href="../HyMod/">HyMod</a></li><li><a class="tocitem" href="../GR4J/">GR4J</a></li><li><a class="tocitem" href="../Dam/">Dam (Storage Level)</a></li></ul></li><li><a class="tocitem" href="../use_methods/">Methods to run a network or node</a></li><li><a class="tocitem" href="../metrics/">Included metrics</a></li><li><span class="tocitem">Examples</span><ul><li><input class="collapse-toggle" id="menuitem-7-1" type="checkbox" checked/><label class="tocitem" for="menuitem-7-1"><span class="docs-label">Calibration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../calibration_setup/">Calibration setup</a></li><li class="is-active"><a class="tocitem" href>Example calibration</a></li></ul></li><li><a class="tocitem" href="../simple_showcase/">A simple example</a></li><li><a class="tocitem" href="../model_comparison/">Model comparison example</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li><a class="is-disabled">Calibration</a></li><li class="is-active"><a href>Example calibration</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Example calibration</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ConnectedSystems/Streamfall.jl/blob/master/docs/src/calibration.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Example-calibration"><a class="docs-heading-anchor" href="#Example-calibration">Example calibration</a><a id="Example-calibration-1"></a><a class="docs-heading-anchor-permalink" href="#Example-calibration" title="Permalink"></a></h1><pre><code class="language-julia hljs"># Import common packages and functions
+# This is shown under Calibration Setup
+include(&quot;_obj_func_definition.jl&quot;)
+
+
+&quot;&quot;&quot;Example calibration function.
+
+Illustrate model calibration using the BlackBoxOptim package.
+&quot;&quot;&quot;
+function calibrate(sn, v_id, climate, calib_data)
+
+    ins = inlets(sn, v_id)
+
+    # Recurse through and calibrate all nodes upstream
+    if !isempty(ins)
+        for nid in ins
+            calibrate(sn, nid, climate, calib_data)
+        end
+    end
+
+    this_node = get_node(sn, v_id)
+
+    # Create new optimization function (see definition inside Calibration Setup)
+    opt_func = x -&gt; obj_func(x, climate, sn, v_id, calib_data)
+
+    # Get node parameters (default values and bounds)
+    param_names, x0, param_bounds = param_info(this_node; with_level=false)
+    opt = bbsetup(opt_func; SearchRange=param_bounds,
+                  Method=:adaptive_de_rand_1_bin_radiuslimited,
+                  MaxTime=300.0,  # time in seconds to spend
+                  TraceInterval=30.0,
+                  PopulationSize=100,
+                  # Workers=workers()
+                  )
+    
+    res = bboptimize(opt)
+
+    bs = best_candidate(res)
+    @info &quot;Calibrated $(v_id) ($(this_node.node_id)), with score: $(best_fitness(res))&quot;
+    @info &quot;Best Params:&quot; collect(bs)
+
+    # Update node with calibrated parameters
+    update_params!(this_node, bs...)
+
+    return res, opt
+end
+
+
+v_id, node = get_gauge(sn, &quot;406219&quot;)
+@info &quot;Starting calibration...&quot;
+res, opt = calibrate(sn, v_id, climate, hist_data)
+
+best_params = best_candidate(res)
+
+@info best_fitness(res)
+@info best_params
+
+
+update_params!(node, best_params...)
+Streamfall.run_node!(sn, v_id, climate)
+
+h_data = hist_data[&quot;406219&quot;]
+n_data = node.outflow
+
+@info &quot;Outflow NNSE:&quot; Streamfall.NNSE(h_data, n_data)
+@info &quot;Outflow RMSE:&quot; Streamfall.RMSE(h_data, n_data)
+reset!(node)
+
+dam_id, dam_node = get_gauge(sn, &quot;406000&quot;)
+timesteps = sim_length(climate)
+for ts in (1:timesteps)
+    run_node!(sn, dam_id, climate, ts; extraction=hist_dam_releases)
+end
+
+h_data = hist_dam_levels[:, &quot;Dam Level [mAHD]&quot;]
+n_data = dam_node.level
+
+rmse = Streamfall.RMSE(h_data, n_data)
+nse = Streamfall.NSE(h_data, n_data)
+
+# Results of model run
+plot(h_data,
+     legend=:bottomleft,
+     title=&quot;Calibrated IHACRES\n(RMSE: $(rmse); NSE: $(nse))&quot;,
+     label=&quot;Historic&quot;, xlabel=&quot;Day&quot;, ylabel=&quot;Dam Level [mAHD]&quot;)
+
+plot!(n_data, label=&quot;IHACRES&quot;)
+
+savefig(&quot;calibrated_example.png&quot;)
+
+# 1:1 Plot
+scatter(h_data, n_data, legend=false, 
+        markerstrokewidth=0, markerstrokealpha=0, alpha=0.2)
+plot!(h_data, h_data, color=:red, markersize=.1, markerstrokewidth=0,
+      xlabel=&quot;Historic [mAHD]&quot;, ylabel=&quot;IHACRES [mAHD]&quot;, title=&quot;Historic vs Modelled&quot;)
+
+savefig(&quot;calibration_1to1.png&quot;)
+
+
+# NNSE: 0.9643; RMSE: 1.43553
+# d: 84.28015146853407
+# d2: 2.4224106535469145
+# e: 0.8129590022893607
+# f: 2.579276454391652
+# a: 5.923379062122229
+# b: 0.0989925603647026
+# storage_coef: 1.8613364808233752  # gw storage factor
+# alpha: 0.7279050097363565</code></pre><p><img src="../assets/calibrated_example.png" alt/></p><p><img src="../assets/calibration_1to1.png" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../calibration_setup/">« Calibration setup</a><a class="docs-footer-nextpage" href="../simple_showcase/">A simple example »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.10 on <span class="colophon-date" title="Thursday 30 December 2021 07:46">Thursday 30 December 2021</span>. Using Julia version 1.6.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
