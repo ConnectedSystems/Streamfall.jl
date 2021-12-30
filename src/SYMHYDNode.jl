@@ -38,7 +38,6 @@ end
 Create node from spec.
 """
 function SYMHYDNode(name::String, spec::Dict)
-    # n = SYMHYDNode{Param}(; name=name, area=spec["area"])
     n = create_node(SYMHYDNode, name, spec["area"])
     node_params = spec["parameters"]
     node_params["sm_store"] = [node_params["initial_sm_store"]]

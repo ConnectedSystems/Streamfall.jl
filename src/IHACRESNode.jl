@@ -128,7 +128,8 @@ Create a IHACRES node that adopts the bilinear CMD module.
 function BilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
                       a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
                       store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
-    n = BilinearNode(; name=name, area=area)
+    n = create_node(BilinearNode, name, area)
+
     update_params!(n, d, d2, e, f, a, b, s_coef, alpha)
 
     n.storage = [store]
@@ -259,7 +260,6 @@ function run_step!(s_node::BilinearNode,
                                        s_node.d2::Cdouble,
                                        s_node.alpha::Cdouble)::Cvoid
 
-    # @assert any(isnan.(interim_results)) == false
     (mf, e_rainfall, recharge) = interim_results
 
     et::Float64 = @ccall IHACRES.calc_ET(

@@ -41,7 +41,6 @@ end
 
 
 function ExpuhNode(name::String, spec::Dict)
-    # n = ExpuhNode{Param}(; name=name, area=spec["area"])
     n = create_node(ExpuhNode, name, spec["area"])
 
     node_params = spec["parameters"]
@@ -88,7 +87,7 @@ end
 function ExpuhNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
                     tau_q::Float64, tau_s::Float64, v_s::Float64, s_coef::Float64,
                     store::Float64, quick::Float64, slow::Float64)
-    return ExpuhNode{Float64}(
+    return ExpuhNode{Param, Float64}(
         name=name,
         area=area,
         d=d,

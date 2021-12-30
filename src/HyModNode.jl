@@ -38,7 +38,6 @@ end
 
 
 function SimpleHyModNode(name::String, spec::Dict)
-    # n = SimpleHyModNode{Param}(; name=name, area=spec["area"])
     n = create_node(SimpleHyModNode, name, spec["area"])
     node_params = spec["parameters"]
     for (p_name, p_val) in node_params
@@ -53,7 +52,7 @@ end
 
 function SimpleHyModNode(name::String, area::Float64, sm_max::Float64, B::Float64,
                          alpha::Float64, Kf::Float64, Ks::Float64)
-    n = SimpleHyModNode{Param}(; name=name, area=area)
+    n = create_node(SimpleHyModNode, name, area)
     update_params!(n, sm_max, B, alpha, Kf, Ks)
 
     # stores/output

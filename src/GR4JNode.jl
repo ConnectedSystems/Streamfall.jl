@@ -98,7 +98,6 @@ end
 
 
 function GR4JNode(name::String, spec::Dict)
-    # n = GR4JNode(; name=name, area=spec["area"])
     n = create_node(GR4JNode, name, spec["area"])
     node_params = spec["parameters"]
     node_params["p_store"] = [node_params["initial_p_store"]]
