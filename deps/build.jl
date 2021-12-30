@@ -47,13 +47,22 @@ if endswith(target_url, "zip")
     close(zarchive)
 
 elseif endswith(target_url, "tar.gz")
-    # dir_name = split(replace(target, ".tar.gz" => ""), "/")[end]
+    tmp_dir = mktempdir()
 
     open(fn, "r") do fp
-        untar(fp, abspath(extract_path))
+        untar(fp, tmp_dir)
     end
 
-    # mv(joinpath(extract_path, dir_name, "*.*"), joinpath(HERE, "../"), force=true)
+    # Copy files to destination
+    # Necessary as Julia's `mv` and `cp` functions
+    # require empty directories (`force` option deletes an existing directory)
+    for pfn in readdir(tmp_dir)
+        open(joinpath(tmp_dir, pfn), "r") do src
+            open(joinpath(extract_path, pfn), "w") do dst
+                write(dst, read(src))
+            end
+        end
+    end
 end
 
 rm(fn)
