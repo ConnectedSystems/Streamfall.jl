@@ -225,13 +225,9 @@ Filters out leap days.
 - `period::Function` : Method from `Dates` package to group (defaults to `month`)
 """
 function temporal_cross_section(dates, obs, sim;
-                                title="", ylabel=nothing, label=nothing, 
+                                title="", ylabel="Median Error", label=nothing, 
                                 period::Function=monthday,
                                 kwargs...)  # show_extremes::Bool=false, 
-    if isnothing(ylabel)
-        ylabel = ""
-    end
-
     if isnothing(label)
         label = ylabel
     end
