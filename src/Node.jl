@@ -17,7 +17,7 @@ Base.@kwdef mutable struct GenericNode <: NetworkNode
 end
 
 
-"""Create an arbitrary node."""
+"""Create node of a given type."""
 function create_node(node::Type{<:NetworkNode}, name::String, area::Float64)
     return node{Param, Float64}(; name=name, area=area)
 end

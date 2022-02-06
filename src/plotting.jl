@@ -110,7 +110,7 @@ end
 
 
 """
-    temporal_cross_section(dates, obs; ylabel=nothing, period::Function=month)
+    temporal_cross_section(dates, obs; ylabel=nothing, period::Function=monthday)
 
 Provides indication of temporal variation and uncertainty across time, grouped by `period`.
 
@@ -125,7 +125,7 @@ Filters out leap days.
 - `period::Function` : Method from `Dates` package to group (defaults to `monthday`)
 """
 function temporal_cross_section(dates, obs;
-                                title="", ylabel="Median Error", label=nothing, 
+                                title="", ylabel="ME", label=nothing, 
                                 period::Function=monthday,
                                 kwargs...)  # show_extremes::Bool=false, 
     if isnothing(label)
@@ -153,6 +153,8 @@ function temporal_cross_section(dates, obs;
         else
             target = xsect_res.cross_section
         end
+    else
+        target = xsect_res.cross_section
     end
 
     x_section = target.median
@@ -171,10 +173,8 @@ function temporal_cross_section(dates, obs;
         delete!(kwargs, :yaxis)
     end
 
-    xsect_df = xsect_res.cross_section
-
     # Display indicator values using original data instead of log-transformed data
-    med = xsect_df.median
+    med = xsect_res.cross_section.median
     m_ind = round(mean(med), digits=2)
     sd_ind = round(std(med), digits=2)
 
@@ -186,7 +186,7 @@ function temporal_cross_section(dates, obs;
     fig = plot(xlabels, lower_95, fillrange=upper_95, color="lightblue", alpha=0.3, label="CI₉₅ μ: $(wr95_m_ind), σ: $(wr95_sd_ind)", linealpha=0)
     plot!(fig, xlabels, lower_75, fillrange=upper_75, color="lightblue", alpha=0.5, label="CI₇₅ μ: $(wr75_m_ind), σ: $(wr75_sd_ind)", linealpha=0)
     plot!(fig, xlabels, x_section,
-            label="$(label) μ: $(m_ind), σ: $(sd_ind)",
+            label="Median of $(label) μ: $(m_ind), σ: $(sd_ind)",
             color="black",
             xlabel=nameof(period),
             ylabel=ylabel,

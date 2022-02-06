@@ -35,7 +35,7 @@ Base.@kwdef mutable struct BilinearNode{P, A<:Real} <: IHACRESNode
         Param(150.0, bounds=(50.0, 200.0)) # ctf
     ]
 
-    storage::Array{A} = [100.0]
+    storage::Array{A} = [100.0]  # CMD
     quick_store::Array{A} = [0.0]
     slow_store::Array{A} = [0.0]
     outflow::Array{A} = []
@@ -541,6 +541,14 @@ function update_params!(node::BilinearNode, d::Float64, d2::Float64, e::Float64,
     node.b = Param(b, bounds=node.b.bounds::Tuple)
     node.storage_coef = Param(s_coef, bounds=node.storage_coef.bounds::Tuple)
     node.alpha = Param(alpha, bounds=node.alpha.bounds::Tuple)
+    # node.d = d
+    # node.d2 = d2
+    # node.e = e
+    # node.f = f
+    # node.a = a
+    # node.b = b
+    # node.storage_coef = s_coef
+    # node.alpha = alpha
 
     return nothing
 end
@@ -565,6 +573,14 @@ function update_params!(node::BilinearNode, d::Float64, d2::Float64, e::Float64,
     node.b = Param(b, bounds=node.b.bounds::Tuple)
     node.storage_coef = Param(s_coef, bounds=node.storage_coef.bounds::Tuple)
     node.alpha = Param(alpha, bounds=node.alpha.bounds::Tuple)
+    # node.d = d
+    # node.d2 = d2
+    # node.e = e
+    # node.f = f
+    # node.a = a
+    # node.b = b
+    # node.storage_coef = s_coef
+    # node.alpha = alpha
 
     n_lparams = node.level_params
     node.level_params = [
