@@ -12,5 +12,6 @@ Streamfall currently includes implementations of:
 * IHACRES, leveraging [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim)
 * HyMOD (without the snowmelt component)
 * GR4J
+* SYMHYD
 
 [LightGraphs](https://github.com/JuliaGraphs/LightGraphs.jl) and [MetaGraphs](https://github.com/JuliaGraphs/MetaGraphs.jl) are used underneath for network traversal/analysis.
