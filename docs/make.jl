@@ -20,6 +20,7 @@ makedocs(sitename="Streamfall Documentation",
             "IHACRES.md",
             "HyMod.md",
             "GR4J.md",
+            "SYMHYD.md",
             "Dam.md"
         ],
         "use_methods.md",
