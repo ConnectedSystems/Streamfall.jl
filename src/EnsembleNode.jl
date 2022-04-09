@@ -64,7 +64,7 @@ function run_node!(ensemble::BaseEnsemble, climate::Climate; inflow=nothing, ext
 end
 
 
-function run_timestep!(node, rain, et, ts; inflow=0.0, extraction=0.0, exchange=0.0)
+function run_timestep!(node::BaseEnsemble, rain, et, ts; inflow=0.0, extraction=0.0, exchange=0.0)
     for inst in node.instances
         run_timestep!(inst, rain, et, ts; inflow=inflow, extraction=extraction, exchange=exchange)
     end
