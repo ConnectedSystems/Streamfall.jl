@@ -38,33 +38,52 @@ end
 
 
 """
-    climate_values(node::NetworkNode, climate::Climate, timestep::Union{Nothing, Int}=nothing)
+    climate_values(node::NetworkNode, climate::Climate, timestep::Int)
 
 Extract climate related data for a given time step.
 """
 function climate_values(node::NetworkNode, climate::Climate, 
-                        timestep::Union{Nothing, Int}=nothing)
-    node_name = node.name
-
-    data = climate.climate_data
+                        timestep::Int)
+    node_name::String = node.name
+    data::DataFrame = climate.climate_data
 
     # TODO : Catch instances where data is not found (raises BoundsError)
     rain_col = filter(x -> occursin(node_name, x) 
-                            & occursin(climate.rainfall_id, x), 
-                            names(data))[1]
+                        & occursin(climate.rainfall_id, x), 
+                        names(data))[1]
     et_col = filter(x -> occursin(node_name, x)
-                            & occursin(climate.et_id, x),
-                            names(data))[1]
+                        & occursin(climate.et_id, x),
+                        names(data))[1]
 
     if isempty(rain_col) | isempty(et_col)
         throw(ArgumentError("No climate data found for $(node_name) at time step: $(timestep)"))
     end
 
-    if isnothing(timestep)
-        return select(data, [rain_col, et_col])
+    return data[timestep, [rain_col, et_col]]
+end
+
+
+"""
+    climate_values(node::NetworkNode, climate::Climate)
+
+Extract climate related data for a given time step.
+"""
+function climate_values(node::NetworkNode, climate::Climate)
+    data::DataFrame = climate.climate_data
+
+    # TODO : Catch instances where data is not found (raises BoundsError)
+    rain_col = filter(x -> occursin(node.name, x) 
+                            & occursin(climate.rainfall_id, x), 
+                            names(data))[1]
+    et_col = filter(x -> occursin(node.name, x)
+                            & occursin(climate.et_id, x),
+                            names(data))[1]
+
+    if isempty(rain_col) | isempty(et_col)
+        throw(ArgumentError("No climate data found for $(node.name) at time step: $(timestep)"))
     end
 
-    return data[timestep, [rain_col, et_col]]
+    return select(data, [rain_col, et_col])
 end
 
 
