@@ -52,8 +52,8 @@ end
     quick_store = 8.46269687e+02
     slow_store = 3.67133471e+02
 
-    res = run_step!(test_node, rain, evap, inflow, extraction, gw_exchange;
-                    current_store=current_store, quick_store=quick_store, slow_store=slow_store)
+    res = run_step!(test_node, rain, evap, inflow, extraction, gw_exchange,
+                    current_store, quick_store, slow_store, 0.0)
 
     @test !any(isnan, res)
 end
