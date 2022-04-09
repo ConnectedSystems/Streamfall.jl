@@ -267,12 +267,12 @@ function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
 
     UH1, UH2 = fill(0.0, nUH1), fill(0.0, nUH2)
 
-    for t in 2:(nUH1+1)
+    @inbounds for t in 2:(nUH1+1)
         t_f = Float64(t)
         uh1_ordinates[t - 1] = s_curve(t_f, X4) - s_curve(t_f-1.0, X4)
     end
 
-    for t in 2:(nUH2+1)
+    @inbounds for t in 2:(nUH2+1)
         t_f = Float64(t)
         uh2_ordinates[t - 1] = s_curve(t_f, X4, uh2=true) - s_curve(t_f-1.0, X4, uh2=true)
     end
@@ -288,7 +288,7 @@ function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
         denom = (1.0 + p_store/X1 * tanh_scaled_net_precip)
         reservoir_production = numer / denom
 
-        routed_volume = P-E-reservoir_production
+        routed_volume = P - E - reservoir_production
     else
         scaled_net_evap = min((E - P)/X1, 13.0)
         tanh_scaled_net_evap = tanh(scaled_net_evap)
@@ -310,12 +310,12 @@ function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
     routed_volume = routed_volume + (p_store-percolation)
     p_store = percolation
 
-    for i in 1:nUH1-1
+    @inbounds for i in 1:nUH1-1
         UH1[i] = UH1[i+1] + uh1_ordinates[i]*routed_volume
     end
     UH1[end] = uh1_ordinates[end] * routed_volume
 
-    for j in 1:nUH2-1
+    @inbounds for j in 1:nUH2-1
         UH2[j] = UH2[j+1] + uh2_ordinates[j]*routed_volume
     end
     UH2[end] = uh2_ordinates[end] * routed_volume

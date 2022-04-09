@@ -176,7 +176,7 @@ Run scenario for an entire catchment/basin.
 function run_basin!(sn::StreamfallNetwork, climate::Climate;
                     inflow=nothing, extraction=nothing, exchange=nothing)
     _, outlets = find_inlets_and_outlets(sn)
-    for outlet in outlets
+    @inbounds for outlet in outlets
         run_node!(sn, outlet, climate;
                   inflow=inflow, extraction=extraction, exchange=exchange)
     end
@@ -202,7 +202,7 @@ Recurses upstream as needed.
 function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate; 
                    inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
-    for ts in 1:timesteps
+    @inbounds for ts in 1:timesteps
         run_node!(sn, node_id, climate, ts;
                   inflow=inflow, extraction=extraction, exchange=exchange)
     end
@@ -226,8 +226,10 @@ function run_node!(node::NetworkNode, climate::Climate; inflow=nothing, extracti
     timesteps = sim_length(climate)
 
     node_name = node.name
-    for ts in 1:timesteps
+    @inbounds for ts in 1:timesteps
         rain, et = climate_values(node, climate, ts)
+
+        # Check if values are provided, otherwise default to 0.
         ext = timestep_value(ts, node_name, "extraction", extraction)
         flux = timestep_value(ts, node_name, "exchange", exchange)
         in_flow = timestep_value(ts, node_name, "inflow", inflow)
