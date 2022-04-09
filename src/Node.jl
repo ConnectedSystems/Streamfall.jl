@@ -156,6 +156,6 @@ function Base.show(io::IO, n::NetworkNode)
     lb, ub = zip(bounds...)
     details = hcat(param_names, x0, [lb...], [ub...])
 
-    pretty_table(io, details, ["Parameter", "Value", "Lower Bound", "Upper Bound"])
+    pretty_table(io, details, header=["Parameter", "Value", "Lower Bound", "Upper Bound"])
     print("\n")
 end
