@@ -11,7 +11,7 @@ Suitable for use with any metric that ranges from 1 to -∞.
 1. Mathevet, T., Michel, C., Andréassian, V., Perrin, C., 2006.
     A bounded version of the Nash-Sutcliffe criterion for better model
     assessment on large sets of basins.
-    IAHS-AISH Publication 307, 211–219.
+    IAHS-AISH Publication 307, 211-219.
     https://iahs.info/uploads/dms/13614.21--211-219-41-MATHEVET.pdf
 
 # Example

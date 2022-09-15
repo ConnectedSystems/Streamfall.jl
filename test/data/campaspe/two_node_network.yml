@@ -1,0 +1,63 @@
+406219:
+    node_type: BilinearNode
+    inlets:
+    outlets: 406000
+    area: 1985.73
+    route: true
+    parameters:
+        # NNSE: 0.96555; RMSE: 1.43553
+        d: 84.28015146853407
+        d2: 2.4224106535469145
+        e: 0.8129590022893607
+        f: 2.579276454391652
+        a: 5.923379062122229
+        b: 0.0989925603647026
+        storage_coef: 1.8613364808233752  # gw storage factor
+        alpha: 0.7279050097363565
+
+        initial_storage: 100.0
+
+    level_params:
+        - -3.3502
+        - 0.68340
+        - 4.50
+        - 5.0
+        - 0.35
+        - 1.41
+        - -1.45
+        - 6.75
+        - 193.915
+
+406000:
+    node_type: DamNode
+    inlets: 406219
+    outlets: 406201
+    area: 30.11
+    max_storage: 306000.0
+    parameters:
+        storage_coef: 0.001
+        # Methods defined here must take volume as input
+        calc_dam_level: >-
+            function c_dam_level(volume)
+                return 156.8 + 0.9463 * volume^0.2922
+            end
+        calc_dam_area: >-
+            function c_dam_area(volume)
+                return 0.0021 * volume^0.762
+            end
+        # Discharge calculation must take volume and max_storage parameters
+        calc_dam_discharge: >-
+            function c_dam_discharge(volume, max_storage)
+                discharge = 0.0
+                if volume > max_storage
+                    discharge = 0.001492 * (volume - max_storage)^1.5280
+                end
+
+                return max(0.0, discharge)
+            end
+        # Outflow must accept discharge and extraction inputs
+        calc_dam_outflow: >-
+            function c_dam_outflow(discharge, irrigation_extraction)
+                return discharge + irrigation_extraction
+            end
+        initial_storage: 304398.6

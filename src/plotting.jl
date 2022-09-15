@@ -186,7 +186,7 @@ function temporal_cross_section(dates, obs;
     fig = plot(xlabels, lower_95, fillrange=upper_95, color="lightblue", alpha=0.3, label="CI₉₅ μ: $(wr95_m_ind), σ: $(wr95_sd_ind)", linealpha=0)
     plot!(fig, xlabels, lower_75, fillrange=upper_75, color="lightblue", alpha=0.5, label="CI₇₅ μ: $(wr75_m_ind), σ: $(wr75_sd_ind)", linealpha=0)
     plot!(fig, xlabels, x_section,
-            label="Median of $(label) μ: $(m_ind), σ: $(sd_ind)",
+            label="Mean of $(label) μ: $(m_ind), σ: $(sd_ind)",
             color="black",
             xlabel=nameof(period),
             ylabel=ylabel,

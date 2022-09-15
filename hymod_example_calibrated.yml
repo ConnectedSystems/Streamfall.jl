@@ -1,0 +1,11 @@
+leaf_river:
+  outlets: ~
+  parameters:
+    alpha: 0.14891482029688377
+    Sm_max: 243.20840400847163
+    B: 0.39693799337146213
+    Kf: 0.8789480411121212
+    Ks: 0.09529087425651851
+  area: 2800.0
+  node_type: SimpleHyModNode
+  inlets: ~

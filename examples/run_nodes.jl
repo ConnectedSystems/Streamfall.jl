@@ -51,6 +51,15 @@ rmse_score = Streamfall.RMSE(h_data, n_data)
 nse = round(nse_score, digits=4)
 rmse = round(rmse_score, digits=4)
 
+
+import Dates: month, monthday, yearmonth
+
+Streamfall.temporal_cross_section(climate_data.Date, h_data, n_data; period=monthday)
+savefig("temporal_xsection_monthday_ME.png")
+
+Streamfall.temporal_cross_section(climate_data.Date, h_data, n_data; period=yearmonth)
+savefig("temporal_xsection_yearmonth_ME.png")
+
 # Displaying results and saving figure
 # plot(h_data,
 #      legend=:bottomleft,

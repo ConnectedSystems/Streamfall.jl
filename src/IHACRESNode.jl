@@ -222,7 +222,7 @@ Run node with ET data to calculate outflow and update state.
 # Returns
 - float, outflow from node [ML/day], stream level
 """
-function run_step!(s_node::BilinearNode,
+function run_step!(s_node::IHACRESNode,
                     rain::Float64,
                     evap::Float64,
                     inflow::Float64,
@@ -242,7 +242,8 @@ function run_step!(s_node::BilinearNode,
                       current_store, quick_store, slow_store, gw_store)
 end
 
-function run_step!(s_node::BilinearNode,
+
+function run_step!(s_node::IHACRESNode,
                     rain::Float64,
                     evap::Float64,
                     inflow::Float64,
@@ -259,7 +260,7 @@ function run_step!(s_node::BilinearNode,
 end
 
 
-function _run_step!(s_node::BilinearNode,
+function _run_step!(s_node::IHACRESNode,
                     rain::Float64,
                     evap::Float64,
                     inflow::Float64,
@@ -334,7 +335,7 @@ end
 
 
 """
-    run_timestep!(s_node::BilinearNode,
+    run_timestep!(s_node::IHACRESNode,
                   rain::Float64,
                   evap::Float64,
                   timestep::Union{Int64, Nothing};
@@ -344,7 +345,7 @@ end
 
 Run node for a given time step.
 """
-function run_timestep!(s_node::BilinearNode,
+function run_timestep!(s_node::IHACRESNode,
                        rain::Float64,
                        evap::Float64,
                        ts::Union{Int64, Nothing};
