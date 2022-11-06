@@ -4,7 +4,7 @@ using Plots, StatsPlots
 using DataFrames, CSV, Serialization
 using Streamfall, BlackBoxOptim, Bootstrap, Statistics
 import Dates: month, monthday, week, dayofyear
-import Streamfall.Analysis.temporal_uncertainty
+import Streamfall: TemporalCrossSection
 
 
 HERE = @__DIR__
@@ -13,8 +13,8 @@ DATA_PATH = joinpath(HERE, "../test/data/cotter/")
 # Load observations
 date_format = "YYYY-mm-dd"
 obs_data = CSV.File(joinpath(DATA_PATH, "climate/CAMELS-AUS_410730.csv"),
-                        comment="#",
-                        dateformat=date_format) |> DataFrame
+    comment="#",
+    dateformat=date_format) |> DataFrame
 
 hist_streamflow = obs_data[:, ["Date", "410730_Q"]]
 climate_data = obs_data[:, ["Date", "410730_P", "410730_PET"]]
@@ -24,7 +24,7 @@ burn_in = 366  # 1 year burn-in period + 1 day
 obs = hist_streamflow[:, "410730_Q"]
 log_obs = log.(obs .+ 0.02)
 
-inverse_NmKGE(obs, sim) = Streamfall.NmKGE(1 ./ obs , 1 ./ sim)
+inverse_NmKGE(obs, sim) = Streamfall.NmKGE(1 ./ obs, 1 ./ sim)
 
 if !@isdefined bl_overview
     if !isfile("uncert_baseline_opt.node")
@@ -45,7 +45,7 @@ if !@isdefined bl_overview
         # split_NmKGE_results = Streamfall.naive_split_metric(h_data, n_data; n_members=365, metric=Streamfall.NmKGE)
         # bs_NmKGE = (x) -> Streamfall.NmKGE(x[:, 1], x[:, 2])
 
-        bl_xsect = Streamfall.temporal_cross_section(climate_data.Date, obs, bl_sim; show_extremes=false, yscale=:log10)
+        # bl_xsect = Streamfall.temporal_cross_section(climate_data.Date, obs, bl_sim; show_extremes=false, yscale=:log10)
         bl_overview = quickplot(obs, ihacres_node, climate; metric=inverse_NmKGE)
 
         open("uncert_baseline_opt.node", "w") do fh
@@ -56,8 +56,8 @@ if !@isdefined bl_overview
             deserialize(fh)
         end
 
-        bl_sim = copy(ihacres_node.outflow)
-        bl_xsect = Streamfall.temporal_cross_section(climate_data.Date, obs, bl_sim; show_extremes=false, yscale=:log10)
+        # bl_sim = copy(ihacres_node.outflow)
+        # bl_xsect = Streamfall.temporal_cross_section(climate_data.Date, obs, bl_sim; show_extremes=false, yscale=:log10)
         bl_overview = quickplot(obs, ihacres_node, climate; metric=inverse_NmKGE)
     end
 end
@@ -71,9 +71,10 @@ function std_scale(x)
 end
 
 function weighted_obj_function(obs, sim; metric=Streamfall.NmKGE)
-    (x_section, low_section, upp_section, min_section, max_section, whisker_range, rough, std_error, weights) = temporal_uncertainty(climate_data.Date[burn_in:end], obs, sim; min_weight=0.0)
+    x_section = Streamfall.TemporalCrossSection(climate_data.Date[burn_in:end], obs, sim)
 
     n = length(obs)
+    weights = 1.0
     weighted_res = [metric([obs[i]], [sim[i]]) for i in 1:n]
     weighted_res = weighted_res .* weights
 
@@ -89,6 +90,8 @@ function weighted_obj_function(obs, sim; metric=Streamfall.NmKGE)
     # scaled_med_x = median(minmax_scale(abs.(x_section)))
     # scaled_avg_min = 1 - mean(minmax_scale(min_section))  # (1.0 - ℯ^-abs(mean(min_section)))
     # scaled_avg_max = mean(minmax_scale(max_section))
+    upp_section = x_section.cross_section[:, :upper_95]
+    low_section = x_section.cross_section[:, :lower_95]
 
     inner_range = upp_section .- low_section
     cv_range = std(inner_range) / mean(inner_range)
@@ -97,29 +100,10 @@ function weighted_obj_function(obs, sim; metric=Streamfall.NmKGE)
     # max_range = mean(upp_section)
 
     score = scaled # + cv_range  # + (1.0 - ℯ^-rough)  # + min_range + max_range 
-    
+
     return score
 end
 
-# function weighted_obj_function(obs, sim, weights; metric=Streamfall.NmKGE)
-#     n = length(obs)
-#     weighted_res = [metric([obs[i]], [sim[i]]) for i in 1:n]
-#     weighted_res = weighted_res .* weights
-
-#     mean_weighted_res = sum(weighted_res) / length(weights[weights .> 0.0])
-#     cv = std(weighted_res) / mean(weighted_res)
-
-#     # Could minimize 1.5*IQR (max_section - min_section)?
-
-#     # tol_range = quantile(weighted_res, [0.05, 0.95])
-#     # tol_range = tol_range[2] - tol_range[1]
-
-#     # cdf = sort(weighted_res) ./ ((1:n)./n)
-#     # tol_range = quantile(cdf, [0.05, 0.95])
-#     # tol_range = tol_range[2] - tol_range[1]
-
-#     return (mean_weighted_res + ℯ^-cv + ℯ^-rough) / 3  # mean_weighted_res
-# end
 
 reset!(ihacres_node)
 # inverse_func(obs, sim) = Streamfall.mean_NmKGE(obs, sim)
@@ -136,12 +120,12 @@ savefig("baseline_xsection.png")
 
 # log_sim = log.(ihacres_node.outflow .+ 0.02)
 uc_xsect = Streamfall.temporal_cross_section(climate_data.Date, obs, ihacres_node.outflow; show_extremes=false, yscale=:log10)
-plot(bl_xsect, uc_xsect, link=:y, layout=(1,2), size=(800, 350))
+plot(bl_xsect, uc_xsect, link=:y, layout=(1, 2), size=(800, 350))
 savefig("overview_xsection.png")
 
 uc_overview = quickplot(obs, ihacres_node.outflow, climate; metric=inverse_NmKGE)  # ; metric=inverse_NmKGE
 
-plot(bl_overview, uc_overview, layout=(2,1), size=(800, 350))
+plot(bl_overview, uc_overview, layout=(2, 1), size=(800, 350))
 savefig("overview_qq.png")
 
 # Streamfall.temporal_cross_section(climate_data.Date, h_data, n_data; period=monthday)
