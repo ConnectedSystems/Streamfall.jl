@@ -35,7 +35,7 @@ Suitable for use with any metric that ranges from 1 to -∞.
 # References
 1. Nossent, J., Bauwens, W., 2012.
     Application of a normalized Nash-Sutcliffe efficiency to improve the
-    accuracy of the Sobol’ sensitivity analysis of a hydrological model.
+    accuracy of the Sobol' sensitivity analysis of a hydrological model.
     EGU General Assembly Conference Abstracts 237.
 
 # Example
@@ -108,7 +108,7 @@ end
 
 
 """The Nash-Sutcliffe Efficiency score"""
-NSE(obs, sim) = 1.0 - sum((obs .- sim).^2) / sum((obs .- mean(obs)).^2)
+NSE(obs, sim) = 1.0 - sum((obs .- sim) .^ 2) / sum((obs .- mean(obs)) .^ 2)
 
 
 """Normalized Nash-Sutcliffe Efficiency score (bounded between 0 and 1).
@@ -122,7 +122,7 @@ NNSE(obs, sim) = 1.0 / (2.0 - NSE(obs, sim))
 
 
 """Root Mean Square Error"""
-RMSE(obs, sim) = (sum((sim .- obs).^2)/length(sim))^0.5
+RMSE(obs, sim) = (sum((sim .- obs) .^ 2) / length(sim))^0.5
 
 
 """Coefficient of determination (R^2)
@@ -340,7 +340,7 @@ function KGE(obs, sim; scaling=nothing)::Float64
     as = scaling[2]
     bs = scaling[3]
 
-    kge = 1 - sqrt(rs*(r - 1)^2 + as*(α - 1)^2 + bs*(β - 1)^2)
+    kge = 1 - sqrt(rs * (r - 1)^2 + as * (α - 1)^2 + bs * (β - 1)^2)
 
     return kge
 end
@@ -406,7 +406,7 @@ This is to:
 """
 function mKGE(obs, sim; scaling=nothing)::Float64
     if isnothing(scaling)
-        scaling = (1,1,1)
+        scaling = (1, 1, 1)
     end
 
     # Timing (Pearson's correlation)
@@ -450,7 +450,7 @@ function mKGE(obs, sim; scaling=nothing)::Float64
     βs = scaling[2]
     γs = scaling[3]
 
-    mod_kge = 1.0 - sqrt(rs*(r - 1)^2 + βs*(β - 1)^2 + γs*(γ - 1)^2)
+    mod_kge = 1.0 - sqrt(rs * (r - 1)^2 + βs * (β - 1)^2 + γs * (γ - 1)^2)
 
     return mod_kge
 end
@@ -517,7 +517,7 @@ mean_NmKGE(obs, sim; scaling=nothing, ϵ=1e-2) = mean([Streamfall.NmKGE(obs, sim
 """
 function npKGE(obs, sim; scaling=nothing)::Float64
     if isnothing(scaling)
-        scaling = (1,1,1)
+        scaling = (1, 1, 1)
     end
 
     # flow duration curves
@@ -556,7 +556,7 @@ function npKGE(obs, sim; scaling=nothing)::Float64
     αs = scaling[2]
     βs = scaling[3]
 
-    kge = 1 - sqrt(rs*(r - 1)^2 + αs*(α - 1)^2 + βs*(β - 1)^2)
+    kge = 1 - sqrt(rs * (r - 1)^2 + αs * (α - 1)^2 + βs * (β - 1)^2)
 
     return kge
 end
@@ -620,7 +620,7 @@ end
 function naive_split_metric(obs::Vector, sim::Vector, n_members::Int, metric::Function=NNSE)
     obs_chunks = collect(Iterators.partition(obs, n_members))
     sim_chunks = collect(Iterators.partition(sim, n_members))
-    scores = Array{Float64, 1}(undef, length(obs_chunks))
+    scores = Array{Float64,1}(undef, length(obs_chunks))
 
     for (idx, h_chunk) in enumerate(obs_chunks)
         scores[idx] = metric(h_chunk, sim_chunks[idx])
