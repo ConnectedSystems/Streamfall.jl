@@ -15,8 +15,8 @@ end
     # Load observations
     date_format = "YYYY-mm-dd"
     obs_data = CSV.File(joinpath(DATA_PATH, "climate/CAMELS-AUS_410730.csv"),
-                        comment="#",
-                        dateformat=date_format) |> DataFrame
+        comment="#",
+        dateformat=date_format) |> DataFrame
 
     hist_streamflow = obs_data[:, ["Date", "410730_Q"]]
     climate_data = obs_data[:, ["Date", "410730_P", "410730_PET"]]
@@ -26,7 +26,7 @@ end
 
     # Create objective function to minimize (here we use Normalized KGE')
     func = (obs, sim) -> 1.0 - Streamfall.NmKGE(obs[burn_in:end], sim[burn_in:end])
-    opt_func = (node) -> calibrate!(node, climate, hist_streamflow[:, "410730_Q"]; metric=func, MaxTime=180)
+    opt_func = (node) -> calibrate!(node, climate, hist_streamflow[:, "410730_Q"]; metric=func, MaxTime=900)
 end
 
 
@@ -62,10 +62,10 @@ end
 
 combined_plot = plot(
     [rplt for rplt in res_plots]...,
-    layout=(length(node_list),1),
-    size=(950,450*length(node_list)),
+    layout=(length(node_list), 1),
+    size=(950, 450 * length(node_list)),
 )
 
 display(combined_plot)
 
-# savefig("multi_model_comparison.png")
+savefig("multi_model_comparison_updated.png")
