@@ -42,7 +42,7 @@ function cross_section(tr::TemporalCrossSection)
 
     # Array holding boxplot-like data
     # No. of Dims: (75, 95) * (2) + median + min/max = 7
-    n_cols = 7  # -q95, -q75, q50, q75, q95, min, max 
+    n_cols = 9  # min, -q95, -q75, q50, q75, q95, max, mean, std
     boxframe = fill(0.0, length(keys(sp)), n_cols)
 
     target_pts = [0.0, 0.025, 0.125, 0.875, 0.975, 1.0]
@@ -52,10 +52,11 @@ function cross_section(tr::TemporalCrossSection)
         boxframe[i, 1:3] .= ab_min, lower_95, lower_75
         boxframe[i, 4] = median(vi)
         boxframe[i, 5:7] .= upper_75, upper_95, ab_max
+        boxframe[i, 8:9] .= mean(vi), std(vi)
     end
 
     cols = [:abs_min, :lower_95, :lower_75, :median, 
-            :upper_75, :upper_95, :abs_max]
+            :upper_75, :upper_95, :abs_max, :mean, :std]
 
     x_section = DataFrame(boxframe, cols)
     x_section[:, :subperiod] = collect(keys(sp))

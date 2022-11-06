@@ -1,0 +1,11 @@
+02473000:
+  inlets: ~
+  node_type: SimpleHyModNode
+  outlets: ~
+  area: 2800.0
+  parameters:
+    alpha: 0.2
+    Sm_max: 250.0
+    B: 1.0
+    Kf: 0.5
+    Ks: 0.05
