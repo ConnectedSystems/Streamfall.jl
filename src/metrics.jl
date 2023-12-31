@@ -617,13 +617,13 @@ function LME(obs, sim)::Float64
 end
 
 
-function naive_split_metric(obs::Vector, sim::Vector, n_members::Int, metric::Function=NNSE)
-    obs_chunks = collect(Iterators.partition(obs, n_members))
-    sim_chunks = collect(Iterators.partition(sim, n_members))
-    scores = Array{Float64,1}(undef, length(obs_chunks))
+function naive_split_metric(obs::Vector, sim::Vector, n_members::Int, metric::Function=RMSE)
+    obs_chunks = Iterators.partition(obs, n_members)
+    sim_chunks = Iterators.partition(sim, n_members)
+    scores = Vector{Float64}(undef, ceil(Int64, length(sim) / n_members))
 
-    for (idx, h_chunk) in enumerate(obs_chunks)
-        scores[idx] = metric(h_chunk, sim_chunks[idx])
+    for (idx, (h_chunk, s_chunk)) in enumerate(zip(obs_chunks, sim_chunks))
+        scores[idx] = metric(h_chunk, s_chunk)
     end
 
     return scores
