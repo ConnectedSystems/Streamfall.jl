@@ -5,7 +5,7 @@ struct Climate
     climate_data::DataFrame
     rainfall_id::String
     et_id::String
-    # t_id::Union{String, Nothing} = nothing
+    t_id::String
 end
 
 """
@@ -43,14 +43,15 @@ P and PET columns are identified by `_P` and `_PET` suffixes by default.
 - `data` : Observation data
 - `P_suffix` : Suffix used to indicate precipitation (default: "_P")
 - `PET_suffix` : Suffix used to indicate Potential Evapotranspiration (default: "_PET")
+- `T_suffix` : Suffix used to indicate Temperature (default: "_PET")
 
 # Returns
 Climate
 """
 @inline function extract_climate(
-    data::DataFrame; P_suffix::String="_P", PET_suffix::String="_PET"
+    data::DataFrame; P_suffix::String="_P", PET_suffix::String="_PET", T_suffix::String="_T"
 )::Climate
-    return Climate(data, P_suffix, PET_suffix)
+    return Climate(data, P_suffix, PET_suffix, T_suffix)
 end
 
 """
@@ -84,8 +85,7 @@ end
 
 Extract climate related data for a given time step.
 """
-function climate_values(node::NetworkNode, climate::Climate,
-                        timestep::Int)
+function climate_values(node::NetworkNode, climate::Climate, timestep::Int)
     node_name::String = node.name
     data::DataFrame = climate.climate_data
 
@@ -96,12 +96,21 @@ function climate_values(node::NetworkNode, climate::Climate,
     et_col = filter(x -> occursin(node_name, x)
                         & occursin(climate.et_id, x),
                         names(data))[1]
+    t_col = filter(x -> occursin(node_name, x)
+                        & occursin(climate.t_id, x),
+                        names(data))[1]
 
     if isempty(rain_col) | isempty(et_col)
         throw(ArgumentError("No climate data found for $(node_name) at time step: $(timestep)"))
     end
 
-    return data[timestep, [rain_col, et_col]]
+    if isempty(t_col)
+        sel = [rain_col, et_col]
+    else
+        sel = [rain_col, et_col, t_col]
+    end
+
+    return data[timestep, sel]
 end
 
 
