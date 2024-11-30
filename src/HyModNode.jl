@@ -17,8 +17,8 @@ Adapted with kind permission from: https://github.com/jdherman/GRA-2020-SALib
     https://doi.org/10.5194/hess-17-149-2013
 """
 Base.@kwdef mutable struct SimpleHyModNode{P, A<:AbstractFloat} <: HyModNode
-    name::String
-    area::A
+    const name::String
+    const area::A
 
     # parameters
     Sm_max::P = Param(250.0, bounds=(1.0, 500.0))
@@ -68,37 +68,23 @@ function SimpleHyModNode(name::String, area::Float64, sm_max::Float64, B::Float6
 end
 
 
-function prep_state!(node::HyModNode, sim_length::Int64)
-    node.Sm = fill(0.0, sim_length+1)
-    node.Sf1 = fill(0.0, sim_length+1)
-    node.Sf2 = fill(0.0, sim_length+1)
-    node.Sf3 = fill(0.0, sim_length+1)
-    node.Ss1 = fill(0.0, sim_length+1)
+function prep_state!(node::SimpleHyModNode, sim_length::Int64)::Nothing
+    resize!(node.Sm, sim_length+1)
+    resize!(node.Sf1, sim_length+1)
+    resize!(node.Sf2, sim_length+1)
+    resize!(node.Sf3, sim_length+1)
+    resize!(node.Ss1, sim_length+1)
 
-    node.outflow = fill(0.0, sim_length)
-end
+    node.Sm[2:end] .= 0.0
+    node.Sf1[2:end] .= 0.0
+    node.Sf2[2:end] .= 0.0
+    node.Sf3[2:end] .= 0.0
+    node.Ss1[2:end] .= 0.0
 
+    resize!(node.outflow, sim_length)
+    node.outflow .= 0.0
 
-"""
-    run_node!(node::HyModNode, climate::Climate;
-              inflow=nothing, extraction=nothing, exchange=nothing)
-
-Run given HyMod node for entire simulation period.
-"""
-function run_node!(
-    node::HyModNode, climate::Climate;
-    inflow=nothing, extraction=nothing, exchange=nothing
-)
-    timesteps = sim_length(climate)
-    prep_state!(node, timesteps)
-
-    # Identify relevant climate data
-    P_and_ET = Matrix{Float64}(climate_values(node, climate))
-
-    for ts in 1:timesteps
-        run_timestep!(node, P_and_ET[ts, 1], P_and_ET[ts, 2], ts;
-                      inflow=inflow, extraction=extraction, exchange=exchange)
-    end
+    return nothing
 end
 
 """

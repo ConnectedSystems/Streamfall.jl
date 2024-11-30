@@ -1,5 +1,5 @@
 """
-Portions of the GR4J implementation is directly adapted from Python code written by Andrew MacDonald (2014).
+Portions of the GR4J implementation is adapted from Python code written by Andrew MacDonald (2014).
 
 Per license requirements, the full license conditions included below.
 
@@ -65,8 +65,9 @@ A four-parameter model with two stores.
     https://github.com/amacd31/gr4j
 
 """
-Base.@kwdef mutable struct GR4JNode{P, A<:Real} <: GRNJNode
-    @network_node
+Base.@kwdef mutable struct GR4JNode{P, A<:AbstractFloat} <: GRNJNode
+    const name::String
+    const area::A
 
     # parameters
     X1::P = Param(350.0, bounds=(1.0, 1500.0))
@@ -80,21 +81,37 @@ Base.@kwdef mutable struct GR4JNode{P, A<:Real} <: GRNJNode
     # x4 : time base of unit hydrograph UH1 (days, > 0.5)
 
     # stores
-    p_store::Array{A} = [0.0]
-    r_store::Array{A} = [0.0]
+    p_store::Vector{A} = [0.0]
+    r_store::Vector{A} = [0.0]
 
-    UH1::Array{Array{A}} = []
-    UH2::Array{Array{A}} = []
+    UH1::Vector{Vector{A}} = []
+    UH2::Vector{Vector{A}} = []
 
-    outflow::Array{A} = []
+    uh1_ordinates::Vector{A} = []
+    uh2_ordinates::Vector{A} = []
+
+    outflow::Vector{A} = []
 end
 
 
-# function prep_state!(node::HyModNode, sim_length::Int64)
-#     node.UH1 = fill(undef, sim_length)
-#     node.UH2 = fill(undef, sim_length)
-#     node.outflow = fill(undef, sim_length)
-# end
+function prep_state!(node::GR4JNode, timesteps::Int64)
+    resize!(node.p_store, timesteps+1)
+    resize!(node.r_store, timesteps+1)
+    node.p_store[2:end] .= 0.0
+    node.r_store[2:end] .= 0.0
+
+    # Prep cache
+    X4 = node.X4.val
+    nUH1 = Int(ceil(X4))
+    nUH2 = Int(ceil(2.0*X4))
+    cUH1, cUH2 = fill(0.0, nUH1), fill(0.0, nUH2)
+    node.UH1 = fill(cUH1, timesteps)
+    node.UH2 = fill(cUH2, timesteps)
+    node.uh1_ordinates = Vector{Float64}(undef, nUH1)
+    node.uh2_ordinates = Vector{Float64}(undef, nUH2)
+
+    node.outflow = fill(0.0, timesteps)
+end
 
 
 function GR4JNode(name::String, spec::Dict)
@@ -130,22 +147,6 @@ end
 
 
 """
-    run_node!(node::GR4JNode, climate::Climate)
-
-Run GR4J node for all time steps in given climate sequence.
-"""
-function run_node!(node::GR4JNode, climate::Climate; inflow=nothing, extraction=nothing, exchange=nothing)
-    timesteps = sim_length(climate)
-    # prep_state!(node, sim_length)
-    for ts in 1:timesteps
-        run_timestep!(node, climate, ts; inflow=inflow, extraction=extraction, exchange=exchange)
-    end
-
-    return node.outflow
-end
-
-
-"""
     run_timestep!(node::GR4JNode, climate::Climate, timestep::Int;
                   inflow::Float64, extraction::Float64, exchange::Float64)
 
@@ -158,8 +159,10 @@ function run_timestep!(node::GR4JNode, climate::Climate, timestep::Int; inflow=n
 end
 
 
-function run_timestep!(node::GR4JNode, rain, et, ts; inflow=nothing, extraction=nothing, exchange=nothing)
-    res = run_gr4j(rain, et, node.X1, node.X2, node.X3, node.X4, node.area, node.p_store[end], node.r_store[end])
+function run_timestep!(node::GR4JNode, rain::Float64, et::Float64, ts::Int64; inflow=nothing, extraction=nothing, exchange=nothing)
+    uh1_cache = node.uh1_ordinates
+    uh2_cache = node.uh2_ordinates
+    res = run_gr4j(rain, et, node.X1.val, node.X2.val, node.X3.val, node.X4.val, node.area, node.UH1[ts], node.UH2[ts], uh1_cache, uh2_cache, node.p_store[ts], node.r_store[ts])
     Q, p_s, r_s, UH1, UH2 = res
 
     node_name = node.name
@@ -171,7 +174,7 @@ function run_timestep!(node::GR4JNode, rain, et, ts; inflow=nothing, extraction=
         Q = Q + in_flow + ex - wo
     end
 
-    update_state!(node, p_s, r_s, Q, UH1, UH2)
+    update_state!(node, ts, p_s, r_s, Q, UH1, UH2)
 end
 
 
@@ -181,6 +184,16 @@ function update_state!(node::GR4JNode, ps, rs, q, UH1, UH2)
     append!(node.outflow, q)
     push!(node.UH1, UH1)
     push!(node.UH2, UH2)
+end
+function update_state!(node::GR4JNode, ts::Int64, ps, rs, q, UH1, UH2)::Nothing
+    node.p_store[ts+1] = ps
+    node.r_store[ts+1] = rs
+    node.outflow[ts] = q
+
+    node.UH1[ts] = UH1
+    node.UH2[ts] = UH2
+
+    return nothing
 end
 
 
@@ -218,12 +231,12 @@ end
 
 Determine unit hydrograph ordinates.
 """
-function s_curve(t, x4; uh2::Bool = false)::Float64
+function s_curve(t::F, x4::F; uh2::Bool = false)::F where {F<:Float64}
     if t <= 0.0
         return 0.0
     end
 
-    ordinate::Float64 = 0.0
+    ordinate::F = 0.0
     if t < x4
         ordinate = (t/x4)^2.5
     else
@@ -258,14 +271,10 @@ Generated simulated streamflow for given rainfall and potential evaporation.
 # Returns
 - tuple of simulated outflow [ML/day], and intermediate states: p_store, r_store, UH1, UH2
 """
-function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
-    nUH1 = Int(ceil(X4))
-    nUH2 = Int(ceil(2.0*X4))
-
-    uh1_ordinates = Array{Float64}(undef, nUH1)
-    uh2_ordinates = Array{Float64}(undef, nUH2)
-
-    UH1, UH2 = fill(0.0, nUH1), fill(0.0, nUH2)
+function run_gr4j(P::F, E::F, X1::F, X2::F, X3::F, X4::F, area::F, UH1::Vector{Float64}, UH2::Vector{Float64}, uh1_ordinates::Vector{Float64}, uh2_ordinates::Vector{Float64}, p_store=0.0, r_store=0.0)::Tuple where {F<:Float64}
+    # Main.@infiltrate
+    nUH1::Int64 = Int(ceil(X4))
+    nUH2::Int64 = Int(ceil(2.0*X4))
 
     @inbounds for t in 2:(nUH1+1)
         t_f = Float64(t)
@@ -277,7 +286,7 @@ function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
         uh2_ordinates[t - 1] = s_curve(t_f, X4, uh2=true) - s_curve(t_f-1.0, X4, uh2=true)
     end
 
-    Q = 0.0
+    Q::F = 0.0
     if P > E
         net_evap = 0.0
         scaled_net_precip = min((P - E)/X1, 13.0)
@@ -303,12 +312,11 @@ function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
 
     p_store = p_store - net_evap + reservoir_production
 
-    tmp_a = (p_store / 2.25 / X1)^4
-    tmp_b = (1 + tmp_a)^0.25
+    tmp_a::F = (p_store / 2.25 / X1)^4
+    tmp_b::F = (1 + tmp_a)^0.25
     percolation = p_store / tmp_b
 
     routed_volume = routed_volume + (p_store-percolation)
-    p_store = percolation
 
     @inbounds for i in 1:nUH1-1
         UH1[i] = UH1[i+1] + uh1_ordinates[i]*routed_volume
@@ -321,7 +329,7 @@ function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
     UH2[end] = uh2_ordinates[end] * routed_volume
 
     tmp_a = (r_store / X3)^3.5
-    groundwater_exchange = X2 * tmp_a
+    groundwater_exchange::F = X2 * tmp_a
     r_store = max(0.0, r_store + UH1[1] * 0.9 + groundwater_exchange)
 
     tmp_a = (r_store / X3)^4
@@ -333,5 +341,5 @@ function run_gr4j(P, E, X1, X2, X3, X4, area, p_store=0.0, r_store=0.0)::Tuple
 
     Q = (QR + QD) * area
 
-    return Q, p_store, r_store, UH1, UH2
+    return Q, percolation, r_store, UH1, UH2
 end

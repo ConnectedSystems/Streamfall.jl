@@ -7,8 +7,9 @@ const SYMHYD_SOIL_ET_CONST = 10.0
 
 """
 """
-Base.@kwdef mutable struct SYMHYDNode{P, A<:Real} <: NetworkNode
-    @network_node
+Base.@kwdef mutable struct SYMHYDNode{P, A<:AbstractFloat} <: NetworkNode
+    name::String
+    area::A
 
     # parameters
     baseflow_coef::P = Param(0.5, bounds=(0.0, 1.0))
@@ -69,18 +70,19 @@ function SYMHYDNode(name::String, spec::Dict)
     return n
 end
 
+function prep_state!(node::SYMHYDNode, sim_length::Int64)::Nothing
+    resize!(node.sm_store, sim_length+1)
+    resize!(node.gw_store, sim_length+1)
+    resize!(node.total_store, sim_length+1)
+    node.sm_store[2:end] .= 0.0
+    node.gw_store[2:end] .= 0.0
+    node.total_store[2:end] .= 0.0
 
-"""
+    node.outflow = fill(0.0, sim_length)
+    node.baseflow = fill(0.0, sim_length)
+    node.quickflow = fill(0.0, sim_length)
 
-Run SYMHYD for all time steps within a climate scenario.
-"""
-function run_node!(node::SYMHYDNode, climate::Climate; inflow=nothing, extraction=nothing, exchange=nothing)
-    timesteps = length(climate)
-    for ts in 1:timesteps
-        run_timestep!(node, climate, ts; inflow=inflow, extraction=extraction, exchange=exchange)
-    end
-
-    return node.outflow
+    return nothing
 end
 
 
@@ -88,16 +90,24 @@ end
 
 Run SYMHYD for a given time step
 """
-function run_timestep!(node::SYMHYDNode, climate::Climate, timestep::Int; inflow=nothing, extraction=extraction, exchange=nothing)
-    P, E = climate_values(node, climate, timestep)
+function run_timestep!(node::SYMHYDNode, climate::Climate, ts::Int; inflow=nothing, extraction=extraction, exchange=nothing)::Nothing
+    P, E = climate_values(node, climate, ts)
 
-    run_timestep!(node, P, E, timestep; inflow=inflow, extraction=extraction, exchange=exchange)
+    run_timestep!(node, P, E, ts; inflow=inflow, extraction=extraction, exchange=exchange)
+
+    return nothing
 end
 
-
-function run_timestep!(node::SYMHYDNode, rain, et, ts; inflow=nothing, extraction=nothing, exchange=nothing)
-    res = run_symhyd(node, rain, et)
-    sm_store, gw_store, total_store, total_runoff, baseflow, event_runoff = res
+function run_timestep!(
+    node::SYMHYDNode,
+    rain::F,
+    et::F,
+    ts::Int;
+    inflow=nothing,
+    extraction=nothing,
+    exchange=nothing
+)::Nothing where {F<:AbstractFloat}
+    sm_store, gw_store, total_store, total_runoff, baseflow, event_runoff = run_symhyd(node, rain, et, ts)
 
     node_name = node.name
     wo = timestep_value(ts, node_name, "releases", extraction)
@@ -108,8 +118,10 @@ function run_timestep!(node::SYMHYDNode, rain, et, ts; inflow=nothing, extractio
         total_runoff = total_runoff + in_flow + ex - wo
     end
 
-    area = node.area
-    update_state!(node, sm_store, gw_store, total_store, total_runoff * area, baseflow * area, event_runoff * area)
+    area::F = node.area
+    update_state!(node, ts, sm_store, gw_store, total_store, total_runoff * area, baseflow * area, event_runoff * area)
+
+    return nothing
 end
 
 
@@ -120,6 +132,14 @@ function update_state!(node::SYMHYDNode, sm_store, gw_store, total_store, outflo
     push!(node.outflow, outflow)
     push!(node.baseflow, baseflow)
     push!(node.quickflow, quickflow)
+end
+function update_state!(node::SYMHYDNode, ts::Int64, sm_store, gw_store, total_store, outflow, baseflow, quickflow)
+    node.sm_store[ts+1] = sm_store
+    node.gw_store[ts+1] = gw_store
+    node.total_store[ts+1] = total_store
+    node.outflow[ts] = outflow
+    node.baseflow[ts] = baseflow
+    node.quickflow[ts] = quickflow
 end
 
 
@@ -169,33 +189,33 @@ end
 
 Run SYMHYD for a single time step with given inputs and state variables.
 """
-function run_symhyd(node::SYMHYDNode, P, ET)
+function run_symhyd(node::SYMHYDNode, P::F, ET::F, ts::Int64)::NTuple{6,F} where {F<:Float64}
 
-    sm_store = node.sm_store[end]
-    gw_store = node.gw_store[end]
-    total_store = node.total_store[end]
+    sm_store::F = node.sm_store[ts]
+    gw_store::F = node.gw_store[ts]
+    total_store::F = node.total_store[ts]
 
-    pervious_incident = P
-	impervious_incident = P
+    pervious_incident::F = P
+	impervious_incident::F = P
 
-    impervious_ET = min(node.impervious_threshold, impervious_incident)
-    impervious_runoff = impervious_incident - impervious_ET
+    impervious_ET::F = min(node.impervious_threshold, impervious_incident)
+    impervious_runoff::F = impervious_incident - impervious_ET
 
-    interception_ET = min(pervious_incident, min(ET, node.risc))
-    throughfall = pervious_incident - impervious_ET
+    interception_ET::F = min(pervious_incident, min(ET, node.risc))
+    throughfall::F = pervious_incident - impervious_ET
 
-    smsc = node.smsc
-    sm_fraction = sm_store / smsc
+    smsc::F = node.smsc.val
+    sm_fraction::F = sm_store / smsc
 
-    infiltration_capacity = node.infiltration_coef * exp(-node.infiltration_shape*sm_fraction)
-    infiltration = min(throughfall, infiltration_capacity)
-    infiltration_Xs_runoff = throughfall - infiltration
+    infiltration_capacity::F = node.infiltration_coef.val::F * exp(-node.infiltration_shape.val::F * sm_fraction)::F
+    infiltration::F = min(throughfall, infiltration_capacity)
+    infiltration_Xs_runoff::F = throughfall - infiltration
 
-    interflow_runoff = node.interflow_coef * sm_fraction * infiltration
-    infiltration_after_interflow = infiltration - interflow_runoff
+    interflow_runoff::F = node.interflow_coef.val::F * sm_fraction * infiltration
+    infiltration_after_interflow::F = infiltration - interflow_runoff
 
-    recharge = node.recharge_coef * sm_fraction * infiltration_after_interflow
-    soil_input = infiltration_after_interflow - recharge
+    recharge::F = node.recharge_coef.val::F * sm_fraction * infiltration_after_interflow
+    soil_input::F = infiltration_after_interflow - recharge
 
     # Update states...
     sm_store += soil_input
@@ -208,18 +228,18 @@ function run_symhyd(node::SYMHYDNode, P, ET)
         sm_fraction = 1.0
     end
 
-    baseflow_runoff = node.baseflow_coef * gw_store
+    baseflow_runoff::F = node.baseflow_coef.val::F * gw_store
     gw_store -= baseflow_runoff
 
-    soil_ET = min(sm_store, min(ET - interception_ET, sm_fraction*SYMHYD_SOIL_ET_CONST))
+    soil_ET::F = min(sm_store, min(ET - interception_ET, sm_fraction*SYMHYD_SOIL_ET_CONST))
     sm_store -= soil_ET
 
-    pervious_frac = node.pervious_fraction
+    pervious_frac::F = node.pervious_fraction.val::F
     total_store = (sm_store + gw_store) * pervious_frac
 
-    event_runoff = (1.0 - pervious_frac) * impervious_runoff + pervious_frac * (infiltration_Xs_runoff + interflow_runoff)
-    total_runoff = event_runoff + pervious_frac * baseflow_runoff
-    baseflow = baseflow_runoff * pervious_frac
+    event_runoff::F = (1.0 - pervious_frac) * impervious_runoff + pervious_frac * (infiltration_Xs_runoff + interflow_runoff)
+    total_runoff::F = event_runoff + pervious_frac * baseflow_runoff
+    baseflow::F = baseflow_runoff * pervious_frac
 
 	# values for time step...
 	return sm_store, gw_store, total_store, total_runoff, baseflow, event_runoff

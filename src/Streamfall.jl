@@ -45,6 +45,7 @@ end
 include("Network.jl")
 include("Node.jl")
 include("Climate.jl")
+# include("Operation.jl")
 include("IHACRESNode.jl")
 include("IHACRESExpuhNode.jl")
 include("GR4JNode.jl")
@@ -222,22 +223,26 @@ Run a specific node, and only that node, for all time steps.
 - `extraction::Union{DataFrame, Vector, Number}` : Extractions from this subcatchment
 - `exchange::Union{DataFrame, Vector, Number}` : Groundwater flux
 """
-function run_node!(node::NetworkNode, climate::Climate; inflow=nothing, extraction=nothing, exchange=nothing)
+function run_node!(node::NetworkNode, climate::Climate; inflow=nothing, extraction=nothing, exchange=nothing)::Nothing
     timesteps = sim_length(climate)
+    prep_state!(node, timesteps)
+
+    P_and_ET = climate_values(node, climate)
 
     node_name = node.name
     @inbounds for ts in 1:timesteps
-        rain, et = climate_values(node, climate, ts)
-
         # Check if values are provided, otherwise default to 0.
         ext = timestep_value(ts, node_name, "extraction", extraction)
         flux = timestep_value(ts, node_name, "exchange", exchange)
         in_flow = timestep_value(ts, node_name, "inflow", inflow)
 
-        run_timestep!(node, rain, et, ts; inflow=in_flow, extraction=ext, exchange=flux)
+        run_timestep!(
+            node, P_and_ET[ts, 1], P_and_ET[ts, 2], ts;
+            inflow=in_flow, extraction=ext, exchange=flux
+        )
     end
 
-    return node.outflow, node.level
+    return nothing
 end
 
 

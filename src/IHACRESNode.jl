@@ -5,8 +5,9 @@ using ModelParameters
 abstract type IHACRESNode <: NetworkNode end
 
 
-Base.@kwdef mutable struct BilinearNode{P, A<:Real} <: IHACRESNode
-    @network_node
+Base.@kwdef mutable struct BilinearNode{P, A<:AbstractFloat} <: IHACRESNode
+    const name::String
+    const area::A
 
     # https://wiki.ewater.org.au/display/SD41/IHACRES-CMD+-+SRG
     d::P = Param(200.0, bounds=(10.0, 550.0))  # flow threshold
@@ -23,7 +24,7 @@ Base.@kwdef mutable struct BilinearNode{P, A<:Real} <: IHACRESNode
     storage_coef::P = Param(2.9, bounds=(1e-10, 10.0))
     alpha::P = Param(0.1, bounds=(1e-5, 1 - 1/10^9))
 
-    level_params::Array{P, 1} = [
+    const level_params::Array{P, 1} = [
         Param(-0.01, bounds=(-10.0, -0.01)),  # p1
         Param(0.8, bounds=(0.0, 1.5)),  # p2
         Param(4.5, bounds=(0.0, 20.0)), # p3
@@ -50,29 +51,27 @@ Base.@kwdef mutable struct BilinearNode{P, A<:Real} <: IHACRESNode
 end
 
 
-# function prep_state!(node::IHACRESNode, sim_length::Int64)
-#     ini_storage = node.storage[1]
-#     node.storage = fill(0.0, sim_length+1)
-#     node.storage[1] = ini_storage
+function prep_state!(node::IHACRESNode, timesteps::Int64)::Nothing
+    resize!(node.storage, timesteps+1)
+    node.storage[2:end] .= 0.0
 
-#     ini_qs = node.quick_store[1]
-#     node.quick_store = fill(0.0, sim_length+1)
-#     node.quick_store[1] = ini_qs
+    resize!(node.quick_store, timesteps+1)
+    node.quick_store[2:end] .= 0.0
 
-#     ini_ss = node.slow_store[1]
-#     node.slow_store = fill(0.0, sim_length+1)
-#     node.slow_store[1] = ini_ss
+    resize!(node.slow_store, timesteps+1)
+    node.slow_store[2:end] .= 0.0
 
-#     node.outflow = fill(0.0, sim_length)
-#     node.effective_rainfall = fill(0.0, sim_length)
-#     node.et = fill(0.0, sim_length)
-#     node.inflow = fill(0.0, sim_length)
-#     node.level = fill(0.0, sim_length)
+    node.outflow = fill(0.0, timesteps)
+    node.effective_rainfall = fill(0.0, timesteps)
+    node.et = fill(0.0, timesteps)
+    node.inflow = fill(0.0, timesteps)
+    node.level = fill(0.0, timesteps)
 
-#     ini_gw = node.gw_store[1]
-#     node.gw_store = fill(0.0, sim_length+1)
-#     node.gw_store[1] = ini_gw
-# end
+    resize!(node.gw_store, timesteps+1)
+    node.gw_store[2:end] .= 0.0
+
+    return nothing
+end
 
 
 function BilinearNode(name::String, spec::Dict)
@@ -144,9 +143,9 @@ function BilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::F
 end
 
 
-function update_state(s_node::IHACRESNode, storage::Float64, e_rainfall::Float64, et::Float64,
+function update_state!(s_node::IHACRESNode, storage::Float64, e_rainfall::Float64, et::Float64,
                       qflow_store::Float64, sflow_store::Float64, outflow::Float64,
-                      level::Float64, gw_store::Float64)
+                      level::Float64, gw_store::Float64)::Nothing
     push!(s_node.storage, storage)
     push!(s_node.effective_rainfall, e_rainfall)
     push!(s_node.et, et)
@@ -156,9 +155,36 @@ function update_state(s_node::IHACRESNode, storage::Float64, e_rainfall::Float64
     push!(s_node.slow_store, sflow_store)
     push!(s_node.level, level)
     push!(s_node.gw_store, gw_store)
+
+    return nothing
 end
+function update_state!(
+    s_node::IHACRESNode,
+    ts::Int64,
+    storage::Float64,
+    e_rainfall::Float64,
+    et::Float64,
+    qflow_store::Float64,
+    sflow_store::Float64,
+    inflow::Float64,
+    outflow::Float64,
+    level::Float64,
+    gw_store::Float64
+)::Nothing
+    s_node.storage[ts+1] = storage
+    s_node.quick_store[ts+1] = qflow_store
+    s_node.slow_store[ts+1] = sflow_store
+    s_node.gw_store[ts+1] = gw_store
 
+    s_node.inflow[ts] = inflow
+    s_node.outflow[ts] = outflow
 
+    s_node.effective_rainfall[ts] = e_rainfall
+    s_node.et[ts] = et
+    s_node.level[ts] = level
+
+    return nothing
+end
 
 """
     run_node!(node::IHACRESNode, climate::Climate, timestep::Int;
@@ -192,103 +218,65 @@ function run_node!(node::IHACRESNode, climate::Climate, ts::Int;
     return run_timestep!(node, rain, et, ts; inflow=in_flow, extraction=wo, exchange=ex)
 end
 
-
 """
-    run_step!(s_node::BilinearNode,
-              rain::Float64,
-              evap::Float64,
-              inflow::Float64,
-              ext::Float64,
-              gw_exchange::Float64;
-              current_store::Float64,
-              quick_store::Float64,
-              slow_store::Float64,
-              gw_store::Float64)::Tuple{Float64, Float64}
+    run_timestep!(
+        node::BilinearNode, climate::Climate, timestep::Int,
+        inflow::Float64, extraction::Float64, exchange::Float64
+    )
 
-Run node with ET data to calculate outflow and update state.
-
-# Arguments
-- `s_node::BilinearNode` : IHACRESNode
-- rain : rainfall for time step
-- evap : evapotranspiration for time step
-- inflow : inflow from previous node
-- ext : irrigation and other water extractions
-- gw_exchange : flux in ML where positive is contribution to stream, negative is infiltration
-- current_store : replacement cmd state value (uses last known state if not provided)
-- quick_store : replacement quick store state value
-- slow_store : replacement slow store state value
-- gw_store : replacement groundwater store state value
-
-# Returns
-- float, outflow from node [ML/day], stream level
+Run the given BilinearNode for a time step.
 """
-function run_step!(s_node::IHACRESNode,
-                    rain::Float64,
-                    evap::Float64,
-                    inflow::Float64,
-                    ext::Float64,
-                    gw_exchange::Float64,
-                    current_store::Float64,
-                    quick_store::Float64,
-                    slow_store::Float64,
-                    gw_store::Float64)::Tuple{Float64, Float64}
+function run_timestep!(
+    node::IHACRESNode, climate::Climate, timestep::Int;
+    inflow=nothing, extraction=nothing, exchange=nothing
+)::Float64
+    ts = timestep
+    P, ET = climate_values(node, climate, ts)
 
-    s_node.storage[end] = current_store
-    s_node.quick_store[end] = quick_store
-    s_node.slow_store[end] = slow_store
-    s_node.gw_store[end] = gw_store
+    return run_timestep!(node, ts, P, ET, in_flow, ext, flux)
+end
+function run_timestep!(node, P, ET, ts; inflow=nothing, extraction=nothing, exchange=nothing)
+    in_flow = timestep_value(ts, node.name, "inflow", inflow)
+    ext = timestep_value(ts, node.name, "extraction", extraction)
+    flux = timestep_value(ts, node.name, "exchange", exchange)
 
-    return _run_step!(s_node, rain, evap, inflow, ext, gw_exchange,
-                      current_store, quick_store, slow_store, gw_store)
+    return run_ihacres!(node, P, ET, ts, in_flow, ext, flux)
 end
 
-
-function run_step!(s_node::IHACRESNode,
-                    rain::Float64,
-                    evap::Float64,
-                    inflow::Float64,
-                    ext::Float64,
-                    gw_exchange::Float64)::Tuple{Float64, Float64}
-
-    current_store = s_node.storage[end]
-    quick_store = s_node.quick_store[end]
-    slow_store = s_node.slow_store[end]
-    gw_store = s_node.gw_store[end]
-
-    return _run_step!(s_node, rain, evap, inflow, ext, gw_exchange,
-                      current_store, quick_store, slow_store, gw_store)
-end
-
-
-function _run_step!(s_node::IHACRESNode,
-                    rain::Float64,
-                    evap::Float64,
-                    inflow::Float64,
-                    ext::Float64,
-                    gw_exchange::Float64,
-                    current_store::Float64,
-                    quick_store::Float64,
-                    slow_store::Float64,
-                    gw_store::Float64)::Tuple{Float64, Float64}
+function run_ihacres!(
+    s_node::IHACRESNode,
+    rain::F,
+    evap::F,
+    ts::Int64,
+    inflow::F,
+    ext::F,
+    gw_exchange::F
+)::Tuple{F, F} where {F<:Float64}
+    current_store::F = s_node.storage[ts]
+    quick_store::F = s_node.quick_store[ts]
+    slow_store::F = s_node.slow_store[ts]
+    gw_store::F = s_node.gw_store[ts]
 
     cache_res = s_node.cache.i_cache
-    @ccall IHACRES.calc_ft_interim_cmd(cache_res::Ptr{Cdouble},
-                            current_store::Cdouble,
-                            rain::Cdouble,
-                            s_node.d::Cdouble,
-                            s_node.d2::Cdouble,
-                            s_node.alpha::Cdouble)::Cvoid
+    @ccall IHACRES.calc_ft_interim_cmd(
+        cache_res::Ptr{Cdouble},
+        current_store::Cdouble,
+        rain::Cdouble,
+        s_node.d.val::Cdouble,
+        s_node.d2.val::Cdouble,
+        s_node.alpha.val::Cdouble
+    )::Cvoid
     (mf, e_rainfall, recharge) = cache_res
 
-    et::Float64 = @ccall IHACRES.calc_ET(
-        s_node.e::Cdouble,
+    et::F = @ccall IHACRES.calc_ET(
+        s_node.e.val::Cdouble,
         evap::Cdouble,
         mf::Cdouble,
-        s_node.f::Cdouble,
-        s_node.d::Cdouble
+        s_node.f.val::Cdouble,
+        s_node.d.val::Cdouble
     )::Cdouble
 
-    cmd::Float64 = @ccall IHACRES.calc_cmd(
+    cmd::F = @ccall IHACRES.calc_cmd(
         current_store::Cdouble,
         rain::Cdouble,
         et::Cdouble,
@@ -303,8 +291,8 @@ function _run_step!(s_node::IHACRESNode,
         e_rainfall::Cdouble,
         recharge::Cdouble,
         s_node.area::Cdouble,
-        s_node.a::Cdouble,
-        s_node.b::Cdouble
+        s_node.a.val::Cdouble,
+        s_node.b.val::Cdouble
     )::Cvoid
     (nq_store, ns_store, outflow) = cache_res
 
@@ -312,7 +300,7 @@ function _run_step!(s_node::IHACRESNode,
     @ccall IHACRES.routing(
         routing_res::Ptr{Cdouble},
         gw_store::Cdouble,
-        s_node.storage_coef::Cdouble,
+        s_node.storage_coef.val::Cdouble,
         inflow::Cdouble,
         outflow::Cdouble,
         ext::Cdouble,
@@ -321,47 +309,15 @@ function _run_step!(s_node::IHACRESNode,
 
     (gw_store, outflow) = routing_res
 
-    level_params = Array{Float64}(s_node.level_params)
+    level_params = Vector{Float64}(s_node.level_params)
     level::Float64 = @ccall IHACRES.calc_ft_level(
         outflow::Cdouble,
         level_params::Ptr{Cdouble}
     )::Cdouble
 
-    push!(s_node.inflow, inflow)
-    update_state(s_node, cmd, e_rainfall, et, nq_store, ns_store, outflow, level, gw_store)
+    update_state!(s_node, ts, cmd, e_rainfall, et, nq_store, ns_store, inflow, outflow, level, gw_store)
 
     return outflow, level
-end
-
-
-"""
-    run_timestep!(s_node::IHACRESNode,
-                  rain::Float64,
-                  evap::Float64,
-                  timestep::Union{Int64, Nothing};
-                  inflow::Float64,
-                  extraction::Float64,
-                  exchange::Float64)::Tuple{Float64, Float64}
-
-Run node for a given time step.
-"""
-function run_timestep!(s_node::IHACRESNode,
-                       rain::Float64,
-                       evap::Float64,
-                       ts::Union{Int64, Nothing};
-                       inflow::Float64=0.0,
-                       extraction::Float64=0.0,
-                       exchange::Float64=0.0)::Tuple{Float64, Float64}
-    if !isnothing(ts)
-        current_store = s_node.storage[ts]
-        quick_store = s_node.quick_store[ts]
-        slow_store = s_node.slow_store[ts]
-        gw_store = s_node.gw_store[ts]
-        return run_step!(s_node, rain, evap, inflow, extraction, exchange,
-                         current_store, quick_store, slow_store, gw_store)
-    end
-
-    return run_step!(s_node, rain, evap, inflow, extraction, exchange)
 end
 
 
