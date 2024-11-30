@@ -8,6 +8,50 @@ struct Climate
     # t_id::Union{String, Nothing} = nothing
 end
 
+"""
+Extract streamflow data from file.
+
+Streamflow (Q) column is identified the Gauge ID.
+
+Flow data is identified with the suffix `_Q` by default
+e.g., ("000001_Q")
+
+# Arguments
+- `data` : Observation data
+- `gauge_id` : Gauge/Node ID
+- `suffix` : Suffix used to indicate flow data (default: "_Q")
+
+# Returns
+DataFrame of observations for selected gauge.
+"""
+@inline function extract_flow(
+    data::DataFrame, gauge_id::String, suffix::String="_Q"
+)::DataFrame
+    target = data[:, ["Date", gauge_id * suffix]]
+    rename!(target, gauge_id * suffix => gauge_id)
+
+    return target
+end
+
+"""
+Create a climate dataset of Precipitation (P) and Potential Evapotranspiration (PET).
+Data for multiple gauges may be defined in a single dataset.
+
+P and PET columns are identified by `_P` and `_PET` suffixes by default.
+
+# Arguments
+- `data` : Observation data
+- `P_suffix` : Suffix used to indicate precipitation (default: "_P")
+- `PET_suffix` : Suffix used to indicate Potential Evapotranspiration (default: "_PET")
+
+# Returns
+Climate
+"""
+@inline function extract_climate(
+    data::DataFrame; P_suffix::String="_P", PET_suffix::String="_PET"
+)::Climate
+    return Climate(data, P_suffix, PET_suffix)
+end
 
 """
     subcatchment_data(node::NetworkNode, climate::Climate)

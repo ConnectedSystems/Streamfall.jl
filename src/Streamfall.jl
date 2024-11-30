@@ -264,6 +264,9 @@ export param_info, update_params!, sim_length, reset!
 export run_catchment!, run_basin!, run_node!, run_node_with_temp!
 export calibrate!
 
+# Data
+export extract_flow, extract_climate
+
 # plotting methods
 export quickplot, plot_network, save_figure
 
