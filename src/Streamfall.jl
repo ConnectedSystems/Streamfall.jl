@@ -34,26 +34,30 @@ include("Nodes/DamNode.jl")
 include("Nodes/EnsembleNode.jl")
 
 
-function timestep_value(timestep::Int, gauge_id::String, col_partial::String,
-                        dataset::Union{DataFrame, Vector, Number, Nothing}=nothing)::Float64
-    amount::Float64 = 0.0
-    if !isnothing(dataset)
-        if dataset isa Vector
-            amount = dataset[ts]
-        elseif dataset isa DataFrame
-            # Extract data for time step based on partial match
-            target_col = filter(x -> occursin(gauge_id, x)
+function timestep_value(ts::Int, gauge_id::String, col_partial::String, dataset::DataFrame)::Float64
+    target_col = filter(x -> occursin(gauge_id, x)
                                 & occursin(col_partial, x),
-                                names(dataset))
-            if !isempty(target_col)
-                amount = checkbounds(Bool, dataset.Date, timestep) ? dataset[timestep, target_col][1] : 0.0
-            end
-        elseif dataset isa Number
-            amount = dataset
+                                names(dataset)
+    )
+
+    if !isempty(target_col)
+        amount = if checkbounds(Bool, dataset.Date, timestep)
+            dataset[timestep, target_col][1]
+        else
+            0.0
         end
     end
 
     return amount
+end
+@inline function timestep_value(_::Int, _::String, _::String, dataset::Float64)::Float64
+    return dataset
+end
+@inline function timestep_value(_::Int, _::String, _::String, dataset::Nothing)::Float64
+    return 0.0
+end
+@inline function timestep_value(ts::Int, _::String, _::String, dataset::Vector)::Float64
+    return dataset[ts]
 end
 
 
