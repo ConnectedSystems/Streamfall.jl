@@ -22,35 +22,14 @@ end
 const IHACRES = joinpath(MODPATH, "../deps", "usr", "lib", "ihacres$(libext)")
 
 
-"""@def macro
-
-Inline code to avoid repetitious declarations.
-"""
-macro def(name, definition)
-    return quote
-        macro $(esc(name))()
-            esc($(Expr(:quote, definition)))
-        end
-    end
-end
-
-
-@def add_preprefix begin
-    if !isnothing(id_prefix)
-        prefix = id_prefix * prefix
-    end
-end
-
-
 include("Network.jl")
-include("Node.jl")
+include("Nodes/Node.jl")
 include("Climate.jl")
-# include("Operation.jl")
-include("IHACRESNode.jl")
-include("IHACRESExpuhNode.jl")
-include("GR4JNode.jl")
-include("HyModNode.jl")
-include("SYMHYDNode.jl")
+include("Nodes/IHACRES/IHACRESNode.jl")
+include("Nodes/IHACRES/IHACRESExpuhNode.jl")
+include("Nodes/GR4J/GR4JNode.jl")
+include("Nodes/HyMod/HyModNode.jl")
+include("Nodes/SYMHYD/SYMHYDNode.jl")
 include("DamNode.jl")
 include("EnsembleNode.jl")
 
@@ -251,9 +230,6 @@ include("calibration.jl")
 
 include("Analysis/Analysis.jl")
 include("plotting.jl")
-
-
-export @def
 
 # Nodes
 export NetworkNode, GenericNode, GenericDirectNode
