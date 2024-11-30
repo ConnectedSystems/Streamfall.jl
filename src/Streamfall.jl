@@ -199,7 +199,7 @@ Recurses upstream as needed.
 - `extraction::DataFrame` : water orders for each time step (defaults to nothing)
 - `exchange::DataFrame` : exchange with groundwater system at each time step (defaults to nothing)
 """
-function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate; 
+function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate;
                    inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
     @inbounds for ts in 1:timesteps

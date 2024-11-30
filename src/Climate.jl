@@ -29,8 +29,8 @@ Extract rainfall data for a given node.
 """
 function rainfall_data(node::NetworkNode, climate::Climate)::DataFrame
     data = climate.climate_data
-    rain_col = filter(x -> occursin(node.name, x) 
-                            & occursin(climate.rainfall_id, x), 
+    rain_col = filter(x -> occursin(node.name, x)
+                            & occursin(climate.rainfall_id, x),
                             names(data))[1]
 
     return data[:, rain_col]
@@ -42,14 +42,14 @@ end
 
 Extract climate related data for a given time step.
 """
-function climate_values(node::NetworkNode, climate::Climate, 
+function climate_values(node::NetworkNode, climate::Climate,
                         timestep::Int)
     node_name::String = node.name
     data::DataFrame = climate.climate_data
 
     # TODO : Catch instances where data is not found (raises BoundsError)
-    rain_col = filter(x -> occursin(node_name, x) 
-                        & occursin(climate.rainfall_id, x), 
+    rain_col = filter(x -> occursin(node_name, x)
+                        & occursin(climate.rainfall_id, x),
                         names(data))[1]
     et_col = filter(x -> occursin(node_name, x)
                         & occursin(climate.et_id, x),
@@ -66,14 +66,14 @@ end
 """
     climate_values(node::NetworkNode, climate::Climate)
 
-Extract climate related data for a given time step.
+Extract climate related data.
 """
 function climate_values(node::NetworkNode, climate::Climate)
     data::DataFrame = climate.climate_data
 
     # TODO : Catch instances where data is not found (raises BoundsError)
-    rain_col = filter(x -> occursin(node.name, x) 
-                            & occursin(climate.rainfall_id, x), 
+    rain_col = filter(x -> occursin(node.name, x)
+                            & occursin(climate.rainfall_id, x),
                             names(data))[1]
     et_col = filter(x -> occursin(node.name, x)
                             & occursin(climate.et_id, x),

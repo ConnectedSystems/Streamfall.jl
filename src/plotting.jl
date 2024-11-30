@@ -49,10 +49,10 @@ function quickplot(obs::Array, sim::Array, xticklabels::Array, label="Modeled", 
     end
 
     label = "$(label) ($(metric_name): $(score))"
-    fig = plot(xticklabels, obs, 
-                label="Observed", 
-                legend=:best, 
-                ylabel="Streamflow", 
+    fig = plot(xticklabels, obs,
+                label="Observed",
+                legend=:best,
+                ylabel="Streamflow",
                 xlabel="Date",
                 fg_legend=:transparent,
                 bg_legend=:transparent)
@@ -125,9 +125,9 @@ Filters out leap days.
 - `period::Function` : Method from `Dates` package to group (defaults to `monthday`)
 """
 function temporal_cross_section(dates, obs;
-                                title="", ylabel="ME", label=nothing, 
+                                title="", ylabel="ME", label=nothing,
                                 period::Function=monthday,
-                                kwargs...)  # show_extremes::Bool=false, 
+                                kwargs...)  # show_extremes::Bool=false,
     if isnothing(label)
         label = ylabel
     end
@@ -225,9 +225,9 @@ Filters out leap days.
 - `period::Function` : Method from `Dates` package to group (defaults to `month`)
 """
 function temporal_cross_section(dates, obs, sim;
-                                title="", ylabel="Median Error", label=nothing, 
+                                title="", ylabel="Median Error", label=nothing,
                                 period::Function=monthday,
-                                kwargs...)  # show_extremes::Bool=false, 
+                                kwargs...)  # show_extremes::Bool=false,
     if isnothing(label)
         label = ylabel
     end

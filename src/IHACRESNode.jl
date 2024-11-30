@@ -238,7 +238,7 @@ function run_step!(s_node::IHACRESNode,
     s_node.slow_store[end] = slow_store
     s_node.gw_store[end] = gw_store
 
-    return _run_step!(s_node, rain, evap, inflow, ext, gw_exchange, 
+    return _run_step!(s_node, rain, evap, inflow, ext, gw_exchange,
                       current_store, quick_store, slow_store, gw_store)
 end
 
@@ -255,7 +255,7 @@ function run_step!(s_node::IHACRESNode,
     slow_store = s_node.slow_store[end]
     gw_store = s_node.gw_store[end]
 
-    return _run_step!(s_node, rain, evap, inflow, ext, gw_exchange, 
+    return _run_step!(s_node, rain, evap, inflow, ext, gw_exchange,
                       current_store, quick_store, slow_store, gw_store)
 end
 

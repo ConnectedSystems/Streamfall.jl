@@ -68,7 +68,7 @@ function param_info(node::NetworkNode; kwargs...)::Tuple
     values = collect(tmp[:val])
     bounds = collect(tmp[:bounds])
     param_names = collect(tmp[:fieldname])
-    
+
     return param_names, values, bounds
 end
 
