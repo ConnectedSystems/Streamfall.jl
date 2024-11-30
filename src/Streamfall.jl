@@ -30,8 +30,8 @@ include("Nodes/IHACRES/IHACRESExpuhNode.jl")
 include("Nodes/GR4J/GR4JNode.jl")
 include("Nodes/HyMod/HyModNode.jl")
 include("Nodes/SYMHYD/SYMHYDNode.jl")
-include("DamNode.jl")
-include("EnsembleNode.jl")
+include("Nodes/DamNode.jl")
+include("Nodes/EnsembleNode.jl")
 
 
 function timestep_value(timestep::Int, gauge_id::String, col_partial::String,
