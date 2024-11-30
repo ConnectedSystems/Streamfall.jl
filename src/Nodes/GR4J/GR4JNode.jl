@@ -272,7 +272,6 @@ Generated simulated streamflow for given rainfall and potential evaporation.
 - tuple of simulated outflow [ML/day], and intermediate states: p_store, r_store, UH1, UH2
 """
 function run_gr4j(P::F, E::F, X1::F, X2::F, X3::F, X4::F, area::F, UH1::Vector{Float64}, UH2::Vector{Float64}, uh1_ordinates::Vector{Float64}, uh2_ordinates::Vector{Float64}, p_store=0.0, r_store=0.0)::Tuple where {F<:Float64}
-    # Main.@infiltrate
     nUH1::Int64 = Int(ceil(X4))
     nUH2::Int64 = Int(ceil(2.0*X4))
 
