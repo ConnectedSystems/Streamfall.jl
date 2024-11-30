@@ -2,9 +2,10 @@ using Parameters
 using ModelParameters
 
 
-Base.@kwdef mutable struct ExpuhNode{P, A<:Real} <: IHACRESNode
-    @network_node
-    
+Base.@kwdef mutable struct ExpuhNode{P, A<:AbstractFloat} <: IHACRESNode
+    name::String
+    area::A
+
     # https://wiki.ewater.org.au/display/SD41/IHACRES-CMD+-+SRG
     d::P = Param(200.0, bounds=(10.0, 550.0))  # flow threshold
     d2::P = Param(2.0, bounds=(0.0001, 10.0))   # flow threshold, multiplier applied to d
