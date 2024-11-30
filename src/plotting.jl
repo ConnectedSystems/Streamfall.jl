@@ -27,7 +27,10 @@ function quickplot(obs, node::NetworkNode, climate::Climate, label="", log=true;
     return quickplot(obs, node.outflow, climate, label, log; burn_in=burn_in, limit=limit, metric=metric)
 end
 
-function quickplot(obs::Array, sim::Array, climate::Climate, label="", log=true; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
+function quickplot(obs::DataFrame, sim::Vector, climate::Climate, label="", log=true; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
+    return quickplot(Matrix(obs[:, Not("Date")])[:, 1], sim, climate, label, log; burn_in, limit, metric)
+end
+function quickplot(obs::Vector, sim::Vector, climate::Climate, label="", log=true; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
     date = timesteps(climate)
     last_e = !isnothing(limit) ? limit : lastindex(obs)
     show_range = burn_in:last_e
@@ -35,7 +38,7 @@ function quickplot(obs::Array, sim::Array, climate::Climate, label="", log=true;
 end
 
 
-function quickplot(obs::Array, sim::Array, xticklabels::Array, label="Modeled", log=true; metric=Streamfall.mKGE)
+function quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled", log=true; metric=Streamfall.mKGE)
     @assert length(xticklabels) == length(obs) || "x-axis tick label length and observed lengths do not match!"
     @assert length(xticklabels) == length(sim) || "x-axis tick label length and simulated lengths do not match!"
 
@@ -70,7 +73,7 @@ function quickplot(obs::Array, sim::Array, xticklabels::Array, label="Modeled", 
         yaxis!(qqfig, :log10)
     end
 
-    combined = plot(fig, qqfig, size=(800, 400), left_margin=10mm, layout=(1,2))
+    combined = plot(fig, qqfig, size=(1000, 500), left_margin=5mm, bottom_margin=5mm, layout=(1,2))
 
     return combined
 end
