@@ -54,19 +54,6 @@ Climate
 end
 
 """
-    subcatchment_data(node::NetworkNode, climate::Climate)
-
-Extract all data for a given node from climate object.
-"""
-function subcatchment_data(node::NetworkNode, climate::Climate)::DataFrame
-    data = climate.climate_data
-    cols = filter(x -> occursin(node.name, string(x)), names(data))
-
-    return data[:, vcat(["Date"], cols)]
-end
-
-
-"""
     rainfall_data(node::NetworkNode, climate::Climate)::DataFrame
 
 Extract rainfall data for a given node.
@@ -80,6 +67,17 @@ function rainfall_data(node::NetworkNode, climate::Climate)::DataFrame
     return data[:, rain_col]
 end
 
+"""
+    subcatchment_data(node::NetworkNode, climate::Climate)
+
+Extract all data for a given node from climate object.
+"""
+function subcatchment_data(node::NetworkNode, climate::Climate)::DataFrame
+    data = climate.climate_data
+    cols = filter(x -> occursin(node.name, string(x)), names(data))
+
+    return data[:, vcat(["Date"], cols)]
+end
 
 """
     climate_values(node::NetworkNode, climate::Climate, timestep::Int)

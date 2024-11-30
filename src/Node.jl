@@ -1,19 +1,15 @@
 using DataFrames
 using PrettyTables
-import ModelParameters: Param
+import ModelParameters: Model, Param
 import MetaGraphs
 
 
 abstract type NetworkNode end
 
-@def network_node begin
+
+Base.@kwdef mutable struct GenericNode{A<:AbstractFloat} <: NetworkNode
     name::String
-    area::Float64
-end
-
-
-Base.@kwdef mutable struct GenericNode <: NetworkNode
-    @network_node
+    area::A
 end
 
 
@@ -35,12 +31,12 @@ function GenericNode(name::String, spec::Dict)
 end
 
 
-Base.@kwdef mutable struct GenericDirectNode <: NetworkNode
-    @network_node
+Base.@kwdef struct GenericDirectNode{T<:AbstractFloat} <: NetworkNode
+    name
+    area
 
-    outflow = []
+    outflow = T[]
 end
-
 
 function GenericDirectNode(name::String, spec::Dict)
     mod_spec = copy(spec)
@@ -144,7 +140,6 @@ function extract_node_spec(node::NetworkNode)
 
     return spec
 end
-
 
 Base.show(io::IO, ::MIME"text/plain", n::NetworkNode) = show(io, n)
 function Base.show(io::IO, n::NetworkNode)

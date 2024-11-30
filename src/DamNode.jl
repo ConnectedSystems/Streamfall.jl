@@ -26,10 +26,11 @@ function c_dam_outflow(discharge, irrigation_extraction)
 end
 
 
-Base.@kwdef mutable struct DamNode{P} <: NetworkNode
-    @network_node
+Base.@kwdef mutable struct DamNode{P, A<:AbstractFloat} <: NetworkNode
+    name::String
+    area::A
 
-    max_storage::Float64
+    max_storage::A
     storage_coef::P = Param(0.5, bounds=(0.00001, 10.0))
 
 
@@ -45,16 +46,16 @@ Base.@kwdef mutable struct DamNode{P} <: NetworkNode
     # Function to calculate outflow from dam
     calc_dam_outflow::Function = c_dam_outflow
 
-    storage::Array{Float64} = [0.0]
+    storage::Array{A} = [0.0]
 
-    effective_rainfall::Array{Float64} = []
-    et::Array{Float64} = []
-    inflow::Array{Float64} = []
-    dam_area::Array{Float64} = []
+    effective_rainfall::Array{A} = []
+    et::Array{A} = []
+    inflow::Array{A} = []
+    dam_area::Array{A} = []
 
-    level::Array{Float64} = []
-    discharge::Array{Float64} = []
-    outflow::Array{Float64} = []
+    level::Array{A} = []
+    discharge::Array{A} = []
+    outflow::Array{A} = []
 
 end
 
