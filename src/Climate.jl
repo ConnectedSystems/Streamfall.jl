@@ -154,3 +154,36 @@ end
 
 
 Base.length(climate::Climate) = nrow(climate.climate_data)
+
+Base.show(io::IO, ::MIME"text/plain", c::Climate) = show(io, c)
+function Base.show(io::IO, c::Climate)
+    ntype_name = nameof(typeof(c))
+    tgt_col_names = names(c.climate_data[:, Not("year", "month", "day", "Date")])
+
+    col_names = names(c.climate_data)
+    P_cols = occursin.(c.rainfall_id, col_names)
+    ET_cols = occursin.(c.et_id, col_names)
+    T_cols = occursin.("_T", col_names)
+
+    ts_diff = diff(c.climate_data.Date)
+    is_contiguous = all(ts_diff .== ts_diff[1])  # False if there are any breaks in the data
+
+    first_period = first(c.climate_data[:, "Date"])
+    last_period = last(c.climate_data[:, "Date"])
+    approx_years = round((last_period - first_period).value / 365.25; digits=2)
+    println(io, "Climate dataset\n")
+    println(io, "Number of Non-date columns: $(length(tgt_col_names))")
+    println(io, "    P identifier: \"$(c.rainfall_id)\"")
+    println(io, "    ET identifier: \"$(c.et_id)\"")
+    println(io, "    T identifier: \"$(c.t_id)\"")
+    print(io, "\n")
+    println(io, "Represented time period: $(first_period) - $(last_period)")
+    println(io, "    Number of observations: $(length(c))")
+    println(io, "    Approx. number of years: $(approx_years)")
+    println(io, "    Is contiguous: $(is_contiguous)")
+    print(io, "\n")
+    println(io, "Preview:")
+    println(io, first(c.climate_data, 10))
+
+    print(io, "\n")
+end
