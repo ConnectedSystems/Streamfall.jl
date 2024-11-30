@@ -6,8 +6,9 @@ using Statistics
 abstract type EnsembleNode <: NetworkNode end
 
 
-Base.@kwdef mutable struct BaseEnsemble{N<:NetworkNode, P, R<:Real} <: EnsembleNode
-    @network_node
+Base.@kwdef mutable struct BaseEnsemble{N<:NetworkNode, P, A<:Real} <: EnsembleNode
+    name::String
+    area::A
 
     instances::Array{N} = []
     weights::Array{P} = [
@@ -17,7 +18,7 @@ Base.@kwdef mutable struct BaseEnsemble{N<:NetworkNode, P, R<:Real} <: EnsembleN
     # Default to weighted sum
     comb_method::Function = (X, weights) -> sum([x * w for (x, w) in zip(X, weights)])
 
-    outflow::Array{R} = []
+    outflow::Array{A} = []
 end
 
 

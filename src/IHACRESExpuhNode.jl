@@ -2,9 +2,10 @@ using Parameters
 using ModelParameters
 
 
-Base.@kwdef mutable struct ExpuhNode{P, A<:Real} <: IHACRESNode
-    @network_node
-    
+Base.@kwdef mutable struct ExpuhNode{P, A<:AbstractFloat} <: IHACRESNode
+    name::String
+    area::A
+
     # https://wiki.ewater.org.au/display/SD41/IHACRES-CMD+-+SRG
     d::P = Param(200.0, bounds=(10.0, 550.0))  # flow threshold
     d2::P = Param(2.0, bounds=(0.0001, 10.0))   # flow threshold, multiplier applied to d
@@ -84,7 +85,7 @@ function ExpuhNode(name::String, spec::Dict)
 end
 
 
-function ExpuhNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64, 
+function ExpuhNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
                     tau_q::Float64, tau_s::Float64, v_s::Float64, s_coef::Float64,
                     store::Float64, quick::Float64, slow::Float64)
     return ExpuhNode{Param, Float64}(
@@ -105,7 +106,7 @@ function ExpuhNode(name::String, area::Float64, d::Float64, d2::Float64, e::Floa
 end
 
 """
-    run_node!(s_node::ExpuhNode, rain::Float64, evap::Float64, 
+    run_node!(s_node::ExpuhNode, rain::Float64, evap::Float64,
               inflow::Float64, ext::Float64, gw_exchange::Float64;
               current_store=nothing,
               quick_store=nothing,
@@ -114,10 +115,10 @@ end
 
 Run given IHACRES ExpuhNode for a time step based on last known state.
 """
-function run_node!(s_node::ExpuhNode, 
-                   rain::Float64, 
-                   evap::Float64, 
-                   inflow::Float64, 
+function run_node!(s_node::ExpuhNode,
+                   rain::Float64,
+                   evap::Float64,
+                   inflow::Float64,
                    ext::Float64,
                    gw_exchange::Float64;
                    current_store=nothing,
@@ -182,8 +183,8 @@ function run_node_with_temp!(s_node::ExpuhNode, rain::Float64, temp::Float64, in
     mf = @ccall IHACRES.calc_trig_interim_cmd(cmd::Cdouble, s_node.d::Cdouble, e_rainfall::Cdouble)::Cdouble
 
     et::Float64 = @ccall IHACRES.calc_ET_from_T(
-        s_node.e::Cdouble, 
-        temp::Cdouble, 
+        s_node.e::Cdouble,
+        temp::Cdouble,
         mf::Cdouble,
         s_node.f::Cdouble,
         s_node.d::Cdouble

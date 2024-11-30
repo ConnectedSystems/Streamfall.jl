@@ -26,10 +26,11 @@ function c_dam_outflow(discharge, irrigation_extraction)
 end
 
 
-Base.@kwdef mutable struct DamNode{P} <: NetworkNode
-    @network_node
+Base.@kwdef mutable struct DamNode{P, A<:AbstractFloat} <: NetworkNode
+    name::String
+    area::A
 
-    max_storage::Float64
+    max_storage::A
     storage_coef::P = Param(0.5, bounds=(0.00001, 10.0))
 
 
@@ -45,16 +46,16 @@ Base.@kwdef mutable struct DamNode{P} <: NetworkNode
     # Function to calculate outflow from dam
     calc_dam_outflow::Function = c_dam_outflow
 
-    storage::Array{Float64} = [0.0]
+    storage::Array{A} = [0.0]
 
-    effective_rainfall::Array{Float64} = []
-    et::Array{Float64} = []
-    inflow::Array{Float64} = []
-    dam_area::Array{Float64} = []
+    effective_rainfall::Array{A} = []
+    et::Array{A} = []
+    inflow::Array{A} = []
+    dam_area::Array{A} = []
 
-    level::Array{Float64} = []
-    discharge::Array{Float64} = []
-    outflow::Array{Float64} = []
+    level::Array{A} = []
+    discharge::Array{A} = []
+    outflow::Array{A} = []
 
 end
 
@@ -161,25 +162,25 @@ Update dam volume for timestep.
 volume of water stored in dam
 """
 function update_volume(volume, node_inflow, gamma, rain, evap, area, extractions, discharge, max_store)::Float64
-    
+
     vol = volume + (node_inflow + gamma) + (rain - evap) * area - extractions - discharge
 
     return max(0.0, min(max_store, vol))
 end
 
 
-function run_node!(node::DamNode, climate::Climate; 
+function run_node!(node::DamNode, climate::Climate;
                    inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
     for ts in 1:timesteps
-        run_node!(node, climate, ts; 
+        run_node!(node, climate, ts;
                   inflow=inflow, extraction=extraction, exchange=exchange)
     end
 end
 
 
 """
-    run_node!(node::DamNode, climate::Climate, timestep::Int; 
+    run_node!(node::DamNode, climate::Climate, timestep::Int;
               inflow=nothing, extraction=nothing, exchange=nothing)
 
 Run a specific node for a specified time step.
@@ -192,7 +193,7 @@ Run a specific node for a specified time step.
 - `extraction::DataFrame` : Time series of water orders (expects column of `_releases`)
 - `exchange::DataFrame` : Time series of groundwater flux
 """
-function run_node!(node::DamNode, climate::Climate, timestep::Int; 
+function run_node!(node::DamNode, climate::Climate, timestep::Int;
                    inflow=nothing, extraction=nothing, exchange=nothing)
     ts = timestep
     if checkbounds(Bool, node.outflow, ts)
@@ -220,14 +221,14 @@ Calculate outflow for the dam node for a single time step.
 - node : DamNode
 - rain : rainfall in mm
 - et : evapotranspiration data in mm
-- irrig_ext : irrigation extractions 
+- irrig_ext : irrigation extractions
 - extractions : extraction data in ML
 - gw_flux : groundwater interaction
 
 # Returns
 - outflow from dam
 """
-function run_node!(node::DamNode, 
+function run_node!(node::DamNode,
                    rain::Float64,
                    et::Float64,
                    vol::Float64,
