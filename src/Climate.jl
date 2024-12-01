@@ -6,6 +6,10 @@ struct Climate
     rainfall_id::String
     et_id::String
     t_id::String
+
+    function Climate(data, p_id, et_id)
+        return new(data, p_id, et_id, "_T")
+    end
 end
 
 """
@@ -28,6 +32,12 @@ DataFrame of observations for selected gauge.
     data::DataFrame, gauge_id::String, suffix::String="_Q"
 )::DataFrame
     target = data[:, ["Date", gauge_id * suffix]]
+    try
+        target[!, gauge_id * suffix] = convert.(Float64, target[!, gauge_id * suffix])
+    catch
+        target[!, gauge_id * suffix] = convert.(Union{Float64,Missing}, target[!, gauge_id * suffix])
+    end
+
     rename!(target, gauge_id * suffix => gauge_id)
 
     return target
@@ -96,9 +106,17 @@ function climate_values(node::NetworkNode, climate::Climate, timestep::Int)
     et_col = filter(x -> occursin(node_name, x)
                         & occursin(climate.et_id, x),
                         names(data))[1]
-    t_col = filter(x -> occursin(node_name, x)
-                        & occursin(climate.t_id, x),
-                        names(data))[1]
+    t_col = try
+        filter(x -> occursin(node_name, x)
+                            & occursin(climate.t_id, x),
+                            names(data))[1]
+    catch err
+        if !(err isa BoundsError)
+            rethrow(err)
+        end
+
+        []
+    end
 
     if isempty(rain_col) | isempty(et_col)
         throw(ArgumentError("No climate data found for $(node_name) at time step: $(timestep)"))
