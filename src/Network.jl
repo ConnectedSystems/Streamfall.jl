@@ -1,18 +1,33 @@
+using OrderedCollections
+
 using Cairo, Compose
 using Graphs, MetaGraphs, GraphPlot
 using ModelParameters
 
-import YAML: write_file
+import YAML: load_file, write_file
 
 
 struct StreamfallNetwork
     mg::MetaDiGraph
 end
 
+function load_network(name::String, fn::String)
+    network = load_file(
+        fn;
+        dicttype=OrderedDict
+    )
+
+    return create_network(name, network)
+end
+
 
 Base.getindex(sn::StreamfallNetwork, n::String) = get_node(sn, n)
 Base.getindex(sn::StreamfallNetwork, nid::Int) = get_node(sn, nid)
 
+function node_names(sn::StreamfallNetwork)
+    verts = vertices(sn.mg)
+    return [sn[v].name for v in verts]
+end
 
 function set_prop!(sn::StreamfallNetwork, nid::Int64, prop::Symbol, var::Any)::Nothing
     MetaGraphs.set_prop!(sn.mg, nid, prop, var)
@@ -111,15 +126,15 @@ end
 
 
 """
-    create_node(mg::MetaDiGraph, node_name::String, details::Dict, nid::Int)
+    create_node(mg::MetaDiGraph, node_name::String, details::OrderedDict, nid::Int)
 
 Create a node specified with given name (if it does not exist).
 
-Returns 
-- `this_id`, ID of node (if pre-existing) and 
+Returns
+- `this_id`, ID of node (if pre-existing) and
 - `nid`, incremented node id for entire network (equal to `this_id` if exists)
 """
-function create_node(mg::MetaDiGraph, node_name::String, details::Dict, nid::Int)
+function create_node(mg::MetaDiGraph, node_name::String, details::OrderedDict, nid::Int)
     details = copy(details)
 
     match = collect(MetaGraphs.filter_vertices(mg, :name, node_name))
@@ -149,46 +164,47 @@ function create_node(mg::MetaDiGraph, node_name::String, details::Dict, nid::Int
         set_props!(mg, nid, Dict(:name=>node_name,
                                  :node=>n,
                                  :nfunc=>func))
-        
+
         this_id = nid
-        nid = nid + 1
     else
         this_id = match[1]
     end
 
-    return this_id, nid
+    return this_id
 end
 
 
 """
-    create_network(name::String, network::Dict)::StreamfallNetwork
+    create_network(name::String, network::OrderedDict)::StreamfallNetwork
 
 Create a StreamNetwork from a YAML-derived specification.
 
 # Example
 ```julia-repl
-julia> network_spec = YAML.load_file("example_network.yml")
+julia> using OrderedCollections
+julia> network_spec = YAML.load_file("example_network.yml"; dicttype=OrderedDict{Any,Any})
 julia> sn = create_network("Example Network", network_spec)
 ```
 """
-function create_network(name::String, network::Dict)::StreamfallNetwork
+function create_network(name::String, network::OrderedDict)::StreamfallNetwork
     num_nodes = length(network)
     mg = MetaDiGraph(num_nodes)
     MetaGraphs.set_prop!(mg, :description, name)
-    
-    nid = 1
-    for (node, details) in network
+
+    for (nid, (node, details)) in enumerate(network)
         n_name = string(node)
 
-        this_id, nid = create_node(mg, n_name, details, nid)
+        this_id = create_node(mg, n_name, details, nid)
 
         if haskey(details, "inlets")
             inlets = details["inlets"]
-
             if !isnothing(inlets)
                 for inlet in inlets
-                    in_id, nid = create_node(mg, string(inlet), network[inlet], nid)
-                    add_edge!(mg, in_id => this_id)
+
+                    inlet_id = findall(keys(network) .== inlet)[1]
+
+                    in_id = create_node(mg, string(inlet), network[inlet], inlet_id)
+                    add_edge!(mg, inlet_id => nid)
                 end
             end
         end
@@ -200,8 +216,9 @@ function create_network(name::String, network::Dict)::StreamfallNetwork
                 @assert length(outlets) <= 1 || throw(ArgumentError(msg))
 
                 for outlet in outlets
-                    out_id, nid = create_node(mg, string(outlet), network[outlet], nid)
-                    add_edge!(mg, this_id => out_id)
+                    outlet_id = findall(keys(network) .== outlet)[1]
+                    out_id = create_node(mg, string(outlet), network[outlet], outlet_id)
+                    add_edge!(mg, nid => outlet_id)
                 end
             end
         end
@@ -303,10 +320,18 @@ function Base.show(io::IO, sn::StreamfallNetwork)
 
     vs = vertices(sn.mg)
 
-    for nid in vs
-        println(io, "Node $(nid) : \n")
+    show_verts = vs
+    if length(vs) > 4
+        show_verts = [1, 2, nothing, length(vs)-1, length(vs)]
+    end
+
+    for nid in show_verts
+        if isnothing(nid)
+            println(io, "⋮ \n")
+            continue
+        end
+        println(io, "Node $(nid): \n")
         show(io, sn[nid])
-        print("\n")
     end
 end
 
@@ -317,7 +342,7 @@ end
 Simple plot of stream network.
 """
 function plot_network(sn::StreamfallNetwork; as_html=false)
-    node_names = ["$(n.name)" for n in sn]
+    node_labels = ["$(sn[i].name)\n"*string(nameof(typeof(sn[i]))) for i in vertices(sn.mg)]
 
     if as_html
         plot_func = gplothtml
@@ -325,7 +350,7 @@ function plot_network(sn::StreamfallNetwork; as_html=false)
         plot_func = gplot
     end
 
-    plot_func(sn.mg, nodelabel=node_names)
+    plot_func(sn.mg, nodelabel=node_labels)
 end
 
 

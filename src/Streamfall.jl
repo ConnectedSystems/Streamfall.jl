@@ -40,9 +40,10 @@ function timestep_value(ts::Int, gauge_id::String, col_partial::String, dataset:
                                 names(dataset)
     )
 
+    amount = 0.0
     if !isempty(target_col)
-        amount = if checkbounds(Bool, dataset.Date, timestep)
-            dataset[timestep, target_col][1]
+        amount = if checkbounds(Bool, dataset.Date, ts)
+            dataset[ts, target_col][1]
         else
             0.0
         end
@@ -98,60 +99,6 @@ function align_time_frame(timeseries::T...) where {T<:DataFrame}
     return modded
 end
 
-
-"""
-    run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int;
-              extraction::Union{DataFrame, Nothing}=nothing,
-              exchange::Union{DataFrame, Nothing}=nothing)
-
-Run a model attached to a node for a given time step.
-Recurses upstream as needed.
-
-# Arguments
-- `sn::StreamfallNetwork`
-- `node_id::Int`
-- `climate::Climate`
-- `timestep::Int`
-- `inflow::DataFrame` : Additional inflow to consider (in ML/timestep)
-- `extraction::DataFrame` : Volume of water to be extracted (in ML/timestep)
-- `exchange::DataFrame` : Volume of flux (in ML/timestep), where negative values are losses to the groundwater system
-"""
-function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int;
-                   inflow::Union{DataFrame, Nothing}=nothing,
-                   extraction::Union{DataFrame, Nothing}=nothing,
-                   exchange::Union{DataFrame, Nothing}=nothing)
-    ts = timestep
-
-    sim_inflow = 0.0
-    ins = inneighbors(sn.mg, node_id)
-
-    if !isempty(ins)
-        for i in ins
-            # Get inflow from previous node
-            res = run_node!(sn, i, climate, timestep;
-                            inflow=inflow,
-                            extraction=extraction,
-                            exchange=exchange)
-            if res isa Number
-                sim_inflow += res
-            elseif length(res) > 1
-                # get outflow from (outflow, level)
-                sim_inflow += res[1]
-            end
-        end
-    end
-
-    node = sn[node_id]
-    ts_inflow = timestep_value(ts, node.name, "inflow", inflow)
-    ts_inflow += sim_inflow
-
-    run_func! = get_prop(sn, node_id, :nfunc)
-
-    # Run for a time step, dependent on previous state
-    run_func!(node, climate, ts; inflow=ts_inflow, extraction=extraction, exchange=exchange)
-end
-
-
 """
     run_basin!(sn::StreamfallNetwork, climate::Climate; inflow=nothing, extraction=nothing, exchange=nothing)
 
@@ -160,8 +107,8 @@ Run scenario for an entire catchment/basin.
 function run_basin!(sn::StreamfallNetwork, climate::Climate;
                     inflow=nothing, extraction=nothing, exchange=nothing)
     _, outlets = find_inlets_and_outlets(sn)
-    @inbounds for outlet in outlets
-        run_node!(sn, outlet, climate;
+    @inbounds for outlet_id in outlets
+        run_node!(sn, outlet_id, climate;
                   inflow=inflow, extraction=extraction, exchange=exchange)
     end
 end
@@ -171,7 +118,7 @@ run_catchment! = run_basin!
 
 """
     run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate;
-              extraction=nothing, exchange=nothing)::Nothing
+              inflow=nothing, extraction=nothing, exchange=nothing)::Nothing
 
 Generic run method that runs a model attached to a given node for all time steps.
 Recurses upstream as needed.
@@ -183,14 +130,85 @@ Recurses upstream as needed.
 - `extraction::DataFrame` : water orders for each time step (defaults to nothing)
 - `exchange::DataFrame` : exchange with groundwater system at each time step (defaults to nothing)
 """
-function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate;
-                   inflow=nothing, extraction=nothing, exchange=nothing)
+function run_node!(
+    sn::StreamfallNetwork, node_id::Int, climate::Climate;
+    inflow=nothing, extraction=nothing, exchange=nothing
+)::Nothing
     timesteps = sim_length(climate)
-    @inbounds for ts in 1:timesteps
-        run_node!(sn, node_id, climate, ts;
-                  inflow=inflow, extraction=extraction, exchange=exchange)
+
+    # Run all upstream nodes
+    sim_inflow = zeros(timesteps)
+    ins = inneighbors(sn.mg, node_id)
+    for i in ins
+        # Get inflow from previous node
+        run_node!(
+            sn, i, climate;
+            inflow=inflow, extraction=extraction, exchange=exchange
+        )
+
+        # Add outflow from upstream to inflow
+        sim_inflow .+= sn[i].outflow
     end
+
+    # Run this node
+    run_node!(
+        sn[node_id], climate;
+        inflow=sim_inflow, extraction=extraction, exchange=exchange
+    )
+
+    return nothing
 end
+
+# """
+#     run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int;
+#               extraction::Union{DataFrame, Nothing}=nothing,
+#               exchange::Union{DataFrame, Nothing}=nothing)
+
+# Run a model attached to a node for a given time step.
+# Recurses upstream as needed.
+
+# # Arguments
+# - `sn::StreamfallNetwork`
+# - `node_id::Int`
+# - `climate::Climate`
+# - `timestep::Int`
+# - `inflow::DataFrame` : Additional inflow to consider (in ML/timestep)
+# - `extraction::DataFrame` : Volume of water to be extracted (in ML/timestep)
+# - `exchange::DataFrame` : Volume of flux (in ML/timestep), where negative values are losses to the groundwater system
+# """
+# function run_node!(sn::StreamfallNetwork, node_id::Int, climate::Climate, timestep::Int;
+#                    inflow::Union{DataFrame, Nothing}=nothing,
+#                    extraction::Union{DataFrame, Nothing}=nothing,
+#                    exchange::Union{DataFrame, Nothing}=nothing)
+#     ts = timestep
+
+#     sim_inflow = 0.0
+#     ins = inneighbors(sn.mg, node_id)
+
+#     if !isempty(ins)
+#         for i in ins
+#             prep_state!(sn[node_id], length(climate))
+
+#             # Get inflow from previous node
+#             res = run_node!(sn, i, climate, timestep;
+#                             inflow=inflow,
+#                             extraction=extraction,
+#                             exchange=exchange)
+
+#             # Add outflow
+#             sim_inflow += res
+#         end
+#     end
+
+#     node = sn[node_id]
+#     ts_inflow = timestep_value(ts, node.name, "inflow", inflow)
+#     ts_inflow += sim_inflow
+
+#     run_func! = get_prop(sn, node_id, :nfunc)
+
+#     # Run for a time step, dependent on previous state
+#     run_func!(node, climate, ts; inflow=ts_inflow, extraction=extraction, exchange=exchange)
+# end
 
 
 """
@@ -206,7 +224,10 @@ Run a specific node, and only that node, for all time steps.
 - `extraction::Union{DataFrame, Vector, Number}` : Extractions from this subcatchment
 - `exchange::Union{DataFrame, Vector, Number}` : Groundwater flux
 """
-function run_node!(node::NetworkNode, climate::Climate; inflow=nothing, extraction=nothing, exchange=nothing)::Nothing
+function run_node!(
+    node::NetworkNode, climate::Climate;
+    inflow=nothing, extraction=nothing, exchange=nothing
+)::Nothing
     timesteps = sim_length(climate)
     prep_state!(node, timesteps)
 
@@ -243,14 +264,14 @@ export EnsembleNode, BaseEnsemble
 export run_step!, run_timestep!
 
 # Network
-export find_inlets_and_outlets, inlets, outlets, create_network, create_node
-export climate_values, get_node, get_node_id, get_prop, set_prop!
+export find_inlets_and_outlets, inlets, outlets, load_network, create_network, create_node
+export climate_values, node_names, get_node, get_node_id, get_prop, set_prop!
 export param_info, update_params!, sim_length, reset!
 export run_catchment!, run_basin!, run_node!, run_node_with_temp!
 export calibrate!
 
 # Data
-export extract_flow, extract_climate
+export extract_flow, extract_climate, align_time_frame
 
 # plotting methods
 export quickplot, plot_network, save_figure
