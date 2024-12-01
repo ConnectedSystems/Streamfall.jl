@@ -30,7 +30,7 @@ The spec takes the following form:
     area: 130.0  # subcatchment area in km^2 (from BoM)
 
     # Model parameters (in this case, for IHACRES)
-    parameters:    
+    parameters:
         d: 200.0     # millimeters
         d2: 2.0      # multiplier applied to `d`
         e: 1.0       # ET scaling factor, dimensionless
@@ -40,19 +40,6 @@ The spec takes the following form:
         storage_coef: 2.9  # groundwater interaction factor
         alpha: 0.95  # effective rainfall scaling factor
         initial_storage: 0.0  # initial CMD value, CMD > 0 means there is a deficit
-
-    # additional node-specific parameters
-    # (unused in this example so can be ignored)
-    level_params:  
-        - -3.3502  # p1
-        - 0.68340  # p2
-        - 4.50     # p3
-        - 5.0      # p4
-        - 0.35     # p5
-        - 1.41     # p6
-        - -1.45    # p7
-        - 6.75     # p8
-        - 167.845  # CTF
 ```
 
 The spec is then loaded in Julia and passed into `create_network()`
@@ -100,11 +87,11 @@ Individual nodes can also be created programmatically:
 
 ```julia
 # Programmatically create a node (from a spec)
-new_node = BilinearNode("410730", network["410730"])
+new_node = IHACRESBilinearNode("410730", network["410730"])
 
 # Creating the same node manually by specifying model parameters
 # Argument order: node_name, area, d, d2, e, f, a, b, storage_coef, alpha, initial cmd, initial quickflow, initial slowflow, initial gw_store
-new_node = BilinearNode("410730", 130.0, 95.578, 1.743, 1.047, 1.315, 99.134, 0.259, 2.9, 0.785, 100.0, 0.0, 0.0, 0.0)
+new_node = IHACRESBilinearNode("410730", 130.0, 95.578, 1.743, 1.047, 1.315, 99.134, 0.259, 2.9, 0.785, 100.0, 0.0, 0.0, 0.0)
 ```
 
 Of course, model parameters may not be known in advance.

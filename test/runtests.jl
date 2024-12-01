@@ -26,7 +26,7 @@ end
 
 
 @testset "Ensure no NaN outputs" begin
-    test_node = BilinearNode(
+    test_node = IHACRESBilinearNode(
         "Test",  # name/id
         1985.73,  # area
         200.0,  # d
@@ -69,7 +69,7 @@ end
     target_node = get_prop(sn, 1, :node)
 
     @test target_node.area == 1985.73
-    @test target_node.level_params[1] == -3.3502
+    # @test target_node.level_params[1] == -3.3502
 end
 
 
@@ -84,7 +84,7 @@ end
                                        d::Cdouble,
                                        d2::Cdouble,
                                        alpha::Cdouble)::Cvoid
-    
+
     (mf, e_rainfall, recharge) = interim_results
 
     @test !isnan(mf)
