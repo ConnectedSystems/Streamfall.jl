@@ -147,7 +147,7 @@ function run_hymod!(node::SimpleHyModNode, ts::Int64, P::F, PET::F, inflow::F, e
 
     Qtmp::F = (Qs1 + Qf3) * node.area
     Q_t::F = inflow + Qtmp - ext + flux
-    update_states!(node, ts, Sm_t1, Sf1_t1, Sf2_t1, Sf3_t1, Ss1_t1, Q_t)
+    update_state!(node, ts, Sm_t1, Sf1_t1, Sf2_t1, Sf3_t1, Ss1_t1, Q_t)
 
     return Q_t
 end
@@ -162,7 +162,7 @@ function update_params!(node::HyModNode, Sm_max::F, B::F, alpha::F, Kf::F, Ks::F
 end
 
 
-# function update_states!(node::HyModNode, Sm, Sf1, Sf2, Sf3, Ss1, Q)::Nothing
+# function update_state!(node::HyModNode, Sm, Sf1, Sf2, Sf3, Ss1, Q)::Nothing
 #     append!(node.Sm, Sm)
 #     append!(node.Sf1, Sf1)
 #     append!(node.Sf2, Sf2)
@@ -172,7 +172,7 @@ end
 
 #     return nothing
 # end
-function update_states!(
+function update_state!(
     node::HyModNode, ts::Int, Sm::F, Sf1::F, Sf2::F, Sf3::F, Ss1::F, Q::F
 )::Nothing where {F<:Float64}
     # State for time t+1
