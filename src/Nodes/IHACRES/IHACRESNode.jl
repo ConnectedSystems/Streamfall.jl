@@ -1,11 +1,14 @@
 using Parameters
 using ModelParameters
 
+include("./components/p_and_et.jl")
+include("./components/cmd.jl")
+include("./components/flow.jl")
 
 abstract type IHACRESNode <: NetworkNode end
 
 
-Base.@kwdef mutable struct BilinearNode{P, A<:AbstractFloat} <: IHACRESNode
+Base.@kwdef mutable struct IHACRESBilinearNode{P, A<:AbstractFloat} <: IHACRESNode
     const name::String
     const area::A
 
@@ -24,17 +27,17 @@ Base.@kwdef mutable struct BilinearNode{P, A<:AbstractFloat} <: IHACRESNode
     storage_coef::P = Param(2.9, bounds=(1e-10, 10.0))
     alpha::P = Param(0.1, bounds=(1e-5, 1 - 1/10^9))
 
-    const level_params::Array{P, 1} = [
-        Param(-0.01, bounds=(-10.0, -0.01)),  # p1
-        Param(0.8, bounds=(0.0, 1.5)),  # p2
-        Param(4.5, bounds=(0.0, 20.0)), # p3
-        Param(5.0, bounds=(1.0, 10.0)), # p4
-        Param(0.35, bounds=(0.0, 1.0)), # p5
-        Param(1.41, bounds=(-2.0, 2.0)), # p6
-        Param(-1.45, bounds=(-2.5, 0.0)), # p7
-        Param(6.75, bounds=(0.0, 10.0)), # p8
-        Param(150.0, bounds=(50.0, 200.0)) # ctf
-    ]
+    # const level_params::Array{P, 1} = [
+    #     Param(-0.01, bounds=(-10.0, -0.01)),  # p1
+    #     Param(0.8, bounds=(0.0, 1.5)),  # p2
+    #     Param(4.5, bounds=(0.0, 20.0)), # p3
+    #     Param(5.0, bounds=(1.0, 10.0)), # p4
+    #     Param(0.35, bounds=(0.0, 1.0)), # p5
+    #     Param(1.41, bounds=(-2.0, 2.0)), # p6
+    #     Param(-1.45, bounds=(-2.5, 0.0)), # p7
+    #     Param(6.75, bounds=(0.0, 10.0)), # p8
+    #     Param(150.0, bounds=(50.0, 200.0)) # CTF (height in local datum where stream will cease to flow)
+    # ]
 
     storage::Array{A} = [100.0]  # CMD
     quick_store::Array{A} = [0.0]
@@ -43,11 +46,8 @@ Base.@kwdef mutable struct BilinearNode{P, A<:AbstractFloat} <: IHACRESNode
     effective_rainfall::Array{A} = []
     et::Array{A} = []
     inflow::Array{A} = []
-    level::Array{A} = []
+    # level::Array{A} = []
     gw_store::Array{A} = [0.0]
-
-    # cache arrays
-    cache::NamedTuple{(:i_cache, :r_cache), <:Tuple{Vector{Float64}, Vector{Float64}}} = (i_cache=zeros(3), r_cache=zeros(2))
 end
 
 
@@ -65,7 +65,7 @@ function prep_state!(node::IHACRESNode, timesteps::Int64)::Nothing
     node.effective_rainfall = fill(0.0, timesteps)
     node.et = fill(0.0, timesteps)
     node.inflow = fill(0.0, timesteps)
-    node.level = fill(0.0, timesteps)
+    # node.level = fill(0.0, timesteps)
 
     resize!(node.gw_store, timesteps+1)
     node.gw_store[2:end] .= 0.0
@@ -74,25 +74,25 @@ function prep_state!(node::IHACRESNode, timesteps::Int64)::Nothing
 end
 
 
-function BilinearNode(name::String, spec::Dict)
-    n = create_node(BilinearNode, name, spec["area"])
+function IHACRESBilinearNode(name::String, spec::Dict)
+    n = create_node(IHACRESBilinearNode, name, spec["area"])
     node_params = copy(spec["parameters"])
 
-    if haskey(spec, "level_params")
-        n_lparams = n.level_params
-        s_lparams = spec["level_params"]
-        node_params["level_params"] = Param[
-            Param(s_lparams[1], bounds=n_lparams[1].bounds)
-            Param(s_lparams[2], bounds=n_lparams[2].bounds)
-            Param(s_lparams[3], bounds=n_lparams[3].bounds)
-            Param(s_lparams[4], bounds=n_lparams[4].bounds)
-            Param(s_lparams[5], bounds=n_lparams[5].bounds)
-            Param(s_lparams[6], bounds=n_lparams[6].bounds)
-            Param(s_lparams[7], bounds=n_lparams[7].bounds)
-            Param(s_lparams[8], bounds=n_lparams[8].bounds)
-            Param(s_lparams[9], bounds=n_lparams[9].bounds)
-        ]
-    end
+    # if haskey(spec, "level_params")
+    #     n_lparams = n.level_params
+    #     s_lparams = spec["level_params"]
+    #     node_params["level_params"] = Param[
+    #         Param(s_lparams[1], bounds=n_lparams[1].bounds)
+    #         Param(s_lparams[2], bounds=n_lparams[2].bounds)
+    #         Param(s_lparams[3], bounds=n_lparams[3].bounds)
+    #         Param(s_lparams[4], bounds=n_lparams[4].bounds)
+    #         Param(s_lparams[5], bounds=n_lparams[5].bounds)
+    #         Param(s_lparams[6], bounds=n_lparams[6].bounds)
+    #         Param(s_lparams[7], bounds=n_lparams[7].bounds)
+    #         Param(s_lparams[8], bounds=n_lparams[8].bounds)
+    #         Param(s_lparams[9], bounds=n_lparams[9].bounds)
+    #     ]
+    # end
 
     node_params["storage"] = [node_params["initial_storage"]]
     delete!(node_params, "initial_storage")
@@ -121,16 +121,16 @@ end
 
 
 """
-    BilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
+    IHACRESBilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
                 a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
                 store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
 
 Create a IHACRES node that adopts the bilinear CMD module.
 """
-function BilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
+function IHACRESBilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
                       a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
                       store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
-    n = create_node(BilinearNode, name, area)
+    n = create_node(IHACRESBilinearNode, name, area)
 
     update_params!(n, d, d2, e, f, a, b, s_coef, alpha)
 
@@ -143,9 +143,16 @@ function BilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::F
 end
 
 
-function update_state!(s_node::IHACRESNode, storage::Float64, e_rainfall::Float64, et::Float64,
-                      qflow_store::Float64, sflow_store::Float64, outflow::Float64,
-                      level::Float64, gw_store::Float64)::Nothing
+function update_state!(
+    s_node::IHACRESNode,
+    storage::F,
+    e_rainfall::F,
+    et::F,
+    qflow_store::F,
+    sflow_store::F,
+    outflow::F,
+    gw_store::F
+)::Nothing where {F<:Float64}
     push!(s_node.storage, storage)
     push!(s_node.effective_rainfall, e_rainfall)
     push!(s_node.et, et)
@@ -153,7 +160,7 @@ function update_state!(s_node::IHACRESNode, storage::Float64, e_rainfall::Float6
 
     push!(s_node.quick_store, qflow_store)
     push!(s_node.slow_store, sflow_store)
-    push!(s_node.level, level)
+    # push!(s_node.level, level)
     push!(s_node.gw_store, gw_store)
 
     return nothing
@@ -168,7 +175,6 @@ function update_state!(
     sflow_store::Float64,
     inflow::Float64,
     outflow::Float64,
-    level::Float64,
     gw_store::Float64
 )::Nothing
     s_node.storage[ts+1] = storage
@@ -181,14 +187,16 @@ function update_state!(
 
     s_node.effective_rainfall[ts] = e_rainfall
     s_node.et[ts] = et
-    s_node.level[ts] = level
+    # s_node.level[ts] = level
 
     return nothing
 end
 
 """
-    run_node!(node::IHACRESNode, climate::Climate, timestep::Int;
-                  inflow=nothing, extraction=nothing, exchange=nothing)
+    run_node!(
+        node::IHACRESNode, climate::Climate, ts::Int;
+        inflow=nothing, extraction=nothing, exchange=nothing
+    )
 
 Run a specific node for a specified time step.
 
@@ -200,8 +208,10 @@ Run a specific node for a specified time step.
 - `extraction::DataFrame` : Time series of water orders (expects column of `_releases`)
 - `exchange::DataFrame` : Time series of groundwater flux
 """
-function run_node!(node::IHACRESNode, climate::Climate, ts::Int;
-                   inflow=nothing, extraction=nothing, exchange=nothing)
+function run_node!(
+    node::IHACRESNode, climate::Climate, ts::Int;
+    inflow=nothing, extraction=nothing, exchange=nothing
+)
     if checkbounds(Bool, node.outflow, ts)
         if node.outflow[ts] != undef
             # already ran for this time step so no need to run
@@ -220,11 +230,11 @@ end
 
 """
     run_timestep!(
-        node::BilinearNode, climate::Climate, timestep::Int,
+        node::IHACRESBilinearNode, climate::Climate, timestep::Int,
         inflow::Float64, extraction::Float64, exchange::Float64
     )
 
-Run the given BilinearNode for a time step.
+Run the given IHACRESBilinearNode for a time step.
 """
 function run_timestep!(
     node::IHACRESNode, climate::Climate, timestep::Int;
@@ -235,7 +245,7 @@ function run_timestep!(
 
     return run_timestep!(node, ts, P, ET, in_flow, ext, flux)
 end
-function run_timestep!(node, P, ET, ts; inflow=nothing, extraction=nothing, exchange=nothing)
+function run_timestep!(node::IHACRESNode, P, ET, ts; inflow=nothing, extraction=nothing, exchange=nothing)
     in_flow = timestep_value(ts, node.name, "inflow", inflow)
     ext = timestep_value(ts, node.name, "extraction", extraction)
     flux = timestep_value(ts, node.name, "exchange", exchange)
@@ -251,94 +261,84 @@ function run_ihacres!(
     inflow::F,
     ext::F,
     gw_exchange::F
-)::Tuple{F, F} where {F<:Float64}
+)::F where {F<:Float64}
     current_store::F = s_node.storage[ts]
     quick_store::F = s_node.quick_store[ts]
     slow_store::F = s_node.slow_store[ts]
     gw_store::F = s_node.gw_store[ts]
 
-    cache_res = s_node.cache.i_cache
-    @ccall IHACRES.calc_ft_interim_cmd(
-        cache_res::Ptr{Cdouble},
-        current_store::Cdouble,
-        rain::Cdouble,
-        s_node.d.val::Cdouble,
-        s_node.d2.val::Cdouble,
-        s_node.alpha.val::Cdouble
-    )::Cvoid
-    (mf, e_rainfall, recharge) = cache_res
+    (mf, e_rainfall, recharge) = calc_ft_interim_cmd(
+        current_store,
+        rain,
+        s_node.d.val::F,
+        s_node.d2.val::F,
+        s_node.alpha.val::F
+    )
 
-    et::F = @ccall IHACRES.calc_ET(
-        s_node.e.val::Cdouble,
-        evap::Cdouble,
-        mf::Cdouble,
-        s_node.f.val::Cdouble,
-        s_node.d.val::Cdouble
-    )::Cdouble
+    et::F = calc_ET_from_E(
+        s_node.e.val::F,
+        evap,
+        mf,
+        s_node.f.val::F,
+        s_node.d.val::F
+    )
 
-    cmd::F = @ccall IHACRES.calc_cmd(
-        current_store::Cdouble,
-        rain::Cdouble,
-        et::Cdouble,
-        e_rainfall::Cdouble,
-        recharge::Cdouble
-    )::Cdouble
+    cmd::F = calc_cmd(
+        current_store,
+        rain,
+        et,
+        e_rainfall,
+        recharge
+    )
 
-    @ccall IHACRES.calc_ft_flows(
-        cache_res::Ptr{Cdouble},
-        quick_store::Cdouble,
-        slow_store::Cdouble,
-        e_rainfall::Cdouble,
-        recharge::Cdouble,
-        s_node.area::Cdouble,
-        s_node.a.val::Cdouble,
-        s_node.b.val::Cdouble
-    )::Cvoid
-    (nq_store, ns_store, outflow) = cache_res
+    (nq_store, ns_store, outflow) = calc_ft_flows(
+        quick_store,
+        slow_store,
+        e_rainfall,
+        recharge,
+        s_node.area,
+        s_node.a.val::F,
+        s_node.b.val::F
+    )
 
-    routing_res = s_node.cache.r_cache
-    @ccall IHACRES.routing(
-        routing_res::Ptr{Cdouble},
-        gw_store::Cdouble,
-        s_node.storage_coef.val::Cdouble,
-        inflow::Cdouble,
-        outflow::Cdouble,
-        ext::Cdouble,
-        gw_exchange::Cdouble
-    )::Cvoid
+    (gw_store, outflow) = routing(
+        gw_store,
+        s_node.storage_coef.val::F,
+        inflow,
+        outflow,
+        ext,
+        gw_exchange
+    )
 
-    (gw_store, outflow) = routing_res
+    # level::Float64 = calc_ft_level(
+    #     outflow,
+    #     Vector{Float64}(s_node.level_params)
+    # )
 
-    level_params = Vector{Float64}(s_node.level_params)
-    level::Float64 = @ccall IHACRES.calc_ft_level(
-        outflow::Cdouble,
-        level_params::Ptr{Cdouble}
-    )::Cdouble
+    update_state!(s_node, ts, cmd, e_rainfall, et, nq_store, ns_store, inflow, outflow, gw_store)
 
-    update_state!(s_node, ts, cmd, e_rainfall, et, nq_store, ns_store, inflow, outflow, level, gw_store)
-
-    return outflow, level
+    return outflow
 end
 
 
 """
-    param_info(node::IHACRESNode; with_level::Bool = true)::Tuple
+    param_info(node::IHACRESNode)::Tuple
 
 Extract node parameter names, values, and bounds for IHACRESNode types.
 """
-function param_info(node::IHACRESNode; with_level::Bool = false)::Tuple
+function param_info(node::IHACRESNode)::Tuple
     tmp = Model(node)
     values = collect(tmp[:val])
     bounds = collect(tmp[:bounds])
     param_names = collect(tmp[:fieldname])
 
-    if with_level
-        level_param_vals = map(x->x.val, node.level_params)
-        append!(values, level_param_vals)
+    # if with_level
+    #     level_param_vals = map(x->x.val, node.level_params)
+    #     append!(values, level_param_vals)
 
-        level_param_bounds = map(x->x.bounds, node.level_params)
-        append!(bounds, level_param_bounds)
-    end
+    #     level_param_bounds = map(x->x.bounds, node.level_params)
+    #     append!(bounds, level_param_bounds)
+    # end
 
     return param_names, values, bounds
 end
@@ -357,7 +357,7 @@ function run_node_with_temp!(sn::StreamfallNetwork, nid::Int64, climate::Climate
 end
 
 
-function run_node_with_temp!(node::BilinearNode, climate::Climate;
+function run_node_with_temp!(node::IHACRESBilinearNode, climate::Climate;
                              inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
     @inbounds for ts in 1:timesteps
@@ -369,7 +369,7 @@ function run_node_with_temp!(node::BilinearNode, climate::Climate;
 end
 
 
-function run_node_with_temp!(node::BilinearNode, climate::Climate, timestep::Int64;
+function run_node_with_temp!(node::IHACRESBilinearNode, climate::Climate, timestep::Int64;
                              inflow=nothing, extraction=nothing, exchange=nothing)
     ts = timestep
     P, T = climate_values(node, climate, ts)
@@ -381,7 +381,7 @@ end
 
 
 """
-    run_node_with_temp!(s_node::BilinearNode,
+    run_node_with_temp!(s_node::IHACRESBilinearNode,
                         rain::Float64,
                         temp::Float64,
                         inflow::Float64,
@@ -394,7 +394,7 @@ end
 
 Run node with temperature data to calculate outflow and update state.
 """
-function run_node_with_temp!(s_node::BilinearNode,
+function run_node_with_temp!(s_node::IHACRESBilinearNode,
                              rain::Float64,
                              temp::Float64,
                              inflow::Float64,
@@ -409,82 +409,82 @@ function run_node_with_temp!(s_node::BilinearNode,
     slow_store = s_node.slow_store[end]
     gw_store = s_node.gw_store[end]
 
-    interim_results = [0.0, 0.0, 0.0]
-    @ccall IHACRES.calc_ft_interim_cmd(interim_results::Ptr{Cdouble},
-                                       current_store::Cdouble,
-                                       rain::Cdouble,
-                                       s_node.d::Cdouble,
-                                       s_node.d2::Cdouble,
-                                       s_node.alpha::Cdouble)::Cvoid
+    (mf, e_rainfall, recharge) = calc_ft_interim_cmd(
+        interim_results,
+        current_store,
+        rain,
+        s_node.d,
+        s_node.d2,
+        s_node.alpha
+    )
 
-    @assert any(isnan.(interim_results)) == false
-    (mf, e_rainfall, recharge) = interim_results
+    et::Float64 = calc_ET_from_T(
+        s_node.e,
+        temp,
+        mf,
+        s_node.f,
+        s_node.d
+    )
 
-    et::Float64 = @ccall IHACRES.calc_ET_from_T(
-        s_node.e::Cdouble,
-        temp::Cdouble,
-        mf::Cdouble,
-        s_node.f::Cdouble,
-        s_node.d::Cdouble
-    )::Cdouble
+    cmd::Float64 = calc_cmd(
+        mf,
+        rain,
+        et,
+        e_rainfall,
+        recharge
+    )
 
-    cmd::Float64 = @ccall IHACRES.calc_cmd(
-        mf::Cdouble,
-        rain::Cdouble,
-        et::Cdouble,
-        e_rainfall::Cdouble,
-        recharge::Cdouble
-    )::Cdouble
+    (nq_store, ns_store, outflow) = calc_ft_flows(
+        quick_store,
+        slow_store,
+        e_rainfall,
+        recharge,
+        s_node.area,
+        s_node.a,
+        s_node.b
+    )
 
-    flow_results = [0.0, 0.0, 0.0]
-    @ccall IHACRES.calc_ft_flows(
-        flow_results::Ptr{Cdouble},
-        quick_store::Cdouble,
-        slow_store::Cdouble,
-        e_rainfall::Cdouble,
-        recharge::Cdouble,
-        s_node.area::Cdouble,
-        s_node.a::Cdouble,
-        s_node.b::Cdouble
-    )::Cvoid
+    @assert any(isnan.((nq_store, ns_store, outflow))) == false
 
-    @assert any(isnan.(flow_results)) == false
-    (nq_store, ns_store, outflow) = flow_results
+    (gw_store, outflow) = routing(
+        gw_store,
+        s_node.storage_coef,
+        inflow,
+        outflow,
+        ext,
+        gw_exchange
+    )
 
-    routing_res = [0.0, 0.0]
-    @ccall IHACRES.routing(
-        routing_res::Ptr{Cdouble},
-        gw_store::Cdouble,
-        s_node.storage_coef::Cdouble,
-        inflow::Cdouble,
-        outflow::Cdouble,
-        ext::Cdouble,
-        gw_exchange::Cdouble)::Cvoid
-
-    @assert any(isnan.(routing_res)) == false
-    (gw_store, outflow) = routing_res
-
-    level_params = Array{Float64}(s_node.level_params)
-    level::Float64 = @ccall IHACRES.calc_ft_level(
-        outflow::Cdouble,
-        level_params::Ptr{Cdouble}
-    )::Cdouble
+    # level_params = Array{Float64}(s_node.level_params)
+    # level::Float64 = calc_ft_level(
+    #     outflow,
+    #     level_params
+    # )
 
     push!(s_node.inflow, inflow)
-    update_state(s_node, cmd, e_rainfall, et, nq_store, ns_store, outflow, level, gw_store)
+    update_state(s_node, cmd, e_rainfall, et, nq_store, ns_store, outflow, gw_store)
 
     return outflow, level
 end
 
 
 """
-    update_params!(node::BilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
+    update_params!(node::IHACRESBilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
                    a::Float64, b::Float64, s_coef::Float64, alpha::Float64)::Nothing
 
 Update model parameters.
 """
-function update_params!(node::BilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
-                        a::Float64, b::Float64, s_coef::Float64, alpha::Float64)::Nothing
+function update_params!(
+    node::IHACRESBilinearNode,
+    d::F,
+    d2::F,
+    e::F,
+    f::F,
+    a::F,
+    b::F,
+    s_coef::F,
+    alpha::F
+)::Nothing where {F<:Float64}
     node.d = Param(d, bounds=node.d.bounds::Tuple)
     node.d2 = Param(d2, bounds=node.d2.bounds::Tuple)
     node.e = Param(e, bounds=node.e.bounds::Tuple)
@@ -498,41 +498,41 @@ function update_params!(node::BilinearNode, d::Float64, d2::Float64, e::Float64,
 end
 
 
-"""
-    update_params!(node::BilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
-                   a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
-                   p1::Float64, p2::Float64, p3::Float64, p4::Float64, p5::Float64, p6::Float64, p7::Float64, p8::Float64, CTF::Float64)::Nothing
+# """
+#     update_params!(node::IHACRESBilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
+#                    a::Float64, b::Float64, s_coef::Float64, alpha::Float64)::Nothing
 
-Update all parameters.
-"""
-function update_params!(node::BilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
-                        a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
-                        p1::Float64, p2::Float64, p3::Float64, p4::Float64, p5::Float64,
-                        p6::Float64, p7::Float64, p8::Float64, CTF::Float64)::Nothing
-    node.d = Param(d, bounds=node.d.bounds::Tuple)
-    node.d2 = Param(d2, bounds=node.d2.bounds::Tuple)
-    node.e = Param(e, bounds=node.e.bounds::Tuple)
-    node.f = Param(f, bounds=node.f.bounds::Tuple)
-    node.a = Param(a, bounds=node.a.bounds::Tuple)
-    node.b = Param(b, bounds=node.b.bounds::Tuple)
-    node.storage_coef = Param(s_coef, bounds=node.storage_coef.bounds::Tuple)
-    node.alpha = Param(alpha, bounds=node.alpha.bounds::Tuple)
+# Update all parameters.
+# """
+# function update_params!(node::BilinearNode, d::F, d2::F, e::F, f::F,
+#     a::F, b::F, s_coef::F, alpha::F,
+#     p1::F, p2::F, p3::F, p4::F, p5::F,
+#     p6::F, p7::F, p8::F, CTF::F
+# )::Nothing where {F<:Float64}
+#     node.d = Param(d, bounds=node.d.bounds::Tuple)
+#     node.d2 = Param(d2, bounds=node.d2.bounds::Tuple)
+#     node.e = Param(e, bounds=node.e.bounds::Tuple)
+#     node.f = Param(f, bounds=node.f.bounds::Tuple)
+#     node.a = Param(a, bounds=node.a.bounds::Tuple)
+#     node.b = Param(b, bounds=node.b.bounds::Tuple)
+#     node.storage_coef = Param(s_coef, bounds=node.storage_coef.bounds::Tuple)
+#     node.alpha = Param(alpha, bounds=node.alpha.bounds::Tuple)
 
-    n_lparams = node.level_params
-    node.level_params = [
-        Param(p1, bounds=n_lparams[1].bounds::Tuple)
-        Param(p2, bounds=n_lparams[2].bounds::Tuple)
-        Param(p3, bounds=n_lparams[3].bounds::Tuple)
-        Param(p4, bounds=n_lparams[4].bounds::Tuple)
-        Param(p5, bounds=n_lparams[5].bounds::Tuple)
-        Param(p6, bounds=n_lparams[6].bounds::Tuple)
-        Param(p7, bounds=n_lparams[7].bounds::Tuple)
-        Param(p8, bounds=n_lparams[8].bounds::Tuple)
-        Param(CTF, bounds=n_lparams[9].bounds::Tuple)
-    ]
+#     n_lparams = node.level_params
+#     node.level_params = [
+#         Param(p1, bounds=n_lparams[1].bounds::Tuple)
+#         Param(p2, bounds=n_lparams[2].bounds::Tuple)
+#         Param(p3, bounds=n_lparams[3].bounds::Tuple)
+#         Param(p4, bounds=n_lparams[4].bounds::Tuple)
+#         Param(p5, bounds=n_lparams[5].bounds::Tuple)
+#         Param(p6, bounds=n_lparams[6].bounds::Tuple)
+#         Param(p7, bounds=n_lparams[7].bounds::Tuple)
+#         Param(p8, bounds=n_lparams[8].bounds::Tuple)
+#         Param(CTF, bounds=n_lparams[9].bounds::Tuple)
+#     ]
 
-    return nothing
-end
+#     return nothing
+# end
 
 # TODO
 # update_bounds!()
@@ -549,7 +549,7 @@ function reset!(s_node::IHACRESNode)::Nothing
     s_node.slow_store = [s_node.slow_store[1]]
     s_node.gw_store = [s_node.gw_store[1]]
     s_node.outflow = []
-    s_node.level = []
+    # s_node.level = []
     s_node.effective_rainfall = []
     s_node.et = []
     s_node.inflow = []
