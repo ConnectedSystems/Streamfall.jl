@@ -237,7 +237,7 @@ include("plotting.jl")
 
 # Nodes
 export NetworkNode, GenericNode, GenericDirectNode
-export IHACRES, IHACRESNode, BilinearNode, ExpuhNode, DamNode, Climate
+export IHACRES, IHACRESNode, IHACRESBilinearNode, ExpuhNode, DamNode, Climate
 export create_node, GR4JNode, HyModNode, SimpleHyModNode, SYMHYDNode
 export EnsembleNode, BaseEnsemble
 export run_step!, run_timestep!

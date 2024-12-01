@@ -1,5 +1,5 @@
 406219:
-    node_type: BilinearNode
+    node_type: IHACRESBilinearNode
     inlets:
     outlets: 406000
     area: 1985.73
