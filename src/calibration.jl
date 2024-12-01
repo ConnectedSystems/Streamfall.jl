@@ -3,14 +3,14 @@ using Distributed, BlackBoxOptim, Serialization
 
 
 """Calibrate specified node in network."""
-function obj_func(params, climate::Climate, sn::StreamfallNetwork, v_id::Int, calib_data::Array; 
+function obj_func(params, climate::Climate, sn::StreamfallNetwork, v_id::Int, calib_data::Array;
                   metric::Function, inflow=nothing, extraction=nothing, exchange=nothing)
     return obj_func(params, climate, sn[v_id], calib_data; metric=metric, inflow=inflow, extraction=extraction, exchange=exchange)
 end
 
 
 """Calibrate current node."""
-function obj_func(params, climate::Climate, node::NetworkNode, calib_data::Array; 
+function obj_func(params, climate::Climate, node::NetworkNode, calib_data::Array;
                   metric::Function, inflow=nothing, extraction=nothing, exchange=nothing)
     update_params!(node, params...)
 
@@ -200,13 +200,13 @@ end
 
 
 """
-    calibrate!(sn::StreamfallNetwork, climate::Climate, calib_data;
+    calibrate!(sn::StreamfallNetwork, climate::Climate, calib_data::DataFrame;
                metric::Function=Streamfall.RMSE,
                kwargs...)
 
 Calibrate a stream network.
 """
-function calibrate!(sn::StreamfallNetwork, climate::Climate, calib_data;
+function calibrate!(sn::StreamfallNetwork, climate::Climate, calib_data::DataFrame;
                    metric::Function=Streamfall.RMSE,
                    kwargs...)
     _, outlets = find_inlets_and_outlets(sn)
