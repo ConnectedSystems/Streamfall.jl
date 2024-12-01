@@ -17,17 +17,17 @@ Base.@kwdef mutable struct ExpuhNode{P, A<:AbstractFloat} <: IHACRESNode
 
     storage_coef::P = Param(2.9, bounds=(0.2, 10.0))
 
-    level_params::Array{P, 1} = [
-        Param(-0.01, bounds=(-10.0, -0.01)),  # p1
-        Param(0.8, bounds=(0.0, 1.5)),  # p2
-        Param(4.5, bounds=(0.0, 20.0)), # p3
-        Param(5.0, bounds=(1.0, 10.0)), # p4
-        Param(0.35, bounds=(0.0, 1.0)), # p5
-        Param(1.41, bounds=(-2.0, 2.0)), # p6
-        Param(-1.45, bounds=(-2.5, 0.0)), # p7
-        Param(6.75, bounds=(0.0, 10.0)), # p8
-        Param(150.0, bounds=(50.0, 200.0)) # ctf
-    ]
+    # level_params::Array{P, 1} = [
+    #     Param(-0.01, bounds=(-10.0, -0.01)),  # p1
+    #     Param(0.8, bounds=(0.0, 1.5)),  # p2
+    #     Param(4.5, bounds=(0.0, 20.0)), # p3
+    #     Param(5.0, bounds=(1.0, 10.0)), # p4
+    #     Param(0.35, bounds=(0.0, 1.0)), # p5
+    #     Param(1.41, bounds=(-2.0, 2.0)), # p6
+    #     Param(-1.45, bounds=(-2.5, 0.0)), # p7
+    #     Param(6.75, bounds=(0.0, 10.0)), # p8
+    #     Param(150.0, bounds=(50.0, 200.0)) # ctf
+    # ]
 
     storage::Array{A} = [100.0]
     quick_store::Array{A} = [0.0]
@@ -47,17 +47,17 @@ function ExpuhNode(name::String, spec::Dict)
     node_params = spec["parameters"]
     n_lparams = n.level_params
     s_lparams = spec["level_params"]
-    node_params["level_params"] = Param[
-        Param(s_lparams[1], bounds=n_lparams[1].bounds)
-        Param(s_lparams[2], bounds=n_lparams[2].bounds)
-        Param(s_lparams[3], bounds=n_lparams[3].bounds)
-        Param(s_lparams[4], bounds=n_lparams[4].bounds)
-        Param(s_lparams[5], bounds=n_lparams[5].bounds)
-        Param(s_lparams[6], bounds=n_lparams[6].bounds)
-        Param(s_lparams[7], bounds=n_lparams[7].bounds)
-        Param(s_lparams[8], bounds=n_lparams[8].bounds)
-        Param(s_lparams[9], bounds=n_lparams[9].bounds)
-    ]
+    # node_params["level_params"] = Param[
+    #     Param(s_lparams[1], bounds=n_lparams[1].bounds)
+    #     Param(s_lparams[2], bounds=n_lparams[2].bounds)
+    #     Param(s_lparams[3], bounds=n_lparams[3].bounds)
+    #     Param(s_lparams[4], bounds=n_lparams[4].bounds)
+    #     Param(s_lparams[5], bounds=n_lparams[5].bounds)
+    #     Param(s_lparams[6], bounds=n_lparams[6].bounds)
+    #     Param(s_lparams[7], bounds=n_lparams[7].bounds)
+    #     Param(s_lparams[8], bounds=n_lparams[8].bounds)
+    #     Param(s_lparams[9], bounds=n_lparams[9].bounds)
+    # ]
 
     node_params["storage"] = [node_params["initial_storage"]]
     delete!(node_params, "initial_storage")
