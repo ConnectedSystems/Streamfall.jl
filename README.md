@@ -36,7 +36,7 @@ julia>] test
 ```
 
 
-## Quick start (prep)
+## Quick start (single node)
 
 ```julia
 using YAML, DataFrames, CSV, Plots
@@ -44,45 +44,46 @@ using Statistics
 using Streamfall, BlackBoxOptim
 
 
-# Load observations
-date_format = "YYYY-mm-dd"
+using CSV, DataFrames
+using Streamfall
 
-# Load file which holds streamflow, precipitation and PET data
-obs_data = CSV.File("example_data.csv",
-                    comment="#",
-                    dateformat=date_format) |> DataFrame
+# Load data file which holds observed streamflow, precipitation and PET data
+obs_data = CSV.read("../test/data/cotter/climate/CAMELS-AUS_410730.csv", DataFrame; comment="#")
+# 18808×8 DataFrame
+#    Row │ year   month  day    Date        410730_P    410730_PET  410730_max_T  410730_Q
+#        │ Int64  Int64  Int64  Date        Float64     Float64     Float64       Float64
+# ───────┼─────────────────────────────────────────────────────────────────────────────────
+#      1 │  1963      7      5  1963-07-05   0.204475     1.02646        6.80409  127.322
+#      2 │  1963      7      6  1963-07-06   4.24377      0.790078       5.91556  110.224
+#      3 │  1963      7      7  1963-07-07   5.20097      0.400584       3.02218  117.653
 
-# Historic observations
-Qo = obs_data[:, ["Date", "Gauge_Q"]]
+# Streamfall expects Date, Precipitation (P), and flow (Q) columns for each gauge at a minimum.
+# Some rainfall-runoff models may also require Temmperature (T) data.
 
-# Create climate data interface (all climate data are expected to have a "Date" column)
-climate_data = obs_data[:, ["Date", "Gauge_P", "Gauge_PET"]]
-climate = Climate(climate_data, "_P", "_PET")
-```
+Qo = extract_flow(obs_data, "410730")
+climate = extract_climate(obs_data)
 
-## Quick start (single node)
+# Create a node (node type, node id, catchment/watershed area)
+hymod_node = create_node(SimpleHyModNode, "410730", 129.2);
 
-```julia
-# Create a node (node type, node_name, sub-catchment area)
-hymod_node = create_node(SimpleHyModNode, "Gauge", 129.2)
-# gr4j_node = create_node(GR4JNode, "Gauge", 129.2)
-# ihacres_node = create_node(BilinearNode, "Gauge", 129.2)
-
-# Calibrate a node for 30 seconds (uses the BlackBoxOptim package)
-# Default metric used is RMSE
+# Attempt to fit model parameters for 30 seconds
 calibrate!(hymod_node, climate, Qo; MaxTime=30)
 
-# Basic overview plot (shows time series and Q-Q plot)
-# Uses a 365 day offset (e.g., 1 year burn-in period)
+# Run the fitted model
 run_node!(hymod_node, climate)
-quickplot(Qo[:, "Gauge_Q"], hymod_node, climate, "HyMod"; burn_in=366, limit=nothing)
 
-# save figure
+# Display a basic overview plot (shows time series and Q-Q plot)
+# using a 365 day offset (e.g., 1 year burn-in period)
+quickplot(Qo, hymod_node, climate, "HyMod"; burn_in=366, limit=nothing)
+
+# Save figure
 savefig("quick_example.png")
 ```
 
 
 ## Quick start (network of nodes)
+
+!!! We are aware of bugs in the current implementation. These are being addressed.
 
 ```julia
 # Load and generate stream network
