@@ -176,9 +176,13 @@ Base.length(climate::Climate) = nrow(climate.climate_data)
 Base.show(io::IO, ::MIME"text/plain", c::Climate) = show(io, c)
 function Base.show(io::IO, c::Climate)
     ntype_name = nameof(typeof(c))
-    tgt_col_names = names(c.climate_data[:, Not("year", "month", "day", "Date")])
 
     col_names = names(c.climate_data)
+
+    dt_cols = ["year", "month", "day", "Date"]
+    ignore_cols = dt_cols[[in(t, col_names) for t in dt_cols]]
+    tgt_col_names = names(c.climate_data[:, Not(ignore_cols...)])
+
     P_cols = occursin.(c.rainfall_id, col_names)
     ET_cols = occursin.(c.et_id, col_names)
     T_cols = occursin.("_T", col_names)
