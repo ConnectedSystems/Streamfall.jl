@@ -26,7 +26,6 @@
         - 6.75     # p8
         - 167.845  # CTF
 
-
 406219:
     node_type: IHACRESBilinearNode
     inlets:
