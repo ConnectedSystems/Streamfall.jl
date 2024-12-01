@@ -56,33 +56,31 @@ Base.@kwdef mutable struct DamNode{P, A<:AbstractFloat} <: NetworkNode
     level::Array{A} = []
     discharge::Array{A} = []
     outflow::Array{A} = []
-
 end
 
 
 function DamNode(
     name::String,
-    area::Float64,
-    max_storage::Float64,
-    storage_coef::Float64,
-    initial_storage::Float64,
+    area::F,
+    max_storage::F,
+    storage_coef::F,
+    initial_storage::F,
     calc_dam_level::Function,
     calc_dam_area::Function,
     calc_dam_discharge::Function,
-    calc_dam_outflow::Function)
+    calc_dam_outflow::Function) where {F<:Float64}
     return DamNode(name, area, max_storage, storage_coef,
                    calc_dam_level, calc_dam_area, calc_dam_discharge, calc_dam_outflow,
-                   [initial_storage], [], [], [], [], [], [], [])
+                   F[initial_storage], F[], F[], F[], F[], F[], F[], F[])
 end
-
 
 """
     DamNode(name::String, spec::Dict)
 
 Create DamNode from a given specification.
 """
-function DamNode(name::String, spec::Dict)
-    n = DamNode{Param}(; name=name, area=spec["area"],
+function DamNode(name::String, spec::Union{Dict,OrderedDict})
+    n = DamNode{Param,Float64}(; name=name, area=spec["area"],
                        max_storage=spec["max_storage"])
 
     node_params = spec["parameters"]
@@ -127,8 +125,22 @@ function storage(node::DamNode)
     return last(node.storage)
 end
 
+function prep_state!(node::DamNode, timesteps::Int64)
+    resize!(node.storage, timesteps+1)
+    node.storage[2:end] .= 0.0
 
-function update_state(node::DamNode, storage, rainfall, et, area, discharge, outflow)
+    node.effective_rainfall = zeros(timesteps)
+    node.et = zeros(timesteps)
+    node.inflow = zeros(timesteps)
+    node.dam_area = zeros(timesteps)
+
+    node.level = zeros(timesteps)
+    node.discharge = zeros(timesteps)
+    node.outflow = zeros(timesteps)
+end
+
+
+function update_state!(node::DamNode, storage, rainfall, et, area, discharge, outflow)
     push!(node.storage, storage)
     push!(node.effective_rainfall, rainfall)
     push!(node.et, et)
@@ -136,6 +148,18 @@ function update_state(node::DamNode, storage, rainfall, et, area, discharge, out
     push!(node.dam_area, area)
     push!(node.discharge, discharge)
     push!(node.outflow, outflow)
+
+    return nothing
+end
+function update_state!(node::DamNode, ts::Int64, storage, rainfall, et, area, discharge, outflow)
+    node.storage[ts+1] = storage
+
+    node.effective_rainfall[ts] = rainfall
+    node.et[ts] = et
+    node.level[ts] = node.calc_dam_level(storage)
+    node.dam_area[ts] = area
+    node.discharge[ts] = discharge
+    node.outflow[ts] = outflow
 
     return nothing
 end
@@ -172,10 +196,14 @@ end
 function run_node!(node::DamNode, climate::Climate;
                    inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
+    prep_state!(node, timesteps)
+
     for ts in 1:timesteps
         run_node!(node, climate, ts;
                   inflow=inflow, extraction=extraction, exchange=exchange)
     end
+
+    return nothing
 end
 
 
@@ -194,23 +222,25 @@ Run a specific node for a specified time step.
 - `exchange::DataFrame` : Time series of groundwater flux
 """
 function run_node!(node::DamNode, climate::Climate, timestep::Int;
-                   inflow=nothing, extraction=nothing, exchange=nothing)
+                   inflow=nothing, extraction=nothing, exchange=nothing)::Nothing
     ts = timestep
-    if checkbounds(Bool, node.outflow, ts)
-        if node.outflow[ts] != undef
-            # already ran for this time step so no need to run
-            return node.outflow[ts], node.level[ts]
-        end
-    end
+    # if checkbounds(Bool, node.outflow, ts)
+    #     if node.outflow[ts] != undef
+    #         # already ran for this time step so no need to run
+    #         return node.outflow[ts], node.level[ts]
+    #     end
+    # end
 
     node_name = node.name
     rain, et = climate_values(node, climate, ts)
     wo = timestep_value(ts, node_name, "releases", extraction)
     ex = timestep_value(ts, node_name, "exchange", exchange)
     in_flow = timestep_value(ts, node_name, "inflow", inflow)
-    vol = node.storage[ts]
+    current_vol = node.storage[ts]
 
-    return run_node!(node, rain, et, vol, in_flow, wo, ex)
+    run_node!(node, ts, rain, et, current_vol, in_flow, wo, ex)
+
+    return nothing
 end
 
 
@@ -229,13 +259,13 @@ Calculate outflow for the dam node for a single time step.
 - outflow from dam
 """
 function run_node!(node::DamNode,
+                   ts::Int64,
                    rain::Float64,
                    et::Float64,
-                   vol::Float64,
+                   volume::Float64,
                    inflow::Float64,
                    extractions::Float64,
                    gw_flux::Float64)
-    volume = vol
     dam_area = node.calc_dam_area(volume)
     discharge = node.calc_dam_discharge(volume, node.max_storage)
 
@@ -243,9 +273,9 @@ function run_node!(node::DamNode,
                                   dam_area, extractions, discharge, node.max_storage)
     outflow = node.calc_dam_outflow(discharge, extractions)
 
-    update_state(node, updated_store, rain, et, dam_area, discharge, outflow)
+    update_state!(node, ts, updated_store, rain, et, dam_area, discharge, outflow)
 
-    return outflow, level(node)
+    return nothing
 end
 
 
