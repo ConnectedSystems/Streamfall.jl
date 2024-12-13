@@ -12,7 +12,7 @@ Base.@kwdef mutable struct ExpuhNode{P, A<:AbstractFloat} <: IHACRESNode
     e::P = Param(1.0, bounds=(0.1, 1.5))  # temperature to PET conversion factor
     f::P = Param(0.8, bounds=(0.01, 3.0))  # plant stress threshold factor (multiplicative factor of d)
     tau_q::P = Param(1.0, bounds=(0.0, 5.0))
-    tau_s::P = Param(5, bounds=(5.0, 200.0))
+    tau_s::P = Param(5.0, bounds=(5.0, 200.0))
     v_s::P = Param(0.5, bounds=(0.0, 1.0))
 
     storage_coef::P = Param(2.9, bounds=(0.2, 10.0))
