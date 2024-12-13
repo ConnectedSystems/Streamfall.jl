@@ -12,7 +12,7 @@ Base.@kwdef mutable struct ExpuhNode{P, A<:AbstractFloat} <: IHACRESNode
     e::P = Param(1.0, bounds=(0.1, 1.5))  # temperature to PET conversion factor
     f::P = Param(0.8, bounds=(0.01, 3.0))  # plant stress threshold factor (multiplicative factor of d)
     tau_q::P = Param(1.0, bounds=(0.0, 5.0))
-    tau_s::P = Param(5, bounds=(5.0, 200.0))
+    tau_s::P = Param(5.0, bounds=(5.0, 200.0))
     v_s::P = Param(0.5, bounds=(0.0, 1.0))
 
     storage_coef::P = Param(2.9, bounds=(0.2, 10.0))
@@ -167,7 +167,7 @@ function run_node!(s_node::ExpuhNode,
 
     level::Float64 = @ccall IHACRES.calc_ft_level(outflow::Cdouble, s_node.level_params::Ptr{Cdouble})::Cdouble
 
-    update_state(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, level, gw_store)
+    update_state!(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, level, gw_store)
 
     return (outflow, level)
 end
@@ -213,7 +213,7 @@ function run_node_with_temp!(s_node::ExpuhNode, rain::Float64, temp::Float64, in
 
     level::Float64 = @ccall IHACRES.calc_ft_level(outflow::Cdouble, s_node.level_params::Ptr{Cdouble})::Cdouble
 
-    update_state(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, level, gw_store)
+    update_state!(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, level, gw_store)
 
     return (outflow, level)
 end
