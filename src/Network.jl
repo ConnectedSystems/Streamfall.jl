@@ -106,7 +106,7 @@ end
 """
     inlets(sn::StreamfallNetwork, node_name::String)
 
-Find nodes which provides inflows for given node.
+Find ID(s) of nodes which provides inflows for given node.
 """
 function inlets(sn::StreamfallNetwork, node_name::String)::Array{Int}
     nid, _ = sn[node_name]
@@ -117,7 +117,7 @@ end
 """
     outlets(sn::StreamfallNetwork, node_name::String)
 
-Find node immediately downstream from given node.
+Find ID(s) of node immediately downstream from given node.
 """
 function outlets(sn::StreamfallNetwork, node_name::String)::Array{Int}
     nid, _ = sn[node_name]
