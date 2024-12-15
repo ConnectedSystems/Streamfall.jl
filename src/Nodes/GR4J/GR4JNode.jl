@@ -91,6 +91,8 @@ Base.@kwdef mutable struct GR4JNode{P, A<:AbstractFloat} <: GRNJNode
     uh2_ordinates::Vector{A} = []
 
     outflow::Vector{A} = []
+
+    obj_func::Function = obj_func
 end
 
 

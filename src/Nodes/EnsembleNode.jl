@@ -19,6 +19,8 @@ Base.@kwdef mutable struct BaseEnsemble{N<:NetworkNode, P, A<:Real} <: EnsembleN
     comb_method::Function = (X, weights) -> sum([x * w for (x, w) in zip(X, weights)])
 
     outflow::Array{A} = []
+
+    obj_func::Function = obj_func
 end
 
 

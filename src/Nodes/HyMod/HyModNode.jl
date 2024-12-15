@@ -35,6 +35,8 @@ Base.@kwdef mutable struct SimpleHyModNode{P, A<:AbstractFloat} <: HyModNode
     Ss1::Array{A} = [0.0]
 
     outflow::Array{A} = []
+
+    obj_func::Function = obj_func
 end
 
 

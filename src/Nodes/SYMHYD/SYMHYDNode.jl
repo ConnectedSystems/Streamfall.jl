@@ -31,6 +31,8 @@ Base.@kwdef mutable struct SYMHYDNode{P, A<:AbstractFloat} <: NetworkNode
     outflow::Array{A} = []  # mm
     baseflow::Array{A} = []  # mm
     quickflow::Array{A} = []  # mm
+
+    obj_func::Function = obj_func
 end
 
 
