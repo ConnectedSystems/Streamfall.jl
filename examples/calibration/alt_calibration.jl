@@ -38,7 +38,7 @@ function calibrate(sn, v_id, climate, calib_data)
                   TraceInterval=30.0,
                   PopulationSize=75,
                   )
-    
+
     res = bboptimize(opt)
 
     bs = best_candidate(res)

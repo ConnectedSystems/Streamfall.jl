@@ -210,21 +210,25 @@ end
 
 
 """
-    run_node!(node::DamNode, climate::Climate, timestep::Int;
-              inflow=nothing, extraction=nothing, exchange=nothing)
+    run_node!(
+        node::DamNode, climate::Climate, timestep::Int;
+        inflow=nothing, extraction=nothing, exchange=nothing
+    )::Nothing
 
 Run a specific node for a specified time step.
 
 # Arguments
-- `node::DamNode` :
-- `climate::Climate` :
-- `timestep::Int` : current time step
-- `inflow::DataFrame` : Time series of inflows from any upstream node.
-- `extraction::DataFrame` : Time series of water orders (expects column of `_releases`)
-- `exchange::DataFrame` : Time series of groundwater flux
+- `node` : DamNode
+- `climate` : Climate dataset
+- `timestep` : Current time step
+- `inflow` : Time series of inflows from any upstream node.
+- `extraction` : Time series of water orders (expects column of `_releases`)
+- `exchange` : Time series of groundwater flux
 """
-function run_node!(node::DamNode, climate::Climate, timestep::Int;
-                   inflow=nothing, extraction=nothing, exchange=nothing)::Nothing
+function run_node!(
+    node::DamNode, climate::Climate, timestep::Int;
+    inflow=nothing, extraction=nothing, exchange=nothing
+)::Nothing
     ts = timestep
     # if checkbounds(Bool, node.outflow, ts)
     #     if node.outflow[ts] != undef
@@ -247,27 +251,40 @@ end
 
 
 """
+    run_node!(
+        node::DamNode,
+        ts::Int64,
+        rain::Float64,
+        et::Float64,
+        volume::Float64,
+        inflow::Float64,
+        extractions::Float64,
+        gw_flux::Float64
+    )
+
 Calculate outflow for the dam node for a single time step.
 
-# Parameters
-- node : DamNode
-- rain : rainfall in mm
-- et : evapotranspiration data in mm
-- irrig_ext : irrigation extractions
-- extractions : extraction data in ML
-- gw_flux : groundwater interaction
+# Arguments
+- `node` : DamNode
+- `rain` : rainfall in mm
+- `et` : evapotranspiration data in mm
+- `irrig_ext` : irrigation extractions
+- `extractions` : extraction data in ML
+- `gw_flux` : groundwater interaction
 
 # Returns
-- outflow from dam
+Outflow from dam
 """
-function run_node!(node::DamNode,
-                   ts::Int64,
-                   rain::Float64,
-                   et::Float64,
-                   volume::Float64,
-                   inflow::Float64,
-                   extractions::Float64,
-                   gw_flux::Float64)
+function run_node!(
+    node::DamNode,
+    ts::Int64,
+    rain::Float64,
+    et::Float64,
+    volume::Float64,
+    inflow::Float64,
+    extractions::Float64,
+    gw_flux::Float64
+)
     dam_area = node.calc_dam_area(volume)
     discharge = node.calc_dam_discharge(volume, node.max_storage)
 
@@ -297,6 +314,12 @@ end
 
 """
     update_params!(node::DamNode, storage_coef::Float64)::Nothing
+
+Method to update `DamNode` specific parameters.
+
+# Arguments
+- `node` : DamNode
+- `storage_coef` : Storage coefficient value
 """
 function update_params!(node::DamNode, storage_coef::Float64)::Nothing
     node.storage_coef = Param(storage_coef, bounds=node.storage_coef.bounds)
