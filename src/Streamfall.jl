@@ -22,9 +22,12 @@ end
 const IHACRES = joinpath(MODPATH, "../deps", "usr", "lib", "ihacres$(libext)")
 
 
+
 include("Network.jl")
 include("Nodes/Node.jl")
 include("Climate.jl")
+include("metrics.jl")
+include("calibration.jl")
 include("Nodes/IHACRES/IHACRESNode.jl")
 include("Nodes/IHACRES/IHACRESExpuhNode.jl")
 include("Nodes/GR4J/GR4JNode.jl")
@@ -249,10 +252,6 @@ function run_node!(
     return nothing
 end
 
-
-include("metrics.jl")
-include("calibration.jl")
-
 include("Analysis/Analysis.jl")
 include("plotting.jl")
 
@@ -261,14 +260,16 @@ export NetworkNode, GenericNode, GenericDirectNode
 export IHACRES, IHACRESNode, IHACRESBilinearNode, ExpuhNode, DamNode, Climate
 export create_node, GR4JNode, HyModNode, SimpleHyModNode, SYMHYDNode
 export EnsembleNode, BaseEnsemble
-export run_step!, run_timestep!
 
 # Network
 export find_inlets_and_outlets, inlets, outlets, load_network, create_network, create_node
 export climate_values, node_names, get_node, get_node_id, get_prop, set_prop!
 export param_info, update_params!, sim_length, reset!
 export run_catchment!, run_basin!, run_node!, run_node_with_temp!
+export run_step!, run_timestep!
 export calibrate!
+
+export best_candidate, best_fitness, best_params
 
 # Data
 export extract_flow, extract_climate, align_time_frame
