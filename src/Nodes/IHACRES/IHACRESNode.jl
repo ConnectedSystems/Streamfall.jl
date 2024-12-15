@@ -48,6 +48,8 @@ Base.@kwdef mutable struct IHACRESBilinearNode{P, A<:AbstractFloat} <: IHACRESNo
     inflow::Array{A} = []
     # level::Array{A} = []
     gw_store::Array{A} = [0.0]
+
+    obj_func::Function = obj_func
 end
 
 

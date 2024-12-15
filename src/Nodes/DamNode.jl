@@ -56,6 +56,8 @@ Base.@kwdef mutable struct DamNode{P, A<:AbstractFloat} <: NetworkNode
     level::Array{A} = []
     discharge::Array{A} = []
     outflow::Array{A} = []
+
+    obj_func::Function = dependent_obj_func
 end
 
 

@@ -38,6 +38,8 @@ Base.@kwdef mutable struct ExpuhNode{P, A<:AbstractFloat} <: IHACRESNode
     inflow::Array{A} = []
     level::Array{A} = []
     gw_store::Array{A} = [0.0]
+
+    obj_func::Function = obj_func
 end
 
 
