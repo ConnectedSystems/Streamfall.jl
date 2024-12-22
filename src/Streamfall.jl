@@ -99,6 +99,19 @@ function align_time_frame(timeseries::T...) where {T<:DataFrame}
     min_date, max_date = find_common_timeframe(timeseries...)
     modded = [t[min_date .<= t.Date .<= max_date, :] for t in timeseries]
 
+    for t in modded
+        ts_diff = diff(t.Date)
+        is_contiguous = all(ts_diff .== ts_diff[1])
+
+        if !is_contiguous
+            msg = """
+            Data is non-contiguous or is inconsistent (e.g., a mix of daily and monthly data).
+            There cannot be gaps in the time series.
+            """
+            throw(ArgumentError(msg))
+        end
+    end
+
     return modded
 end
 
