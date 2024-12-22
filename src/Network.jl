@@ -365,7 +365,7 @@ end
 
 
 function Base.iterate(sn::StreamfallNetwork, state=1)
-    if state >= length(sn)
+    if state > length(sn)
         return nothing
     end
 
