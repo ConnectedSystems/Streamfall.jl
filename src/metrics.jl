@@ -3,6 +3,35 @@ using StatsBase
 
 
 """
+    handle_missing(metric_function, simulated, observed; handle_missing=:skip)
+
+Convenience wrapper to handle missing data in observations.
+"""
+function handle_missing(
+    metric::F, observed::Vector{T}, simulated::Vector{T2}; handle_missing::Symbol=:skip
+) where {F,T<:Real,T2}
+    if handle_missing === :skip
+        # Get indices where neither value is missing
+        valid_indices = .!ismissing.(observed) .& .!ismissing.(simulated)
+
+        # Extract only valid data points
+        clean_obs = observed[valid_indices]
+        clean_sim = simulated[valid_indices]
+
+        return metric(clean_obs, clean_sim)
+    elseif handle_missing === :error
+        # Throw error if any missing values
+        if any(ismissing.(observed)) || any(ismissing.(simulated))
+            throw(ArgumentError("Missing values found in data"))
+        end
+
+        return metric(observed, simulated)
+    end
+
+    throw(ArgumentError("Unknown missing data handling method: $handle_missing"))
+end
+
+"""
 Bounds given metric between -1.0 and 1.0, where 1.0 is perfect fit.
 
 Suitable for use with any metric that ranges from 1 to -∞.
