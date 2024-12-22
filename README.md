@@ -1,26 +1,28 @@
-<img align="center" src="docs/src/assets/logo.png" alt="Streamfall.jl" />
+<div align="center">
+<img align="center" src="docs/src/assets/logo_updated.svg" alt="Streamfall.jl" fill="currentColor"/>
+<p>Streamfall: An experimental graph-based streamflow modelling system written in Julialang.</p>
+</div>
 
-Streamfall: An experimental graph-based streamflow modelling system written in Julialang.
-
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://connectedsystems.github.io/Streamfall.jl/dev)
-[![DOI](https://zenodo.org/badge/345341654.svg)](https://zenodo.org/badge/latestdoi/345341654)
-
-Aims of the project are to leverage the Julia language and ecosystem to support:
+Streamfall leverages the Julia language and ecosystem to support:
 - Quick application and exploratory analysis
 - Use of different rainfall-runoff models and their ensembles in tandem
 - Modelling and assessment of interacting systems
-- Parallel scenario runs
 
 Streamfall now includes tentative implementations of GR4J, HyMod, IHACRES, and SYMHYD.
-The IHACRES rainfall-runoff model is implemented with [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim).
+The IHACRES rainfall-runoff model was previously implemented with [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim), but has since been ported to be in pure Julia.
 
 [Graphs](https://github.com/JuliaGraphs/Graphs.jl) and [MetaGraphs](https://github.com/JuliaGraphs/MetaGraphs.jl) are used underneath for network traversal/analysis.
 
-Development version of the documentation can be found [here](https://connectedsystems.github.io/Streamfall.jl/dev).
+Development version of the documentation can be found here: [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://connectedsystems.github.io/Streamfall.jl/dev).
 
 > [NOTE] Streamfall is currently in its early stages and under active development. Although it is fairly usable for small networks and single node analyses, things may change drastically and unexpectedly.
 
+
+[![DOI](https://zenodo.org/badge/345341654.svg)](https://zenodo.org/badge/latestdoi/345341654)
+
 ## Development
+
+Local development should follow the usual process of git cloning the repository.
 
 To build locally:
 
@@ -35,16 +37,31 @@ To run tests:
 julia>] test
 ```
 
+## Usage
+
+Streamfall is currently unregistered but can be added to a Julia environment directly from
+the Package manager:
+
+```bash
+julia>] add https://github.com/ConnectedSystems/Streamfall.jl#main
+```
+
+Examples below use data from the CAMEL-AUS dataset, available here:
+
+> Fowler, K. J. A., Acharya, S. C., Addor, N., Chou, C., and Peel, M. C.: CAMELS-AUS: hydrometeorological time   series and landscape attributes for 222 catchments in Australia, Earth Syst. Sci. Data, 13, 3847–3867, https://doi.org/10.5194/essd-13-3847-2021, 2021.
+
+Note that since start of development, an updated dataset is incoming (currently under review):
+
+> Fowler, K. J. A., Zhang, Z., and Hou, X.: CAMELS-AUS v2: updated hydrometeorological timeseries and landscape attributes for an enlarged set of catchments in Australia, Earth Syst. Sci. Data Discuss. [preprint], https://doi.org/10.5194/essd-2024-263, in review, 2024.
+
 
 ## Quick start (single node)
 
 ```julia
-using YAML, DataFrames, CSV, Plots
 using Statistics
-using Streamfall, BlackBoxOptim
-
-
-using CSV, DataFrames
+using CSV, DataFrames, YAML
+using Plots
+using Statistics
 using Streamfall
 
 # Load data file which holds observed streamflow, precipitation and PET data
@@ -83,8 +100,6 @@ savefig("quick_example.png")
 
 ## Quick start (network of nodes)
 
-!!! We are aware of bugs in the current implementation. These are being addressed.
-
 ```julia
 # Load and generate stream network
 network_spec = YAML.load_file("network.yml")
@@ -102,9 +117,9 @@ calibrate!(sn, climate, Qo; MaxTime=180.0)
 run_basin!(sn, climate)
 
 # Get a specific node in network
-node = sn[1]  # get node 1
+node = sn[1]  # get first node in the network ("node1")
 
-# Could also get node by name
+# Nodes can also be retrieved by name
 # which will also return its position in the network:
 # nid, node = sn["node1"]
 
@@ -135,7 +150,7 @@ Area: 1985.73
 └──────────────┴───────────┴─────────────┴─────────────┘
 ```
 
-### More information
+### Network specification
 
 Stream networks are specified as Dictionaries, with an entry for each node.
 
@@ -146,7 +161,7 @@ An example spec from a YAML file is shown here, with connectivity between nodes 
 # ... Partial snippet of stream definition as an example ...
 
 Node3:
-    node_type: IHACRESNode  # node type, typically tied to the attached model
+    node_type: IHACRESBilinearNode  # node type, typically tied to the attached model
     inlets:  # nodes that contribute incoming streamflow
         - Node1
         - Node2
@@ -161,15 +176,14 @@ A full example of the spec is available [here](https://github.com/ConnectedSyste
 
 [![](https://mermaid.ink/img/eyJjb2RlIjoiZ3JhcGggTFJcbiAgICBBKChOb2RlIDEpKSAtLT4gQygoTm9kZSAzKSlcbiAgICBCKChOb2RlIDIpKSAtLT4gQ1xuICAgIEMgLS0-IEQoKE5vZGUgNCkpXG4gICAgXG4gICIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In0sInVwZGF0ZUVkaXRvciI6ZmFsc2UsImF1dG9TeW5jIjp0cnVlLCJ1cGRhdGVEaWFncmFtIjpmYWxzZX0)](https://mermaid-js.github.io/mermaid-live-editor/edit##eyJjb2RlIjoiZ3JhcGggTFJcbiAgICBBKChOb2RlIDEpKSAtLT4gQygoTm9kZSAzKSlcbiAgICBCKChOb2RlIDIpKSAtLT4gQ1xuICAgIEMgLS0-IEQoKE5vZGUgKSlcbiAgICBcbiAgIiwibWVybWFpZCI6IntcbiAgXCJ0aGVtZVwiOiBcImRlZmF1bHRcIlxufSIsInVwZGF0ZUVkaXRvciI6ZmFsc2UsImF1dG9TeW5jIjp0cnVlLCJ1cGRhdGVEaWFncmFtIjpmYWxzZX0)
 
-
-
-Each node defines a subcatchment and holds the relevant parameter values for the associated model. In the future, it will be possible to read in stream network information from other formats (e.g., GeoPackage).
-
+Each node defines a subcatchment and holds the relevant parameter values for the associated model.
+In the future, it will be possible to read in stream network information from other formats (e.g., GeoPackage).
 
 ## Running a network
 
 ```julia
-using YAML, DataFrames, CSV, Plots
+using CSV, DataFrames, YAML
+using Plots
 using Streamfall
 
 
@@ -239,5 +253,3 @@ See the [docs](https://connectedsystems.github.io/Streamfall.jl/dev) for an over
 
 
 Further preliminary usage examples are provided in the [examples](https://github.com/ConnectedSystems/Streamfall.jl/tree/main/examples) directory.
-
-
