@@ -380,11 +380,11 @@ Numerical instabilities arise as flow approaches values close to zero.
 This is possible under extreme dry conditions or by chance when sub-sampling.
 
 In cases where observations are constant or otherwise displays zero variance or zero
-mean flow, this implementation applies a simple logistic function (ℯ⁻ˣ) to gain an 
+mean flow, this implementation applies a simple logistic function (ℯ⁻ˣ) to gain an
 indication of simulated data's distance to zero.
 
 This is to:
-- avoid NaNs influencing subsequent calculations 
+- avoid NaNs influencing subsequent calculations
 - allow use with split methods which may partition streamflows into periods of 0 flows.
 
 # Arguments
@@ -703,14 +703,14 @@ As an example, if the benchmark has an KGE score of 0.999 and its counterpart 0.
 be reported.
 
 # References
-1. Knoben, W.J.M., Freer, J.E., Woods, R.A., 2019. 
-    Technical note: Inherent benchmark or not? Comparing Nash-Sutcliffe and Kling-Gupta efficiency scores (preprint). 
-    Catchment hydrology/Modelling approaches. 
+1. Knoben, W.J.M., Freer, J.E., Woods, R.A., 2019.
+    Technical note: Inherent benchmark or not? Comparing Nash-Sutcliffe and Kling-Gupta efficiency scores (preprint).
+    Catchment hydrology/Modelling approaches.
     https://doi.org/10.5194/hess-2019-327
 
-2. Towner, J., Cloke, H.L., Zsoter, E., Flamig, Z., Hoch, J.M., Bazo, J., Coughlan de Perez, E., Stephens, E.M., 2019. 
-    Assessing the performance of global hydrological models for capturing peak river flows in the Amazon basin. 
-    Hydrology and Earth System Sciences 23, 3057–3080. 
+2. Towner, J., Cloke, H.L., Zsoter, E., Flamig, Z., Hoch, J.M., Bazo, J., Coughlan de Perez, E., Stephens, E.M., 2019.
+    Assessing the performance of global hydrological models for capturing peak river flows in the Amazon basin.
+    Hydrology and Earth System Sciences 23, 3057–3080.
     https://doi.org/10.5194/hess-23-3057-2019
 """
 function skill_score(model_score, benchmark_score)
