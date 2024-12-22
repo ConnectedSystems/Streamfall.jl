@@ -63,6 +63,7 @@
     max_storage: 306000.0
     parameters:
         storage_coef: 0.001
+        # Define methods that convert volume to level, area, discharge, and outflow.
         # Methods defined here must take volume as input
         calc_dam_level: >-
             function c_dam_level(volume)
