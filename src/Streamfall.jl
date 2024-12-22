@@ -268,16 +268,17 @@ export param_info, update_params!, sim_length, reset!
 export run_catchment!, run_basin!, run_node!, run_node_with_temp!
 export run_step!, run_timestep!
 export calibrate!
+export save_network_spec
 
 export best_candidate, best_fitness, best_params
 
 # Data
 export extract_flow, extract_climate, align_time_frame
 
-# plotting methods
+# Plotting methods
 export quickplot, plot_network, save_figure
 
-# data interface (climate)
+# Data interface (climate)
 export timesteps
 
 # Analysis
