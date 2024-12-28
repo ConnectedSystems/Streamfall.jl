@@ -279,7 +279,7 @@ export find_inlets_and_outlets, inlets, outlets, load_network, create_network, c
 export climate_values, node_names, get_node, get_node_id, get_prop, set_prop!
 export param_info, update_params!, sim_length, reset!
 export run_catchment!, run_basin!, run_node!, run_node_with_temp!
-export run_step!, run_timestep!
+export run_timestep!
 export calibrate!
 export save_network_spec
 

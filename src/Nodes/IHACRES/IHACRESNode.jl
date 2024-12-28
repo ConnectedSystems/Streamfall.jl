@@ -20,10 +20,6 @@ Base.@kwdef mutable struct IHACRESBilinearNode{P, A<:AbstractFloat} <: IHACRESNo
     a::P = Param(0.9, bounds=(0.1, 10.0))  # quickflow storage coefficient == (1/tau_q)
     b::P = Param(0.1, bounds=(1e-3, 0.1))  # slowflow storage coefficent == (1/tau_s)
 
-    # These changes require ihacres_nim to be changed as well...
-    # a::A = Param(0.9, bounds=(0.1, 10.0))  # quickflow storage coefficient == exp(-1/tau_q)
-    # b::A = Param(0.1, bounds=(10.0, 1000.0))  # slowflow storage coefficent == exp(-1/tau_s)
-    # storage_threshold::A = Param(10.0, ...)  # optional threshold controlling bounds between `a` and `b`
     storage_coef::P = Param(2.9, bounds=(1e-10, 10.0))
     alpha::P = Param(0.1, bounds=(1e-5, 1 - 1/10^9))
 
@@ -501,47 +497,6 @@ function update_params!(
 
     return nothing
 end
-
-
-# """
-#     update_params!(node::IHACRESBilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
-#                    a::Float64, b::Float64, s_coef::Float64, alpha::Float64)::Nothing
-
-# Update all parameters.
-# """
-# function update_params!(node::BilinearNode, d::F, d2::F, e::F, f::F,
-#     a::F, b::F, s_coef::F, alpha::F,
-#     p1::F, p2::F, p3::F, p4::F, p5::F,
-#     p6::F, p7::F, p8::F, CTF::F
-# )::Nothing where {F<:Float64}
-#     node.d = Param(d, bounds=node.d.bounds::Tuple)
-#     node.d2 = Param(d2, bounds=node.d2.bounds::Tuple)
-#     node.e = Param(e, bounds=node.e.bounds::Tuple)
-#     node.f = Param(f, bounds=node.f.bounds::Tuple)
-#     node.a = Param(a, bounds=node.a.bounds::Tuple)
-#     node.b = Param(b, bounds=node.b.bounds::Tuple)
-#     node.storage_coef = Param(s_coef, bounds=node.storage_coef.bounds::Tuple)
-#     node.alpha = Param(alpha, bounds=node.alpha.bounds::Tuple)
-
-#     n_lparams = node.level_params
-#     node.level_params = [
-#         Param(p1, bounds=n_lparams[1].bounds::Tuple)
-#         Param(p2, bounds=n_lparams[2].bounds::Tuple)
-#         Param(p3, bounds=n_lparams[3].bounds::Tuple)
-#         Param(p4, bounds=n_lparams[4].bounds::Tuple)
-#         Param(p5, bounds=n_lparams[5].bounds::Tuple)
-#         Param(p6, bounds=n_lparams[6].bounds::Tuple)
-#         Param(p7, bounds=n_lparams[7].bounds::Tuple)
-#         Param(p8, bounds=n_lparams[8].bounds::Tuple)
-#         Param(CTF, bounds=n_lparams[9].bounds::Tuple)
-#     ]
-
-#     return nothing
-# end
-
-# TODO
-# update_bounds!()
-
 
 """
     reset!(s_node::IHACRESNode)::Nothing
