@@ -126,15 +126,15 @@ end
 
 
 """
-    create_node(mg::MetaDiGraph, node_name::String, details::OrderedDict, nid::Int)
+    create_node(mg::MetaDiGraph, node_name::String, details::AbstractDict, nid::Int)
 
 Create a node specified with given name (if it does not exist).
 
 Returns
-- `this_id`, ID of node (if pre-existing) and
-- `nid`, incremented node id for entire network (equal to `this_id` if exists)
+- `this_id` : ID of node (if pre-existing) and
+- `nid` : incremented node id for entire network (equal to `this_id` if exists)
 """
-function create_node(mg::MetaDiGraph, node_name::String, details::OrderedDict, nid::Int)
+function create_node(mg::MetaDiGraph, node_name::String, details::AbstractDict, nid::Int)
     details = copy(details)
 
     match = collect(MetaGraphs.filter_vertices(mg, :name, node_name))
@@ -245,7 +245,7 @@ function reset!(sn::StreamfallNetwork)::Nothing
 end
 
 
-function extract_node_spec!(sn::StreamfallNetwork, nid::Int, spec::Dict)::Nothing
+function extract_node_spec!(sn::StreamfallNetwork, nid::Int, spec::AbstractDict)::Nothing
     node = sn[nid]
 
     node_name = string(node.name)
@@ -273,7 +273,7 @@ function extract_node_spec!(sn::StreamfallNetwork, nid::Int, spec::Dict)::Nothin
     end
 
     node_spec = extract_node_spec(node)
-    network_spec = Dict(
+    network_spec = OrderedDict(
         "inlets" => in_ids,
         "outlets" => out_ids
     )
@@ -289,22 +289,21 @@ end
 
 Extract network details
 """
-function extract_network_spec(sn::StreamfallNetwork)::Dict
+function extract_network_spec(sn::StreamfallNetwork)::OrderedDict
     _, outlets = find_inlets_and_outlets(sn)
-    spec = Dict()
+    spec = OrderedDict()
     for nid in outlets
         extract_node_spec!(sn, nid, spec)
     end
-
-    # TODO: Make spec nicely ordered
 
     return spec
 end
 
 
-function save_network_spec(sn::StreamfallNetwork, fn::String)
+function save_network_spec(sn::StreamfallNetwork, fn::String)::Nothing
     spec = extract_network_spec(sn)
     write_file(fn, spec)
+
     return nothing
 end
 

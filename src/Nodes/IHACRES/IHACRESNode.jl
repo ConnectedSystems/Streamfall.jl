@@ -76,7 +76,7 @@ function prep_state!(node::IHACRESNode, timesteps::Int64)::Nothing
 end
 
 
-function IHACRESBilinearNode(name::String, spec::Union{Dict,OrderedDict})
+function IHACRESBilinearNode(name::String, spec::AbstractDict)
     n = create_node(IHACRESBilinearNode, name, spec["area"])
     node_params = copy(spec["parameters"])
 

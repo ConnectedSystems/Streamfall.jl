@@ -40,7 +40,7 @@ Base.@kwdef mutable struct SimpleHyModNode{P, A<:AbstractFloat} <: HyModNode
 end
 
 
-function SimpleHyModNode(name::String, spec::Dict)
+function SimpleHyModNode(name::String, spec::AbstractDict)
     n = create_node(SimpleHyModNode, name, spec["area"])
     node_params = spec["parameters"]
     for (p_name, p_val) in node_params

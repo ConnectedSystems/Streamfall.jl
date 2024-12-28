@@ -116,7 +116,7 @@ function prep_state!(node::GR4JNode, timesteps::Int64)
 end
 
 
-function GR4JNode(name::String, spec::Dict)
+function GR4JNode(name::String, spec::AbstractDict)
     n = create_node(GR4JNode, name, spec["area"])
     node_params = spec["parameters"]
     node_params["p_store"] = [node_params["initial_p_store"]]
@@ -177,6 +177,8 @@ function run_timestep!(node::GR4JNode, rain::Float64, et::Float64, ts::Int64; in
     end
 
     update_state!(node, ts, p_s, r_s, Q, UH1, UH2)
+
+    return Q
 end
 
 
