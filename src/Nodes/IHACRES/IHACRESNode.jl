@@ -239,7 +239,7 @@ end
 Run the given IHACRESBilinearNode for a time step.
 """
 function run_timestep!(
-    node::IHACRESNode, climate::Climate, timestep::Int;
+    node::IHACRESNode, climate::Climate, timestep::Int64;
     inflow=nothing, extraction=nothing, exchange=nothing
 )::Float64
     ts = timestep
@@ -247,7 +247,10 @@ function run_timestep!(
 
     return run_timestep!(node, ts, P, ET, in_flow, ext, flux)
 end
-function run_timestep!(node::IHACRESNode, P, ET, ts; inflow=nothing, extraction=nothing, exchange=nothing)
+function run_timestep!(
+    node::IHACRESNode, P::F, ET::F, ts::Int64;
+    inflow=nothing, extraction=nothing, exchange=nothing
+)::F where {F<:AbstractFloat}
     in_flow = timestep_value(ts, node.name, "inflow", inflow)
     ext = timestep_value(ts, node.name, "extraction", extraction)
     flux = timestep_value(ts, node.name, "exchange", exchange)

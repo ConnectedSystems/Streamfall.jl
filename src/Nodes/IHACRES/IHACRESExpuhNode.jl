@@ -44,6 +44,13 @@ end
 
 
 function ExpuhNode(name::String, spec::Dict)
+    Base.depwarn(
+        """
+        The current implementation of IHACRES Exponential Unit Hydrograph routing is being
+        reviewed with the intention of folding it into a more flexible and composable
+        architecture. Errors may arise in its use.
+        """
+    )
     n = create_node(ExpuhNode, name, spec["area"])
 
     node_params = spec["parameters"]
@@ -108,25 +115,31 @@ function ExpuhNode(name::String, area::Float64, d::Float64, d2::Float64, e::Floa
 end
 
 """
-    run_node!(s_node::ExpuhNode, rain::Float64, evap::Float64,
-              inflow::Float64, ext::Float64, gw_exchange::Float64;
-              current_store=nothing,
-              quick_store=nothing,
-              slow_store=nothing,
-            )::Tuple
+    run_node!(
+        s_node::ExpuhNode,
+        rain::F,
+        evap::F,
+        inflow::F,
+        ext::F,
+        gw_exchange::F;
+        current_store=nothing,
+        quick_store=nothing,
+        slow_store=nothing,
+    )::F where {F<:AbstractFloat}
 
 Run given IHACRES ExpuhNode for a time step based on last known state.
 """
-function run_node!(s_node::ExpuhNode,
-                   rain::Float64,
-                   evap::Float64,
-                   inflow::Float64,
-                   ext::Float64,
-                   gw_exchange::Float64;
-                   current_store=nothing,
-                   quick_store=nothing,
-                   slow_store=nothing,
-                )::Tuple
+function run_node!(
+    s_node::ExpuhNode,
+    rain::F,
+    evap::F,
+    inflow::F,
+    ext::F,
+    gw_exchange::F;
+    current_store=nothing,
+    quick_store=nothing,
+    slow_store=nothing,
+)::F where {F<:AbstractFloat}
 
     if !isnothing(current_store)
         s_node.storage[end] = current_store
@@ -167,11 +180,11 @@ function run_node!(s_node::ExpuhNode,
             gw_exchange::Cdouble)::Cvoid
     (gw_store, outflow) = routing_res
 
-    level::Float64 = @ccall IHACRES.calc_ft_level(outflow::Cdouble, s_node.level_params::Ptr{Cdouble})::Cdouble
+    # level::Float64 = @ccall IHACRES.calc_ft_level(outflow::Cdouble, s_node.level_params::Ptr{Cdouble})::Cdouble
 
-    update_state!(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, level, gw_store)
+    update_state!(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, gw_store)
 
-    return (outflow, level)
+    return outflow
 end
 
 
@@ -213,9 +226,9 @@ function run_node_with_temp!(s_node::ExpuhNode, rain::Float64, temp::Float64, in
             gw_exchange::Cdouble)::Cvoid
     (gw_store, outflow) = routing_res
 
-    level::Float64 = @ccall IHACRES.calc_ft_level(outflow::Cdouble, s_node.level_params::Ptr{Cdouble})::Cdouble
+    # level::Float64 = @ccall IHACRES.calc_ft_level(outflow::Cdouble, s_node.level_params::Ptr{Cdouble})::Cdouble
 
-    update_state!(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, level, gw_store)
+    update_state!(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, gw_store)
 
     return (outflow, level)
 end

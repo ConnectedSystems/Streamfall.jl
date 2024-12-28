@@ -92,12 +92,10 @@ end
 
 Run SYMHYD for a given time step
 """
-function run_timestep!(node::SYMHYDNode, climate::Climate, ts::Int; inflow=nothing, extraction=extraction, exchange=nothing)::Nothing
+function run_timestep!(node::SYMHYDNode, climate::Climate, ts::Int; inflow=nothing, extraction=extraction, exchange=nothing)::AbstractFloat
     P, E = climate_values(node, climate, ts)
 
-    run_timestep!(node, P, E, ts; inflow=inflow, extraction=extraction, exchange=exchange)
-
-    return nothing
+    return run_timestep!(node, P, E, ts; inflow=inflow, extraction=extraction, exchange=exchange)
 end
 
 function run_timestep!(
@@ -108,7 +106,7 @@ function run_timestep!(
     inflow=nothing,
     extraction=nothing,
     exchange=nothing
-)::Nothing where {F<:AbstractFloat}
+)::F where {F<:AbstractFloat}
     sm_store, gw_store, total_store, total_runoff, baseflow, event_runoff = run_symhyd(node, rain, et, ts)
 
     node_name = node.name
@@ -123,7 +121,7 @@ function run_timestep!(
     area::F = node.area
     update_state!(node, ts, sm_store, gw_store, total_store, total_runoff * area, baseflow * area, event_runoff * area)
 
-    return nothing
+    return total_runoff
 end
 
 
