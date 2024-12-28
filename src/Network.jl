@@ -175,7 +175,7 @@ end
 
 
 """
-    create_network(name::String, network::OrderedDict)::StreamfallNetwork
+    create_network(name::String, network::AbstractDict)::StreamfallNetwork
 
 Create a StreamNetwork from a YAML-derived specification.
 
@@ -186,7 +186,7 @@ julia> network_spec = YAML.load_file("example_network.yml"; dicttype=OrderedDict
 julia> sn = create_network("Example Network", network_spec)
 ```
 """
-function create_network(name::String, network::OrderedDict)::StreamfallNetwork
+function create_network(name::String, network::AbstractDict)::StreamfallNetwork
     num_nodes = length(network)
     mg = MetaDiGraph(num_nodes)
     MetaGraphs.set_prop!(mg, :description, name)
