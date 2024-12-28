@@ -168,9 +168,41 @@ end
 
 """
     calibrate!(
-        sn::StreamfallNetwork, v_id::Int64, climate::Climate, calib_data::DataFrame;
-        metric::Function=Streamfall.RMSE, kwargs...
-    )
+        sn::StreamfallNetwork, climate::Climate, calib_data::DataFrame, metric::C;
+        kwargs...
+    ) where {F,C}
+    calibrate!(
+        sn::StreamfallNetwork, v_id::Int64, climate::Climate, calib_data::DataFrame, metric::C;
+        kwargs...
+    ) where {F,C}
+
+Use a single objective function to calibrate a network or a single node in a network.
+"""
+function calibrate!(
+    sn::StreamfallNetwork, climate::Climate, calib_data::DataFrame, metric::C;
+    kwargs...
+) where {C}
+    metrics = Dict(n => metric for n in node_names(sn))
+    return calibrate!(sn, climate, calib_data, metrics; kwargs...)
+end
+function calibrate!(
+    sn::StreamfallNetwork, v_id::Int64, climate::Climate, calib_data::DataFrame, metric::C;
+    kwargs...
+) where {C}
+    metrics = Dict(n => metric for n in node_names(sn))
+    return calibrate!(sn, v_id, climate, calib_data, metrics; kwargs...)
+end
+
+
+"""
+    calibrate!(
+        sn::StreamfallNetwork,
+        v_id::Int64,
+        climate::Climate,
+        calib_data::DataFrame,
+        metric::AbstractDict{String,C};
+        kwargs...
+    ) where {C}
 
 Calibrate just the specified node using the BlackBoxOptim package.
 Assumes all nodes upstream have already been calibrated.
@@ -182,14 +214,18 @@ Default behavior is to calibrate for 5 mins (300 seconds).
 - `v_id` : node identifier
 - `climate` : Climate data
 - `calib_data` : Calibration data for target node by its name.
-- `metric` : Optimization function to use. Defaults to RMSE.
+- `metric` : Optimization function to use (one defined for each node).
 - `kwargs` : Additional calibration arguments.
              BlackBoxOptim arguments will be passed through.
 """
 function calibrate!(
-    sn::StreamfallNetwork, v_id::Int64, climate::Climate, calib_data::DataFrame, metric::Dict{String,F};
+    sn::StreamfallNetwork,
+    v_id::Int64,
+    climate::Climate,
+    calib_data::DataFrame,
+    metric::AbstractDict{String,C};
     kwargs...
-) where {F}
+) where {C}
     kwargs = _merge_defaults(kwargs)
 
     # Fitness of model is dependent on upstream node.
@@ -269,9 +305,12 @@ end
 
 """
     calibrate!(
-        node::NetworkNode, climate::Climate, calib_data::AbstractArray;
-        metric::Function=Streamfall.RMSE, kwargs...
-    )
+        node::NetworkNode,
+        climate::Climate,
+        calib_data::AbstractArray,
+        metric::AbstractDict{String,F};
+        kwargs...
+    ) where {F}
 
 Calibrate a given node using the BlackBoxOptim package.
 
@@ -283,7 +322,10 @@ Calibrate a given node using the BlackBoxOptim package.
 - `metric::Function` : Optimization function to use. Defaults to RMSE.
 """
 function calibrate!(
-    node::NetworkNode, climate::Climate, calib_data::AbstractArray, metric::Dict{String,F};
+    node::NetworkNode,
+    climate::Climate,
+    calib_data::AbstractArray,
+    metric::AbstractDict{String,F};
     kwargs...
 ) where {F}
     _merge_defaults(kwargs)
@@ -328,8 +370,9 @@ end
 
 """
     calibrate!(
-        node::NetworkNode, climate::Climate, calib_data::DataFrame;
-        metric::Function=Streamfall.RMSE, kwargs...
+        node::NetworkNode, climate::Climate, calib_data::DataFrame,
+        metric::AbstractDict{String,F};
+        kwargs...
     )
 
 Calibrate a given node using the BlackBoxOptim package.
@@ -341,28 +384,28 @@ Calibrate a given node using the BlackBoxOptim package.
 - `metric::Function` : Optimization function to use. Defaults to RMSE.
 """
 function calibrate!(
-    node::NetworkNode, climate::Climate, calib_data::DataFrame, metric::Dict{String,F};
+    node::NetworkNode, climate::Climate, calib_data::DataFrame, metric::AbstractDict{String,F};
     kwargs...
 ) where {F}
     return calibrate!(node, climate, calib_data[:, node.name], metric; kwargs...)
 end
-# function calibrate!(
-#     node::NetworkNode, climate::Climate, calib_data::DataFrame;
-#     metric::Function=Streamfall.RMSE, kwargs...
-# )
-#     return calibrate!(node, climate, calib_data[:, node.name]; metric=metric, kwargs...)
-# end
 
 """
     calibrate!(
-        sn::StreamfallNetwork, climate::Climate, calib_data::DataFrame;
-        metric::Dict{String,F}=Streamfall.RMSE, kwargs...
+        sn::StreamfallNetwork,
+        climate::Climate,
+        calib_data::DataFrame,
+        metric::AbstractDict{String,F};
+        kwargs...
     )
 
 Calibrate a stream network.
 """
 function calibrate!(
-    sn::StreamfallNetwork, climate::Climate, calib_data::DataFrame, metric::Dict{String,F};
+    sn::StreamfallNetwork,
+    climate::Climate,
+    calib_data::DataFrame,
+    metric::AbstractDict{String,F};
     kwargs...
 ) where {F}
     _, outlets = find_inlets_and_outlets(sn)
