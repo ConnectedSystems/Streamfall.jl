@@ -106,11 +106,8 @@ function dependent_obj_func(
             score = metric_func(obs_data, sim_data)
         end
     elseif typeof(this_node) <: DamNode
-        # Calibrate against dam levels only
-        sim_data = this_node.level
-        obs_data = calib_data[:, this_node.name]
-
-        score = metric_func(obs_data, sim_data)
+        # Don't bother calibrating DamNodes as they only hold information at this stage.
+        score = 0.0  # metric_func(obs_data, sim_data)
     else
         # Calibrate against outflows only
         sim_data = this_node.outflow
