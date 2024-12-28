@@ -200,10 +200,9 @@ function create_network(name::String, network::AbstractDict)::StreamfallNetwork
             inlets = details["inlets"]
             if !isnothing(inlets)
                 for inlet in inlets
+                    inlet_id::Int64 = findfirst(x -> x == inlet, string.(keys(network)))
 
-                    inlet_id = findall(keys(network) .== inlet)[1]
-
-                    in_id = create_node(mg, string(inlet), network[inlet], inlet_id)
+                    in_id = create_node(mg, string(inlet), network[parse(Int, inlet)], inlet_id)
                     add_edge!(mg, inlet_id => nid)
                 end
             end
@@ -216,8 +215,8 @@ function create_network(name::String, network::AbstractDict)::StreamfallNetwork
                 @assert length(outlets) <= 1 || throw(ArgumentError(msg))
 
                 for outlet in outlets
-                    outlet_id = findall(keys(network) .== outlet)[1]
-                    out_id = create_node(mg, string(outlet), network[outlet], outlet_id)
+                    outlet_id = findfirst(x -> x == outlet, string.(keys(network)))
+                    out_id = create_node(mg, string(outlet), network[parse(Int, outlet)], outlet_id)
                     add_edge!(mg, nid => outlet_id)
                 end
             end

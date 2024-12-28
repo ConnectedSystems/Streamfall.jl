@@ -92,16 +92,19 @@ function DamNode(name::String, spec::Union{Dict,OrderedDict})
             p = eval(Meta.parse(p))
         end
 
-        try
-            if k == "initial_storage"
-                setfield!(n, :storage, [p])
-            else
-                f = getfield(n, s)
-                setfield!(n, s, Param(p, bounds=f.bounds))
-            end
-        catch err
-            setfield!(n, s, p)
+        if k == "initial_storage"
+            setfield!(n, :storage, [p])
+        else
+            f = getfield(n, s)
+            setfield!(n, s, Param(p, bounds=f.bounds))
         end
+    end
+
+    for (k, p) in spec["functions"]
+        s = Symbol(k)
+        f = getfield(n, s)
+        p = eval(Meta.parse(p))
+        setfield!(n, s, p)
     end
 
     return n
@@ -323,5 +326,18 @@ Method to update `DamNode` specific parameters.
 """
 function update_params!(node::DamNode, storage_coef::Float64)::Nothing
     node.storage_coef = Param(storage_coef, bounds=node.storage_coef.bounds)
+    return nothing
+end
+
+"""
+    extract_spec!(node::DamNode, spec::AbstractDict)::Nothing
+
+Extract dam-specific values.
+"""
+function extract_spec!(node::DamNode, spec::AbstractDict)::Nothing
+    spec["initial_storage"] = node.storage[1]
+    spec["max_storage"] = node.max_storage
+    # spec["parameters"]["calc_dam_level"]
+
     return nothing
 end

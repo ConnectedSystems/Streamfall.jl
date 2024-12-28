@@ -127,16 +127,21 @@ function extract_node_spec(node::NetworkNode)
     param_names, x0, _ = param_info(node)
     params = Dict(zip(param_names, x0))
 
-    if hasproperty(node, :storage)
-        params[:initial_storage] = node.storage[1]
-    end
-
     node_type = typeof(node)
     spec = Dict(
         "node_type" => string(nameof(node_type)),
         "area" => area,
         "parameters" => params
     )
+
+    try
+        # Additional node-specific extractions (added to `spec`)
+        extract_spec!(node, spec)
+    catch err
+        if !(err isa MethodError)
+            rethrow(err)
+        end
+    end
 
     return spec
 end
