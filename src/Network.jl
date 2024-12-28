@@ -145,8 +145,8 @@ function create_node(mg::MetaDiGraph, node_name::String, details::AbstractDict, 
         n = nothing
         try
             n = dtype(node_name, details)
-        catch
-            throw(ArgumentError("Unsupported node type: $(node_type)"))
+        catch err
+            throw(ArgumentError("Unsupported node type: $(node_type) or unknown node details"))
         end
 
         # Set function for node if specified
