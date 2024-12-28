@@ -178,6 +178,8 @@ end
 Calibrate just the specified node using the BlackBoxOptim package.
 Assumes all nodes upstream have already been calibrated.
 
+Default behavior is to calibrate for 5 mins (300 seconds).
+
 # Arguments
 - `sn` : Streamfall Network
 - `v_id` : node identifier
