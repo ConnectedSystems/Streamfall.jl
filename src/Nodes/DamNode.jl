@@ -69,7 +69,8 @@ function DamNode(
     calc_dam_level::Function,
     calc_dam_area::Function,
     calc_dam_discharge::Function,
-    calc_dam_outflow::Function) where {F<:Float64}
+    calc_dam_outflow::Function
+) where {F<:Float64}
     return DamNode(name, area, max_storage, storage_coef,
                    calc_dam_level, calc_dam_area, calc_dam_discharge, calc_dam_outflow,
                    F[initial_storage], F[], F[], F[], F[], F[], F[], F[])
@@ -339,7 +340,10 @@ Extract dam-specific values.
 function extract_spec!(node::DamNode, spec::AbstractDict)::Nothing
     spec["initial_storage"] = node.storage[1]
     spec["max_storage"] = node.max_storage
+
+    # Cannot extract function implementation at this time (Julia v1.11)
     # spec["parameters"]["calc_dam_level"]
+    @warn "Cannot extract dam calculations at this time. Functions must be manually copied."
 
     return nothing
 end
