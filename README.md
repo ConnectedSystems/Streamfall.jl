@@ -1,6 +1,8 @@
 <div align="center">
 <img align="center" src="docs/src/assets/logo_updated.svg" alt="Streamfall.jl" fill="currentColor"/>
 <p>Streamfall: An experimental graph-based streamflow modelling system written in Julialang.</p>
+
+[![DOI](https://zenodo.org/badge/345341654.svg)](https://zenodo.org/badge/latestdoi/345341654)
 </div>
 
 Streamfall leverages the Julia language and ecosystem to support:
@@ -19,8 +21,6 @@ The IHACRES rainfall-runoff model was previously implemented with [ihacres_nim](
 Development version of the documentation can be found here: [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://connectedsystems.github.io/Streamfall.jl/dev).
 
 > [NOTE] Streamfall is currently in its early stages and under active development. Although it is fairly usable for small networks and assessing/analyzing single sub-catchments, things may change drastically and unexpectedly.
-
-[![DOI](https://zenodo.org/badge/345341654.svg)](https://zenodo.org/badge/latestdoi/345341654)
 
 ## Development
 
