@@ -1,6 +1,6 @@
 <div align="center">
 <img align="center" src="docs/src/assets/logo_updated.svg" alt="Streamfall.jl" fill="currentColor"/>
-<p>Streamfall: An experimental graph-based streamflow modelling system written in Julialang.</p>
+<p>A graph-based streamflow modelling system written in Julialang.</p>
 
 [![DOI](https://zenodo.org/badge/345341654.svg)](https://zenodo.org/badge/latestdoi/345341654)
 </div>
@@ -11,7 +11,12 @@ Streamfall leverages the Julia language and ecosystem to support:
 - Modelling and assessment of interacting systems
 - Use of different rainfall-runoff models and their ensembles in tandem
 
-Streamfall includes implementations of GR4J, HyMod, IHACRES, and SYMHYD.
+Streamfall includes implementations of:
+- GR4J
+- HyMod
+- IHACRES
+- SYMHYD
+
 Performance should be similar to implementations in C and Fortran.
 
 The IHACRES rainfall-runoff model was previously implemented with [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim), but has since been ported to pure Julia.
@@ -65,7 +70,6 @@ The examples below are run from the [examples](https://github.com/ConnectedSyste
 using Statistics
 using CSV, DataFrames, YAML
 using Plots
-using Statistics
 using Streamfall
 
 # Load data file which holds observed streamflow, precipitation and PET data
@@ -78,8 +82,9 @@ obs_data = CSV.read("../test/data/cotter/climate/CAMELS-AUS_410730.csv", DataFra
 #      2 │  1963      7      6  1963-07-06   4.24377      0.790078       5.91556  110.224
 #      3 │  1963      7      7  1963-07-07   5.20097      0.400584       3.02218  117.653
 
-# Streamfall expects Date, Precipitation (P), and flow (Q) columns for each gauge at a minimum.
-# Some rainfall-runoff models may also require Temmperature (T) data.
+# By default, Streamfall expects Date, Precipitation (P), Evapotranspiration (ET) and
+# Flow (Q) columns for each gauge as a minimum.
+# Some rainfall-runoff models may also require Temperature (T) data.
 
 Qo = extract_flow(obs_data, "410730")
 climate = extract_climate(obs_data)
@@ -182,8 +187,8 @@ A full example of the spec is available [here](https://github.com/ConnectedSyste
 
 [![](https://mermaid.ink/img/eyJjb2RlIjoiZ3JhcGggTFJcbiAgICBBKChOb2RlIDEpKSAtLT4gQygoTm9kZSAzKSlcbiAgICBCKChOb2RlIDIpKSAtLT4gQ1xuICAgIEMgLS0-IEQoKE5vZGUgNCkpXG4gICAgXG4gICIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In0sInVwZGF0ZUVkaXRvciI6ZmFsc2UsImF1dG9TeW5jIjp0cnVlLCJ1cGRhdGVEaWFncmFtIjpmYWxzZX0)](https://mermaid-js.github.io/mermaid-live-editor/edit##eyJjb2RlIjoiZ3JhcGggTFJcbiAgICBBKChOb2RlIDEpKSAtLT4gQygoTm9kZSAzKSlcbiAgICBCKChOb2RlIDIpKSAtLT4gQ1xuICAgIEMgLS0-IEQoKE5vZGUgKSlcbiAgICBcbiAgIiwibWVybWFpZCI6IntcbiAgXCJ0aGVtZVwiOiBcImRlZmF1bHRcIlxufSIsInVwZGF0ZUVkaXRvciI6ZmFsc2UsImF1dG9TeW5jIjp0cnVlLCJ1cGRhdGVEaWFncmFtIjpmYWxzZX0)
 
-Each node defines a subcatchment and holds the relevant parameter values for the associated model.
-In the future, it will be possible to read in stream network information from other formats (e.g., GeoPackage).
+Each node defines a subcatchment and holds the relevant parameter values for the associated
+model.
 
 ## Running a network
 
@@ -229,7 +234,7 @@ run_node!(sn, node_id, climate)
 reset!(node)
 
 # Run a specific node, and only a specific node, for all time steps
-inflow = ...      # array of inflows for each time step
+inflow = ...      # inflows for each time step
 extractions = ... # extractions from stream for each time step
 gw_flux = ...     # forced groundwater interactions for each time step
 run_node!(node, climate; inflow=inflow, extraction=extractions, exchange=gw_flux)
@@ -241,7 +246,8 @@ Another approach is to identify the outlets for a given network...
 inlets, outlets = find_inlets_and_outlets(sn)
 ```
 
-... and call `run_node!` for each outlet (with relevant climate data), which will recurse through all relevant nodes upstream.
+... and call `run_node!` for each outlet (with relevant climate data), which will recurse
+through all relevant nodes upstream.
 
 
 ```julia
