@@ -4,19 +4,21 @@
 </div>
 
 Streamfall leverages the Julia language and ecosystem to support:
-- Quick application and exploratory analysis
-- Use of different rainfall-runoff models and their ensembles in tandem
-- Modelling and assessment of interacting systems
 
-Streamfall now includes tentative implementations of GR4J, HyMod, IHACRES, and SYMHYD.
+- Quick application and exploratory analysis
+- Modelling and assessment of interacting systems
+- Use of different rainfall-runoff models and their ensembles in tandem
+
+Streamfall includes implementations of GR4J, HyMod, IHACRES, and SYMHYD.
+Performance should be similar to implementations in C and Fortran.
+
 The IHACRES rainfall-runoff model was previously implemented with [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim), but has since been ported to be in pure Julia.
 
 [Graphs](https://github.com/JuliaGraphs/Graphs.jl) and [MetaGraphs](https://github.com/JuliaGraphs/MetaGraphs.jl) are used underneath for network traversal/analysis.
 
 Development version of the documentation can be found here: [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://connectedsystems.github.io/Streamfall.jl/dev).
 
-> [NOTE] Streamfall is currently in its early stages and under active development. Although it is fairly usable for small networks and single node analyses, things may change drastically and unexpectedly.
-
+> [NOTE] Streamfall is currently in its early stages and under active development. Although it is fairly usable for small networks and assessing/analyzing single sub-catchments, things may change drastically and unexpectedly.
 
 [![DOI](https://zenodo.org/badge/345341654.svg)](https://zenodo.org/badge/latestdoi/345341654)
 
@@ -46,7 +48,7 @@ the Package manager:
 julia>] add https://github.com/ConnectedSystems/Streamfall.jl#main
 ```
 
-Examples below use data from the CAMEL-AUS dataset, available here:
+The examples below use data from the CAMEL-AUS dataset, available here:
 
 > Fowler, K. J. A., Acharya, S. C., Addor, N., Chou, C., and Peel, M. C.: CAMELS-AUS: hydrometeorological time   series and landscape attributes for 222 catchments in Australia, Earth Syst. Sci. Data, 13, 3847–3867, https://doi.org/10.5194/essd-13-3847-2021, 2021.
 
@@ -56,6 +58,8 @@ Note that since start of development, an updated dataset is incoming (currently 
 
 
 ## Quick start (single node)
+
+The examples below are run from the [examples](https://github.com/ConnectedSystems/Streamfall.jl/tree/main/examples) directory.
 
 ```julia
 using Statistics
@@ -84,13 +88,15 @@ climate = extract_climate(obs_data)
 hymod_node = create_node(SimpleHyModNode, "410730", 129.2);
 
 # Attempt to fit model parameters for 30 seconds
-calibrate!(hymod_node, climate, Qo; MaxTime=30)
+# Here, we use RMSE (Root Mean Square Error) as the objective function
+# Note that Streamfall assumes any objective function is to be minimized.
+calibrate!(hymod_node, climate, Qo, Streamfall.RMSE; MaxTime=30)
 
 # Run the fitted model
 run_node!(hymod_node, climate)
 
 # Display a basic overview plot (shows time series and Q-Q plot)
-# using a 365 day offset (e.g., 1 year burn-in period)
+# using a 366 day offset (e.g., ~1 year burn-in period)
 quickplot(Qo, hymod_node, climate, "HyMod"; burn_in=366, limit=nothing)
 
 # Save figure
@@ -110,14 +116,14 @@ plot_network(sn)
 
 # Calibrate network using the BlackBoxOptim package
 # keyword arguments will be passed to the `bboptimize()` function
-calibrate!(sn, climate, Qo; MaxTime=180.0)
+calibrate!(sn, climate, Qo, Streamfall.RMSE; MaxTime=180.0)
 
 # Run stream network
 # There is also `run_catchment!()` which does the same thing
 run_basin!(sn, climate)
 
 # Get a specific node in network
-node = sn[1]  # get first node in the network ("node1")
+node = sn[1]  # get the first node in the network ("node1")
 
 # Nodes can also be retrieved by name
 # which will also return its position in the network:
@@ -127,7 +133,7 @@ node = sn[1]  # get first node in the network ("node1")
 Streamfall.RMSE(obs_streamflow, node.outflow)
 
 # Save calibrated network spec to file
-Streamfall.save_network_spec(sn, "calibrated_example.yml")
+Streamfall.save_network(sn, "calibrated_example.yml")
 ```
 
 To display an overview of a node or network:
@@ -187,17 +193,16 @@ using Plots
 using Streamfall
 
 
-# Load and generate stream network
+# Load a network from a file, providing a name for the network and the file path.
 # Creates a graph representation of the stream with associated metadata.
-network = YAML.load_file("../test/data/campaspe/campaspe_network.yml")
+sn = load_network("Example Network", "../test/data/campaspe/campaspe_network.yml")
 
-# Name of network/catchment and its specification
-sn = create_network("Example Network", network)
-
-# Load climate data - in this case from a CSV file with data for all nodes.
-climate_data = CSV.File("../test/data/campaspe/climate/climate_historic.csv",
-                        comment="#",
-                        dateformat="YYYY-mm-dd") |> DataFrame
+# Load climate data, in this case from a CSV file with data for all nodes.
+climate_data = CSV.read(
+    "../test/data/campaspe/climate/climate_historic.csv", DataFrame,
+    comment="#",
+    dateformat="YYYY-mm-dd"
+)
 
 # Indicate which columns are precipitation and evaporation data based on partial identifiers
 climate = Climate(climate_data, "_rain", "_evap")
