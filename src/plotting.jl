@@ -213,7 +213,10 @@ end
 
 
 """
-    temporal_cross_section(dates, obs, sim; ylabel=nothing, period::Function=month)
+    temporal_cross_section(
+        dates, obs, sim;
+        title="", ylabel="Median Error", label=nothing, period::Function=monthday, kwargs...
+    )
 
 Provides indication of temporal variation and uncertainty across time, grouped by `period`.
 
@@ -222,15 +225,18 @@ Assumes daily data.
 Filters out leap days.
 
 # Arguments
-- dates : Date of each observation
-- obs : observed data
-- ylabel : Optional replacement ylabel. Uses name of `func` if not provided.
-- `period::Function` : Method from `Dates` package to group (defaults to `month`)
+- `dates` : Date of each observation
+- `obs` : Observed data
+- `sim` : Simulated data
+- `title` : Optional plot title. Blank if not provided.
+- `ylabel` : Optional replacement ylabel. Uses name of `period` if not provided.
+- `label` : Optional legend label. Uses `ylabel` if not provided.
+- `period` : Method from `Dates` package to group (defaults to `month`)
 """
-function temporal_cross_section(dates, obs, sim;
-                                title="", ylabel="Median Error", label=nothing,
-                                period::Function=monthday,
-                                kwargs...)  # show_extremes::Bool=false,
+function temporal_cross_section(
+    dates, obs, sim;
+    title="", ylabel="Median Error", label=nothing, period::Function=monthday, kwargs...
+)  # show_extremes::Bool=false,
     if isnothing(label)
         label = ylabel
     end
@@ -240,7 +246,7 @@ function temporal_cross_section(dates, obs, sim;
     logscale = [:log, :log10]
     tmp = nothing
 
-    xsect_res = TemporalCrossSection(dates, obs, sim)
+    xsect_res = TemporalCrossSection(dates, obs, sim, period)
     target = xsect_res.cross_section
 
     if :yscale in arg_keys || :yaxis in arg_keys
@@ -253,7 +259,7 @@ function temporal_cross_section(dates, obs, sim;
             # Format function for y-axis tick labels (e.g., 10^x)
             format_func = y -> (y != 0) ? L"%$(Int(round(sign(y)) * 10))^{%$(round(abs(y), digits=1))}" : L"0"
 
-            log_xsect_res = TemporalCrossSection(dates, log_obs, log_sim)
+            log_xsect_res = TemporalCrossSection(dates, log_obs, log_sim, period)
             target = log_xsect_res.cross_section
         end
     end
@@ -288,20 +294,22 @@ function temporal_cross_section(dates, obs, sim;
 
     fig = plot(xlabels, lower_95, fillrange=upper_95, color="lightblue", alpha=0.3, label="CI₉₅ μ: $(wr95_m_ind), σ: $(wr95_sd_ind)", linealpha=0)
     plot!(fig, xlabels, lower_75, fillrange=upper_75, color="lightblue", alpha=0.5, label="CI₇₅ μ: $(wr75_m_ind), σ: $(wr75_sd_ind)", linealpha=0)
-    plot!(fig, xlabels, x_section,
-            label="$(label) μ: $(m_ind), σ: $(sd_ind)",
-            color="black",
-            xlabel=nameof(period),
-            ylabel=ylabel,
-            legend=:bottomleft,
-            legendfont=Plots.font(10),
-            fg_legend=:transparent,
-            bg_legend=:transparent,
-            left_margin=5mm,
-            bottom_margin=5mm,
-            title=title,
-            yformatter=format_func;
-            kwargs...)
+    plot!(
+        fig, xlabels, x_section,
+        label="$(label) μ: $(m_ind), σ: $(sd_ind)",
+        color="black",
+        xlabel=nameof(period),
+        ylabel=ylabel,
+        legend=:bottomleft,
+        legendfont=Plots.font(10),
+        fg_legend=:transparent,
+        bg_legend=:transparent,
+        left_margin=5mm,
+        bottom_margin=5mm,
+        title=title,
+        yformatter=format_func;
+        kwargs...
+    )
 
     # if show_extremes
     #     scatter!(fig, xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
