@@ -12,7 +12,7 @@ Streamfall leverages the Julia language and ecosystem to support:
 Streamfall includes implementations of GR4J, HyMod, IHACRES, and SYMHYD.
 Performance should be similar to implementations in C and Fortran.
 
-The IHACRES rainfall-runoff model was previously implemented with [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim), but has since been ported to be in pure Julia.
+The IHACRES rainfall-runoff model was previously implemented with [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim), but has since been ported to pure Julia.
 
 [Graphs](https://github.com/JuliaGraphs/Graphs.jl) and [MetaGraphs](https://github.com/JuliaGraphs/MetaGraphs.jl) are used underneath for network traversal/analysis.
 
@@ -255,6 +255,5 @@ end
 ```
 
 See the [docs](https://connectedsystems.github.io/Streamfall.jl/dev) for an overview and example applications.
-
 
 Further preliminary usage examples are provided in the [examples](https://github.com/ConnectedSystems/Streamfall.jl/tree/main/examples) directory.
