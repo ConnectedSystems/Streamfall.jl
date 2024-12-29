@@ -64,6 +64,11 @@ function dependent_obj_func(
     params, climate::Climate, this_node::NetworkNode, next_node::NetworkNode, calib_data::DataFrame;
     metric::F, weighting=0.5, inflow=nothing, extraction=nothing, exchange=nothing
 ) where {F}
+    if typeof(this_node) <: DamNode
+        # Don't bother calibrating DamNodes as they only hold information at this stage.
+        return 0.0
+    end
+
     update_params!(this_node, params...)
 
     # Run dependent nodes
@@ -105,9 +110,6 @@ function dependent_obj_func(
 
             score = metric_func(obs_data, sim_data)
         end
-    elseif typeof(this_node) <: DamNode
-        # Don't bother calibrating DamNodes as they only hold information at this stage.
-        score = 0.0  # metric_func(obs_data, sim_data)
     else
         # Calibrate against outflows only
         sim_data = this_node.outflow
@@ -271,6 +273,9 @@ function calibrate!(
             x, climate, this_node, calib_data[:, this_node.name];
             metric=metric_func, extraction=extraction, exchange=exchange
         )
+
+        @info "Skipping dam node ($(v_id); $(this_node.name))"
+        return nothing, nothing
     else
         metric_func = (sim, obs) -> handle_missing(metric[this_node.name], sim, obs; handle_missing=:skip)
         opt_func = x -> this_node.obj_func(
