@@ -1,4 +1,4 @@
-# Defining a network
+# Network
 
 ```@autodocs
 Modules = [Streamfall]

@@ -14,7 +14,6 @@ makedocs(sitename="Streamfall Documentation",
     pages = [
         "index.md",
         "primer.md",
-        "network.md",
         "Nodes" => [
             "Node.md",
             "IHACRES.md",
@@ -23,6 +22,7 @@ makedocs(sitename="Streamfall Documentation",
             "SYMHYD.md",
             "Dam.md"
         ],
+        "network.md",
         "use_methods.md",
         "metrics.md",
         "Examples" => [
@@ -34,7 +34,7 @@ makedocs(sitename="Streamfall Documentation",
             "model_comparison.md",
             # "multisystem_showcase.md",
         ]
-        
+
     ]
 )
 

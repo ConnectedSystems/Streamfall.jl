@@ -12,7 +12,7 @@ Primary components of the Streamfall framework include:
 
 A stream network is defined through a YAML specification file (the "spec").
 
-A single node network is shown below using a `IHACRES` model (see [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim) for details on the model).
+A single node network is shown below using a `IHACRES` model.
 
 The spec takes the following form:
 
@@ -21,7 +21,7 @@ The spec takes the following form:
 410730:
     # The node type which defines which model is used for this node
     # In this case, it is the IHACRES with the bilinear formulation of the CMD module
-    node_type: BilinearNode
+    node_type: IHACRESBilinearNode
 
     # This spec defines a single node system
     # so it has no nodes upstream (inlets) or downstream (outlets)
