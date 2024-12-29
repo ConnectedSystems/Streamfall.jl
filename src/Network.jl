@@ -198,6 +198,11 @@ function create_network(name::String, network::AbstractDict)::StreamfallNetwork
 
         if haskey(details, "inlets")
             inlets = details["inlets"]
+
+            is_acceptable = (typeof(inlets) <: AbstractVector) || isnothing(inlets)
+            msg = "Inlets must be given as a list."
+            @assert is_acceptable || throw(ArgumentError(msg))
+
             if !isnothing(inlets)
                 for inlet in inlets
                     inlet_id::Int64 = findfirst(x -> x == inlet, string.(keys(network)))
@@ -210,6 +215,11 @@ function create_network(name::String, network::AbstractDict)::StreamfallNetwork
 
         if haskey(details, "outlets")
             outlets = details["outlets"]
+
+            msg = "Outlets must be given as a list."
+            is_acceptable = (typeof(outlets) <: AbstractVector) || isnothing(outlets)
+            @assert is_acceptable || throw(ArgumentError(msg))
+
             if !isnothing(outlets)
                 msg = "Streamfall currently only supports a single outlet. ($(length(outlets)))"
                 @assert length(outlets) <= 1 || throw(ArgumentError(msg))
@@ -244,45 +254,6 @@ function reset!(sn::StreamfallNetwork)::Nothing
 end
 
 
-function extract_node_spec!(sn::StreamfallNetwork, nid::Int, spec::AbstractDict)::Nothing
-    node = sn[nid]
-
-    node_name = string(node.name)
-    if haskey(spec, node_name)
-        # This node already extracted.
-        return
-    end
-
-    ins = inlets(sn, nid)
-    outs = outlets(sn, nid)
-    in_ids::Union{Array{String}, Nothing} = [sn[i].name for i in ins]
-    out_ids::Union{Array{String}, Nothing} = [sn[i].name for i in outs]
-
-    if length(out_ids) == 0
-        out_ids = nothing
-    end
-
-    if length(in_ids) == 0
-        in_ids = nothing
-    else
-        # Recurse upstream
-        for n in ins
-            extract_node_spec!(sn, n, spec)
-        end
-    end
-
-    node_spec = extract_node_spec(node)
-    network_spec = OrderedDict(
-        "inlets" => in_ids,
-        "outlets" => out_ids
-    )
-
-    spec[node_name] = merge(node_spec, network_spec)
-
-    return nothing
-end
-
-
 """
     extract_network_spec(sn::StreamfallNetwork)
 
@@ -291,15 +262,32 @@ Extract network details
 function extract_network_spec(sn::StreamfallNetwork)::OrderedDict
     _, outlets = find_inlets_and_outlets(sn)
     spec = OrderedDict()
-    for nid in outlets
-        extract_node_spec!(sn, nid, spec)
+
+    for (vid, node) in enumerate(sn)
+        inlets = Streamfall.inneighbors(sn.mg, vid)
+        outlets = Streamfall.outneighbors(sn.mg, vid)
+
+        in_ids = length(inlets) == 0 ? nothing : [sn[i].name for i in inlets]
+        out_ids = length(outlets) == 0 ? nothing : [sn[i].name for i in outlets]
+
+        node_spec = extract_node_spec(node)
+        network_spec = OrderedDict(
+            "inlets" => in_ids,
+            "outlets" => out_ids
+        )
+
+        spec[node.name] = merge(node_spec, network_spec)
     end
 
     return spec
 end
 
+"""
+    save_network(sn::StreamfallNetwork, fn::String)::Nothing
 
-function save_network_spec(sn::StreamfallNetwork, fn::String)::Nothing
+Save network specification to a YAML file.
+"""
+function save_network(sn::StreamfallNetwork, fn::String)::Nothing
     spec = extract_network_spec(sn)
     write_file(fn, spec)
 
