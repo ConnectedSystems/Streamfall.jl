@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="212.982" height="50.193" viewBox="0 0 56.352 13.28">
+  <text xml:space="preserve" style="font-size:13.1892px;line-height:0;white-space:pre;shape-inside:url(#a);display:inline;fill:#1b1b1b;fill-opacity:1;stroke:#FFFFFF;stroke-opacity:1" transform="translate(-109.318 -294.255) scale(.74524)"><tspan x="162.16" y="409.485"><tspan style="font-family:Georgia;-inkscape-font-specification:Georgia;stroke:white;stroke-width:0.15">Streamfall</tspan></tspan></text>
+  <g transform="translate(-31.02 -105.595)">
+    <path d="M-40.863 104.991h.888v14.146h-.888z" style="fill:#4063d8;fill-opacity:1;stroke:none;stroke-width:.272139;stroke-opacity:1" transform="rotate(-37.911) skewX(.178)"/>
+    <path d="M37.674 109.328h.655v4.48h-.655z" style="fill:#4063d8;fill-opacity:1;stroke:none;stroke-width:.256163;stroke-opacity:1"/>
+    <path d="M63.94 102.337h5.423v.786H63.94z" style="fill:#4063d8;fill-opacity:1;stroke:none;stroke-width:.264999;stroke-opacity:1" transform="rotate(15)"/>
+    <ellipse cx="34.085" cy="115.446" rx="1.258" ry="1.14" style="fill:#cb3c33;fill-opacity:1;stroke:none;stroke-width:.264999;stroke-opacity:1"/>
+    <ellipse cx="32.277" cy="106.734" rx="1.258" ry="1.14" style="fill:#389826;fill-opacity:1;stroke:none;stroke-width:.264999;stroke-opacity:1"/>
+    <ellipse cx="37.988" cy="108.333" rx="1.258" ry="1.14" style="fill:#9558b2;fill-opacity:1;stroke:none;stroke-width:.264999;stroke-opacity:1"/>
+  </g>
+</svg>
