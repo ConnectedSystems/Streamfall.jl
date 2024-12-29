@@ -1,5 +1,5 @@
 <div align="center">
-<img align="center" src="docs/src/assets/logo_updated.svg" alt="Streamfall.jl" fill="currentColor"/>
+<img align="center" src="docs/src/assets/logo.svg" alt="Streamfall.jl" fill="currentColor"/>
 <p>A graph-based streamflow modelling system written in Julialang.</p>
 
 [![DOI](https://zenodo.org/badge/345341654.svg)](https://zenodo.org/badge/latestdoi/345341654)
