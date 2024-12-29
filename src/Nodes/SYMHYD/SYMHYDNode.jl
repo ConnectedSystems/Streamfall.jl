@@ -4,9 +4,6 @@ using ModelParameters
 
 const SYMHYD_SOIL_ET_CONST = 10.0
 
-
-"""
-"""
 Base.@kwdef mutable struct SYMHYDNode{P, A<:AbstractFloat} <: NetworkNode
     name::String
     area::A
@@ -37,10 +34,11 @@ end
 
 
 """
+    SYMHYDNode(name::String, spec::AbstractDict)::SYMHYDNode
 
-Create node from spec.
+Create SYMHYD node from spec.
 """
-function SYMHYDNode(name::String, spec::AbstractDict)
+function SYMHYDNode(name::String, spec::AbstractDict)::SYMHYDNode
     n = create_node(SYMHYDNode, name, spec["area"])
     node_params = spec["parameters"]
     node_params["sm_store"] = [node_params["initial_sm_store"]]
@@ -89,15 +87,30 @@ end
 
 
 """
+    run_timestep!(
+        node::SYMHYDNode, climate::Climate, ts::Int;
+        inflow=nothing, extraction=extraction, exchange=nothing
+    )::AbstractFloat
+    run_timestep!(
+        node::SYMHYDNode,
+        rain::F,
+        et::F,
+        ts::Int;
+        inflow=nothing,
+        extraction=nothing,
+        exchange=nothing
+    )::F where {F<:AbstractFloat}
 
-Run SYMHYD for a given time step
+Run SYMHYD for a given timestep.
 """
-function run_timestep!(node::SYMHYDNode, climate::Climate, ts::Int; inflow=nothing, extraction=extraction, exchange=nothing)::AbstractFloat
+function run_timestep!(
+    node::SYMHYDNode, climate::Climate, ts::Int;
+    inflow=nothing, extraction=extraction, exchange=nothing
+)::AbstractFloat
     P, E = climate_values(node, climate, ts)
 
     return run_timestep!(node, P, E, ts; inflow=inflow, extraction=extraction, exchange=exchange)
 end
-
 function run_timestep!(
     node::SYMHYDNode,
     rain::F,
@@ -186,6 +199,7 @@ end
 
 
 """
+    run_symhyd(node::SYMHYDNode, P::F, ET::F, ts::Int64)::NTuple{6,F} where {F<:Float64}
 
 Run SYMHYD for a single time step with given inputs and state variables.
 """

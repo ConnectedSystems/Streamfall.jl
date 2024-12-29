@@ -149,19 +149,29 @@ end
 
 
 """
-    run_timestep!(node::GR4JNode, climate::Climate, timestep::Int;
-                  inflow::Float64, extraction::Float64, exchange::Float64)
+    run_timestep!(
+        node::GR4JNode, climate::Climate, timestep::Int;
+        inflow=nothing, extraction=nothing, exchange=nothing
+    )
+    run_timestep!(
+        node::GR4JNode, rain::Float64, et::Float64, ts::Int64;
+        inflow=nothing, extraction=nothing, exchange=nothing
+    )
 
 Run given GR4J node for a time step.
 """
-function run_timestep!(node::GR4JNode, climate::Climate, timestep::Int; inflow=nothing, extraction=nothing, exchange=nothing)
+function run_timestep!(
+    node::GR4JNode, climate::Climate, timestep::Int;
+    inflow=nothing, extraction=nothing, exchange=nothing
+)
     P, E = climate_values(node, climate, timestep)
 
     run_timestep!(node, P, E, timestep; inflow=inflow, extraction=extraction, exchange=exchange)
 end
-
-
-function run_timestep!(node::GR4JNode, rain::Float64, et::Float64, ts::Int64; inflow=nothing, extraction=nothing, exchange=nothing)
+function run_timestep!(
+    node::GR4JNode, rain::Float64, et::Float64, ts::Int64;
+    inflow=nothing, extraction=nothing, exchange=nothing
+)
     uh1_cache = node.uh1_ordinates
     uh2_cache = node.uh2_ordinates
     res = run_gr4j(rain, et, node.X1.val, node.X2.val, node.X3.val, node.X4.val, node.area, node.UH1[ts], node.UH2[ts], uh1_cache, uh2_cache, node.p_store[ts], node.r_store[ts])
