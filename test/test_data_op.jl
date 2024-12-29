@@ -7,12 +7,12 @@ using Streamfall
 
 here = @__DIR__
 climate_data = joinpath(here, "data/campaspe/climate/climate_historic.csv")
-dam_data_loc = joinpath(here, "data/campaspe/dam")
+dam_data_loc = joinpath(here, "data/campaspe/gauges")
 
 # Read in test data
 climate_data = CSV.File(climate_data, comment="#", dateformat="YYYY-mm-dd") |> DataFrame
-hist_dam_levels = CSV.File(joinpath(dam_data_loc, "historic_levels_for_fit.csv"), dateformat="YYYY-mm-dd") |> DataFrame
-hist_dam_releases = CSV.File(joinpath(dam_data_loc, "historic_releases.csv"), dateformat="YYYY-mm-dd") |> DataFrame
+hist_dam_levels = CSV.File(joinpath(dam_data_loc, "406000_historic_levels_for_fit.csv"), dateformat="YYYY-mm-dd") |> DataFrame
+hist_dam_releases = CSV.File(joinpath(dam_data_loc, "406000_historic_outflow.csv"), dateformat="YYYY-mm-dd") |> DataFrame
 
 
 @testset "Min/max date finding" begin

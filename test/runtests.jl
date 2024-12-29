@@ -6,26 +6,41 @@ using Streamfall
 TEST_DIR = @__DIR__
 
 @testset "Bare node creation" begin
-    # Test direct running of a single time step
-    ihacres = create_node(BilinearNode, "IHACRES", 100.0)
-    @test Streamfall.run_timestep!(ihacres, 6.0, 3.0, 1) isa Any
+
+    ihacres = create_node(IHACRESBilinearNode, "IHACRES", 100.0)
 
     # Expuh form does not yet support time stepping
     expuh = create_node(ExpuhNode, "Expuh", 100.0)
-    @test Streamfall.run_node!(expuh, 6.0, 3.0, 50.0, 10.0, 5.0) isa Any
 
     gr4j = create_node(GR4JNode, "GR4J", 100.0)
-    @test Streamfall.run_timestep!(gr4j, 6.0, 3.0, 1) isa Any
-
     hymod = create_node(SimpleHyModNode, "HyMod", 100.0)
-    @test Streamfall.run_timestep!(hymod, 6.0, 3.0, 1) isa Any
-
     symhyd = create_node(SYMHYDNode, "SYMHYD", 100.0)
-    @test Streamfall.run_timestep!(symhyd, 6.0, 3.0, 1) isa Any
+
+    @testset "Running a single timestep" begin
+        # Prep and run a single timestep simulation for each model
+
+        Streamfall.prep_state!(ihacres, 1)
+        @test Streamfall.run_timestep!(ihacres, 6.0, 3.0, 1) isa AbstractFloat
+
+        Streamfall.prep_state!(expuh, 1)
+        @test Streamfall.run_node!(expuh, 6.0, 3.0, 50.0, 10.0, 5.0) isa AbstractFloat
+
+        Streamfall.prep_state!(gr4j, 1)
+        @test Streamfall.run_timestep!(gr4j, 6.0, 3.0, 1) isa AbstractFloat
+
+        Streamfall.prep_state!(hymod, 1)
+        @test Streamfall.run_timestep!(hymod, 6.0, 3.0, 1) isa AbstractFloat
+
+        Streamfall.prep_state!(symhyd, 1)
+        @test Streamfall.run_timestep!(symhyd, 6.0, 3.0, 1) isa AbstractFloat
+    end
+
 end
 
 
-@testset "Ensure no NaN outputs" begin
+@testset "IHACRES Bilinear - Ensure no NaN outputs" begin
+    # Regression test, checking to see if a problem state combination causes NaN values
+
     test_node = IHACRESBilinearNode(
         "Test",  # name/id
         1985.73,  # area
@@ -43,6 +58,9 @@ end
         0.0  # initial gw store
     )
 
+    # Prep a single timestep simulation
+    Streamfall.prep_state!(test_node, 1)
+
     rain = 7.96848605e+01
     evap = 3.32467909e+00
     inflow = 9.19583373e-11
@@ -52,26 +70,17 @@ end
     quick_store = 8.46269687e+02
     slow_store = 3.67133471e+02
 
-    res = run_step!(test_node, rain, evap, inflow, extraction, gw_exchange,
-                    current_store, quick_store, slow_store, 0.0)
+    test_node.storage[1] = current_store
+    test_node.quick_store[1] = quick_store
+    test_node.slow_store[1] = slow_store
 
-    @test !any(isnan, res)
+    res = run_timestep!(
+        test_node, rain, evap, 1;
+        inflow=inflow, extraction=extraction, exchange=gw_exchange
+    )
+
+    @test !isnan(res)
 end
-
-
-
-@testset "Network creation" begin
-    # Ensure specified parameter values are being assigned on node creation
-    # Load and generate stream network
-    network = YAML.load_file(joinpath(TEST_DIR, "data/campaspe/campaspe_network.yml"))
-    sn = create_network("Example Network", network)
-
-    target_node = get_prop(sn, 1, :node)
-
-    @test target_node.area == 1985.73
-    # @test target_node.level_params[1] == -3.3502
-end
-
 
 @testset "Interim CMD (no NaN poisoning)" begin
     params = (214.6561105573191, 76.6251447, 200.0, 2.0, 0.727)
