@@ -87,7 +87,7 @@ function dependent_obj_func(
         if weighting == 0.0
             # All emphasis is on dam levels
             score = metric_func(obs_data, sim_data)
-        elseif weighting < 1.0
+        elseif weighting <= 1.0
             # Use a mix
             dam_score = metric_func(obs_data, sim_data)
 
