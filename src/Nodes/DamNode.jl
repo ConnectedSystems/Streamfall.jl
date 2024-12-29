@@ -33,17 +33,16 @@ Base.@kwdef mutable struct DamNode{P, A<:AbstractFloat} <: NetworkNode
     max_storage::A
     storage_coef::P = Param(0.5, bounds=(0.00001, 10.0))
 
-
-    # Function to use to calculate dam level from storage volume
+    # Dam storage volume to level
     calc_dam_level::Function = c_dam_level
 
-    # Function to use to calculate dam surface area from storage volume
+    # Dam volume to surface area
     calc_dam_area::Function = c_dam_area
 
-    # Function to use to calculate dam discharge from storage volume
+    # Dam storage volume to dam discharge
     calc_dam_discharge::Function = c_dam_discharge
 
-    # Function to calculate outflow from dam
+    # Dam outflow
     calc_dam_outflow::Function = c_dam_outflow
 
     storage::Array{A} = [0.0]
