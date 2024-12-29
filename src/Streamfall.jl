@@ -230,13 +230,13 @@ export create_node, GR4JNode, HyModNode, SimpleHyModNode, SYMHYDNode
 export EnsembleNode, BaseEnsemble
 
 # Network
-export find_inlets_and_outlets, inlets, outlets, load_network, create_network, create_node
+export find_inlets_and_outlets, inlets, outlets
 export climate_values, node_names, get_node, get_node_id, get_prop, set_prop!
 export param_info, update_params!, sim_length, reset!
 export run_catchment!, run_basin!, run_node!, run_node_with_temp!
 export run_timestep!
 export calibrate!
-export save_network
+export create_network, load_network, save_network
 
 export best_candidate, best_fitness, best_params
 
