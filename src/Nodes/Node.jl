@@ -125,10 +125,10 @@ end
 function extract_node_spec(node::NetworkNode)
     area = node.area
     param_names, x0, _ = param_info(node)
-    params = Dict(zip(param_names, x0))
+    params = OrderedDict(zip(param_names, x0))
 
     node_type = typeof(node)
-    spec = Dict(
+    spec = OrderedDict(
         "node_type" => string(nameof(node_type)),
         "area" => area,
         "parameters" => params

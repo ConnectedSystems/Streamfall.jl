@@ -81,9 +81,12 @@ end
 
 Create DamNode from a given specification.
 """
-function DamNode(name::String, spec::Union{Dict,OrderedDict})
-    n = DamNode{Param,Float64}(; name=name, area=spec["area"],
-                       max_storage=spec["max_storage"])
+function DamNode(name::String, spec::AbstractDict)
+    n = DamNode{Param,Float64}(;
+        name=name,
+        area=spec["area"],
+        max_storage=spec["max_storage"]
+    )
 
     node_params = spec["parameters"]
     for (k, p) in node_params
