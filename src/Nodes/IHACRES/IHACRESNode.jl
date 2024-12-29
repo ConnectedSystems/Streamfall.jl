@@ -92,9 +92,6 @@ function IHACRESBilinearNode(name::String, spec::AbstractDict)
     #     ]
     # end
 
-    node_params["storage"] = [node_params["initial_storage"]]
-    delete!(node_params, "initial_storage")
-
     for (k, p) in node_params
         s = Symbol(k)
         if p isa String
