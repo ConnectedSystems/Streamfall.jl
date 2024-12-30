@@ -20,10 +20,6 @@ climate_data = CSV.read(
 
 dam_level_fn = joinpath(data_path, "gauges/406000_historic_levels_for_fit.csv")
 dam_releases_fn = joinpath(data_path, "gauges/406000_historic_outflow.csv")
-
-@info dam_level_fn
-@info dam_releases_fn
-
 hist_dam_levels = CSV.read(dam_level_fn, DataFrame; dateformat=date_format)
 hist_dam_releases = CSV.read(dam_releases_fn, DataFrame; dateformat=date_format)
 
