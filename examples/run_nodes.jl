@@ -7,8 +7,7 @@ here = @__DIR__
 data_path = joinpath(here, "../test/data/campaspe/")
 
 # Load and generate stream network
-network = YAML.load_file(joinpath(data_path, "campaspe_network.yml"))
-sn = create_network("Example Network", network)
+sn = load_network("Example Network", joinpath(data_path, "campaspe_network.yml"))
 
 # Load climate data
 date_format = "YYYY-mm-dd"
@@ -16,18 +15,16 @@ climate_data = CSV.File(joinpath(data_path, "climate/climate_historic.csv"),
                           comment="#",
                           dateformat=date_format) |> DataFrame
 
-dam_level_fn = joinpath(data_path, "dam/historic_levels_for_fit.csv")
-dam_releases_fn = joinpath(data_path, "dam/historic_releases.csv")
+dam_level_fn = joinpath(data_path, "gauges/406000_historic_levels_for_fit.csv")
+dam_releases_fn = joinpath(data_path, "gauges/406000_historic_outflow.csv")
 hist_dam_levels = CSV.File(dam_level_fn, dateformat=date_format) |> DataFrame
 hist_dam_releases = CSV.File(dam_releases_fn, dateformat=date_format) |> DataFrame
 
-# Combine recorded extractions and releases together
-# hist_dam_releases[:, "406000_releases_[ML]"] .+ hist_dam_releases[:, "406000_extractions_[ML]"]
-hist_dam_releases[:, "406000_extractions_[ML]"] = hist_dam_releases[:, "406000_releases_[ML]"]
+rename!(hist_dam_releases, ["406000_outflow_[ML]" => "406000_releases_[ML]"])
 
 # Subset to same range
-climate_data, hist_dam_levels, hist_dam_releases = Streamfall.align_time_frame(climate_data, 
-                                                                               hist_dam_levels, 
+climate_data, hist_dam_levels, hist_dam_releases = Streamfall.align_time_frame(climate_data,
+                                                                               hist_dam_levels,
                                                                                hist_dam_releases)
 
 climate = Climate(climate_data, "_rain", "_evap")
