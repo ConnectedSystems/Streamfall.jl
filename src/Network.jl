@@ -301,8 +301,7 @@ function Base.show(io::IO, sn::StreamfallNetwork)
     name = MetaGraphs.get_prop(sn.mg, :description)
 
     println(io, "Network Name: $(name)")
-    println(io, "Represented Area: $(area(sn))")
-    println("-"^17, "\n")
+    println(io, "Represented Area: $(round(area(sn), digits=2))\n")
 
     vs = vertices(sn.mg)
 
@@ -316,7 +315,8 @@ function Base.show(io::IO, sn::StreamfallNetwork)
             println(io, "⋮ \n")
             continue
         end
-        println(io, "Node $(nid): \n")
+        println(io, "Node $(nid)")
+        println(io, "-"^8)
         show(io, sn[nid])
     end
 end
