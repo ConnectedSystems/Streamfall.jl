@@ -1,11 +1,98 @@
-<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="212.982" height="50.193" viewBox="0 0 56.352 13.28">
-  <text xml:space="preserve" style="font-size:13.1892px;line-height:0;white-space:pre;shape-inside:url(#a);display:inline;fill:#1b1b1b;fill-opacity:1;stroke:#FFFFFF;stroke-opacity:1" transform="translate(-109.318 -294.255) scale(.74524)"><tspan x="162.16" y="409.485"><tspan style="font-family:Georgia;-inkscape-font-specification:Georgia;stroke:white;stroke-width:0.15">Streamfall</tspan></tspan></text>
-  <g transform="translate(-31.02 -105.595)">
-    <path d="M-40.863 104.991h.888v14.146h-.888z" style="fill:#4063d8;fill-opacity:1;stroke:none;stroke-width:.272139;stroke-opacity:1" transform="rotate(-37.911) skewX(.178)"/>
-    <path d="M37.674 109.328h.655v4.48h-.655z" style="fill:#4063d8;fill-opacity:1;stroke:none;stroke-width:.256163;stroke-opacity:1"/>
-    <path d="M63.94 102.337h5.423v.786H63.94z" style="fill:#4063d8;fill-opacity:1;stroke:none;stroke-width:.264999;stroke-opacity:1" transform="rotate(15)"/>
-    <ellipse cx="34.085" cy="115.446" rx="1.258" ry="1.14" style="fill:#cb3c33;fill-opacity:1;stroke:none;stroke-width:.264999;stroke-opacity:1"/>
-    <ellipse cx="32.277" cy="106.734" rx="1.258" ry="1.14" style="fill:#389826;fill-opacity:1;stroke:none;stroke-width:.264999;stroke-opacity:1"/>
-    <ellipse cx="37.988" cy="108.333" rx="1.258" ry="1.14" style="fill:#9558b2;fill-opacity:1;stroke:none;stroke-width:.264999;stroke-opacity:1"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xml:space="preserve"
+   width="212.982"
+   height="50.193"
+   viewBox="0 0 60 14"
+   version="1.1"
+   id="svg24"
+   sodipodi:docname="logo.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+   id="defs28" /><sodipodi:namedview
+   id="namedview26"
+   pagecolor="#ffffff"
+   bordercolor="#000000"
+   borderopacity="0.25"
+   inkscape:showpageshadow="2"
+   inkscape:pageopacity="0.0"
+   inkscape:pagecheckerboard="0"
+   inkscape:deskcolor="#d1d1d1"
+   showgrid="false"
+   inkscape:zoom="4.0172373"
+   inkscape:cx="13.068683"
+   inkscape:cy="-37.836949"
+   inkscape:window-width="2560"
+   inkscape:window-height="1369"
+   inkscape:window-x="1912"
+   inkscape:window-y="-8"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="svg24" />
+  <style id="github-theme">
+    .logo-text {
+      fill: #1b1b1b;
+    }
+
+    /* Dark theme styles using GitHub's prefers-color-scheme */
+    @media (prefers-color-scheme: dark) {
+      .logo-text {
+        fill: #cecece;
+      }
+    }
+
+    @media (prefers-color-scheme: light-dark) {
+      .logo-text {
+        fill: #cecece;
+      }
+    }
+  </style>
+  <text class=".github-theme"
+   xml:space="preserve"
+   style="font-size:13.1892px;line-height:0;white-space:pre;shape-inside:url(#a);display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-opacity:1"
+   transform="matrix(0.74524,0,0,0.74524,3.912128,11.074877)"
+   id="text8">
+   <tspan style="font-family:Georgia;-inkscape-font-specification:Georgia">Streamfall</tspan>
+  </text>
+  <g
+   transform="translate(-29.266842,-105.10411)"
+   id="g22">
+    <path
+   d="m -40.863,104.991 h 0.888 v 14.146 h -0.888 z"
+   style="fill:#4063d8;fill-opacity:1;stroke:none;stroke-width:0.272139;stroke-opacity:1"
+   transform="matrix(0.78896614,-0.61443668,0.61688776,0.78705727,0,0)"
+   id="path10" />
+    <path
+   d="m 37.674,109.328 h 0.655 v 4.48 h -0.655 z"
+   style="fill:#4063d8;fill-opacity:1;stroke:none;stroke-width:0.256163;stroke-opacity:1"
+   id="path12" />
+    <path
+   d="m 63.94,102.337 h 5.423 v 0.786 H 63.94 Z"
+   style="fill:#4063d8;fill-opacity:1;stroke:none;stroke-width:0.264999;stroke-opacity:1"
+   transform="rotate(15)"
+   id="path14" />
+    <ellipse
+   cx="34.084999"
+   cy="115.446"
+   rx="1.258"
+   ry="1.14"
+   style="fill:#cb3c33;fill-opacity:1;stroke:none;stroke-width:0.264999;stroke-opacity:1"
+   id="ellipse16" />
+    <ellipse
+   cx="32.277"
+   cy="106.734"
+   rx="1.258"
+   ry="1.14"
+   style="fill:#389826;fill-opacity:1;stroke:none;stroke-width:0.264999;stroke-opacity:1"
+   id="ellipse18" />
+    <ellipse
+   cx="37.987999"
+   cy="108.333"
+   rx="1.258"
+   ry="1.14"
+   style="fill:#9558b2;fill-opacity:1;stroke:none;stroke-width:0.264999;stroke-opacity:1"
+   id="ellipse20" />
   </g>
 </svg>
