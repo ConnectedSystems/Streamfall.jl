@@ -220,6 +220,42 @@ function run_node!(
     return nothing
 end
 
+"""
+    run_node!(
+        node::NetworkNode, climate::Climate, ts::Int;
+        inflow=nothing, extraction=nothing, exchange=nothing
+    )
+
+Run a specific node for a specified time step.
+
+# Arguments
+- `node` : A node in a network
+- `climate` : Climate dataset
+- `ts` : current time step
+- `inflow` : Time series of inflows from upstream nodes.
+- `extraction` : Time series of water orders (expects column of `_releases`)
+- `exchange` : Time series of groundwater flux
+"""
+function run_node!(
+    node::NetworkNode, climate::Climate, ts::Int;
+    inflow=nothing, extraction=nothing, exchange=nothing
+)
+    if checkbounds(Bool, node.outflow, ts)
+        if node.outflow[ts] != undef
+            # already ran for this time step so no need to run
+            return node.outflow[ts], node.level[ts]
+        end
+    end
+
+    node_name = node.name
+    rain, et = climate_values(node, climate, ts)
+    wo = timestep_value(ts, node_name, "releases", extraction)
+    ex = timestep_value(ts, node_name, "exchange", exchange)
+    in_flow = timestep_value(ts, node_name, "inflow", inflow)
+
+    return run_timestep!(node, rain, et, ts; inflow=in_flow, extraction=wo, exchange=ex)
+end
+
 include("Analysis/Analysis.jl")
 include("plotting.jl")
 
