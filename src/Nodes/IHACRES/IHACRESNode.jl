@@ -196,12 +196,12 @@ end
 Run a specific node for a specified time step.
 
 # Arguments
-- `node::IHACRESNode` :
-- `climate::Climate` :
-- `ts::Int` : current time step
-- `inflow::DataFrame` : Time series of inflows from any upstream node.
-- `extraction::DataFrame` : Time series of water orders (expects column of `_releases`)
-- `exchange::DataFrame` : Time series of groundwater flux
+- `node` : An IHACRES node
+- `climate` : Climate dataset
+- `ts` : current time step
+- `inflow` : Time series of inflows from upstream nodes.
+- `extraction` : Time series of water orders (expects column of `_releases`)
+- `exchange` : Time series of groundwater flux
 """
 function run_node!(
     node::IHACRESNode, climate::Climate, ts::Int;
@@ -229,7 +229,7 @@ end
         inflow::Float64, extraction::Float64, exchange::Float64
     )
 
-Run the given IHACRESBilinearNode for a time step.
+Run the given IHACRESBilinearNode for a timestep.
 """
 function run_timestep!(
     node::IHACRESNode, climate::Climate, timestep::Int64;
