@@ -15,6 +15,10 @@ Adapted with kind permission from: https://github.com/jdherman/GRA-2020-SALib
     An approach to identify time consistent model parameters: sub-period calibration.
     Hydrology and Earth System Sciences 17, 149-161.
     https://doi.org/10.5194/hess-17-149-2013
+2. Wagener, T., Boyle, D. P., Lees, M. J., Wheater, H. S., Gupta, H. V.,
+    and Sorooshian, S., 2001. A framework for development and applica-
+    tion of hydrological models, Hydrol. Earth Syst. Sci., 5, 13-26,
+    https://doi.org/10.5194/hess-5-13-2001.
 """
 Base.@kwdef mutable struct SimpleHyModNode{P, A<:AbstractFloat} <: HyModNode
     const name::String

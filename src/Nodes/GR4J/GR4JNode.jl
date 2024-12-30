@@ -63,7 +63,6 @@ A four-parameter model with two stores.
 2. MacDonald, A. 2014.
     Python GR4J
     https://github.com/amacd31/gr4j
-
 """
 Base.@kwdef mutable struct GR4JNode{P, A<:AbstractFloat} <: GRNJNode
     const name::String
