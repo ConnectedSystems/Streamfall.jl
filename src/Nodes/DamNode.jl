@@ -57,6 +57,8 @@ Base.@kwdef mutable struct DamNode{P, A<:AbstractFloat} <: NetworkNode
     outflow::Array{A} = []
 
     obj_func::Function = dependent_obj_func
+
+    function_repr = OrderedDict()
 end
 
 
@@ -87,6 +89,7 @@ function DamNode(name::String, spec::AbstractDict)
         area=spec["area"],
         max_storage=spec["max_storage"]
     )
+    n.storage = [spec["initial_storage"]]
 
     node_params = spec["parameters"]
     for (k, p) in node_params
@@ -95,17 +98,16 @@ function DamNode(name::String, spec::AbstractDict)
             p = eval(Meta.parse(p))
         end
 
-        if k == "initial_storage"
-            setfield!(n, :storage, [p])
-        else
-            f = getfield(n, s)
-            setfield!(n, s, Param(p, bounds=f.bounds))
-        end
+        f = getfield(n, s)
+        setfield!(n, s, Param(p, bounds=f.bounds))
     end
 
     for (k, p) in spec["functions"]
         s = Symbol(k)
         f = getfield(n, s)
+
+        n.function_repr[k] = p
+
         p = eval(Meta.parse(p))
         setfield!(n, s, p)
     end
@@ -340,10 +342,11 @@ Extract dam-specific values.
 function extract_spec!(node::DamNode, spec::AbstractDict)::Nothing
     spec["initial_storage"] = node.storage[1]
     spec["max_storage"] = node.max_storage
+    spec["functions"] = OrderedDict()
 
-    # Cannot extract function implementation at this time (Julia v1.11)
-    # spec["parameters"]["calc_dam_level"]
-    @warn "Cannot extract dam calculations at this time. Functions must be manually copied."
+    for (f, r) in node.function_repr
+        spec["functions"][f] = r
+    end
 
     return nothing
 end
