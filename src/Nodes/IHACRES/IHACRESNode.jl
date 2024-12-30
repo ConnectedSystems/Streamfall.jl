@@ -76,6 +76,9 @@ function IHACRESBilinearNode(name::String, spec::AbstractDict)
     n = create_node(IHACRESBilinearNode, name, spec["area"])
     node_params = copy(spec["parameters"])
 
+    # Initial Catchment Moisture Deficit
+    n.storage = [spec["initial_storage"]]
+
     # if haskey(spec, "level_params")
     #     n_lparams = n.level_params
     #     s_lparams = spec["level_params"]
@@ -510,6 +513,17 @@ function reset!(s_node::IHACRESNode)::Nothing
     s_node.effective_rainfall = []
     s_node.et = []
     s_node.inflow = []
+
+    return nothing
+end
+
+"""
+    extract_spec!(node::DamNode, spec::AbstractDict)::Nothing
+
+Additional processing to extract IHACRES-specific details.
+"""
+function extract_spec!(node::IHACRESNode, spec::AbstractDict)::Nothing
+    spec["initial_storage"] = node.storage[1]
 
     return nothing
 end
