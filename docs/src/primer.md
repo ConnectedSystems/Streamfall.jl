@@ -1,11 +1,24 @@
 # Primer
 
-Streamfall is a stream network modelling framework with integrated systems analysis and modelling in mind. The aim is to simplify the construction of basin-scale hydrology models, itself a constituent of a larger system of systems. The overarching concepts are explained here.
+Streamfall is a stream network modelling framework with integrated systems analysis and
+modelling in mind. The aim is to simplify the construction of basin-scale hydrology models,
+itself a constituent of a larger system of systems. The overarching concepts are explained
+here.
+
+The motivation for Streamfall is to enable flexible modelling of a hydrological system.\
+This includes:
+
+- Representation of catchments with heterogenous combinations of rainfall-runoff models \
+  (each sub-catchment may be represented by a different hydrological model)
+- Support interaction with other models which may represent groundwater interactions or \
+  anthropogenic activity (e.g., water extractions)
+- High performance relative to available implementations in R and Python
 
 Primary components of the Streamfall framework include:
 
-1. The graph network defining the stream and the model associated with each node in the network
-2. Data for the basin, including climate data and hydrologic interactions driven by other systems
+1. The graph representing a network of gauges and the associated model
+2. Data for the basin, including climate data and hydrologic interactions \
+   driven by other systems
 3. The functions which run the network as a whole and individual nodes
 
 ## Defining a network
@@ -22,12 +35,15 @@ The spec takes the following form:
     # The node type which defines which model is used for this node
     # In this case, it is the IHACRES with the bilinear formulation of the CMD module
     node_type: IHACRESBilinearNode
+    area: 130.0  # subcatchment area in km^2 (from BoM)
 
     # This spec defines a single node system
     # so it has no nodes upstream (inlets) or downstream (outlets)
     inlets:
     outlets:
-    area: 130.0  # subcatchment area in km^2 (from BoM)
+
+    # Initial CMD state, CMD > 0 means there is a deficit
+    initial_storage: 0.0
 
     # Model parameters (in this case, for IHACRES)
     parameters:
@@ -39,17 +55,13 @@ The spec takes the following form:
         b: 0.1       # slowflow scaling factor
         storage_coef: 2.9  # groundwater interaction factor
         alpha: 0.95  # effective rainfall scaling factor
-        initial_storage: 0.0  # initial CMD value, CMD > 0 means there is a deficit
 ```
 
-The spec is then loaded in Julia and passed into `create_network()`
+The spec is then loaded with `load_network()`
 
 ```julia
-# Load file
-network = YAML.load_file("network.yml")
-
-# Create network from spec, with a human-readable name.
-sn = create_network("Gingera Catchment", network)
+# Load network from a spec file, with a human-readable name.
+sn = load_network("Gingera Catchment", "network.yml")
 ```
 
 Printing the network displays a summary of the nodes:
@@ -59,10 +71,9 @@ julia> sn
 
 Network Name: Gingera Catchment
 Represented Area: 130.0
------------------
 
-Node 1 :
-
+Node 1
+--------
 Name: 410730 [BilinearNode]
 Area: 130.0
 ┌──────────────┬───────┬─────────────┬─────────────┐
@@ -124,7 +135,6 @@ Data that may be optionally provided include:
 - `extractions` : additional extractions from the stream
 - `exchange` : additional forcing for groundwater interactions.
 
-
 These may be provided as a Dictionary of arrays with the node name as the key.
 
 More details may be found in the [Input data format](@ref) page.
@@ -148,10 +158,11 @@ Date, 406214_rain, 406214_evap, 406219_rain, 406219_evap
 
 ```julia
 # Load data from CSV
-date_format = "YYYY-mm-dd"
-climate_data = CSV.File(joinpath(data_path, "climate/climate_historic.csv"),
-                        comment="#",
-                        dateformat=date_format) |> DataFrame
+climate_data = CSV.read(
+    joinpath(data_path, "climate/climate_historic.csv"), DataFrame,
+    comment="#",
+    dateformat="YYYY-mm-dd"
+)
 
 # Create a climate object, specifying which identifiers to use.
 climate = Climate(climate_data, "_rain", "_evap")
@@ -185,16 +196,13 @@ gw_flux = ...     # forced groundwater interactions for each time step
 run_node!(node, climate; inflow=inflow, extraction=extractions, exchange=gw_flux)
 ```
 
-Another approach is to identify the outlets for a given network...
+Another, more direct approach, is to identify all outlets for a given network and call
+`run_node!()` for each outlet with relevant climate data for each timestep.
+All relevant upstream nodes will also be run.
 
 ```julia
 inlets, outlets = find_inlets_and_outlets(sn)
-```
 
-... and call `run_node!` for each outlet (with relevant climate data), which will recurse through all relevant nodes upstream.
-
-
-```julia
 @info "Running example stream..."
 timesteps = sim_length(climate)
 for ts in (1:timesteps)
@@ -204,7 +212,8 @@ for ts in (1:timesteps)
 end
 ```
 
-When interactions with other socio-environmental systems are expected, it can become necessary to run each node individually as needed.
+When interactions with other socio-environmental systems are expected, it can become
+necessary to run each node individually as needed.
 
 Interactions with these external systems are represented as influencing:
 
@@ -216,24 +225,21 @@ The following pattern can be used in such a context:
 
 
 ```julia
-# ... as an example, this is the 100th day in simulation...
-this_timestep = 100
+@info "Running example stream..."
+timesteps = sim_length(climate)
+for ts in (1:timesteps)
+    # Run external model that provides extraction **in the same units**
+    # This does not have to be a model in Julia, but inter-language interoperability is
+    # outside the scope of this example.
+    extractions = some_water_extraction_model(...)
 
-# Inflow comes from upstream
-# This could be obtained by running all nodes upstream, for example
-#     node_id, node = sn["406219"]
-#     run_node!(sn, node_id, climate)
-inflow = run_node!(...)
+    # Run a different model which provides groundwater interactions
+    exchange = a_groundwater_model(...)
 
-# run external model that provides extraction, say 10ML
-# This does not have to be a model in Julia per se.
-extractions = some_other_model(...)
-
-# Run a different model which provides groundwater interactions
-exchange = another_model(...)
-
-# Obtain outflow and level for this time step
-outflow, level = run_node!(target_node, climate, this_timestep; inflow=inflow, extraction=extractions, exchange=exchange)
+    for outlet in outlets
+        run_node!(outlet, climate, ts; extraction=extractions, exchange=exchange)
+    end
+end
 ```
 
 Specific examples can be found in the Examples section.
