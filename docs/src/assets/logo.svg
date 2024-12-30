@@ -51,7 +51,7 @@
   </style>
   <text class=".github-theme"
    xml:space="preserve"
-   style="font-size:13.1892px;line-height:0;white-space:pre;shape-inside:url(#a);display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-opacity:1"
+   style="font-size:13.1892px;line-height:0;white-space:pre;shape-inside:url(#a);display:inline;fill:#000000;fill-opacity:1;stroke:#cecece;stroke-width:0.3;stroke-opacity:1"
    transform="matrix(0.74524,0,0,0.74524,3.912128,11.074877)"
    id="text8">
    <tspan style="font-family:Georgia;-inkscape-font-specification:Georgia">Streamfall</tspan>
