@@ -21,12 +21,9 @@ function quickplot(node::NetworkNode, climate::Climate)
 
     return fig
 end
-
-
 function quickplot(obs, node::NetworkNode, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
     return quickplot(obs, node.outflow, climate, label, log; burn_in=burn_in, limit=limit, metric=metric)
 end
-
 function quickplot(obs::DataFrame, sim::Vector, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
     return quickplot(Matrix(obs[:, Not("Date")])[:, 1], sim, climate, label, log; burn_in, limit, metric)
 end
@@ -36,8 +33,6 @@ function quickplot(obs::Vector, sim::Vector, climate::Climate, label="", log=fal
     show_range = burn_in:last_e
     return quickplot(obs[show_range], sim[show_range], date[show_range], label, log; metric=metric)
 end
-
-
 function quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled", log=false; metric=Streamfall.mKGE)
     @assert length(xticklabels) == length(obs) || "x-axis tick label length and observed lengths do not match!"
     @assert length(xticklabels) == length(sim) || "x-axis tick label length and simulated lengths do not match!"
@@ -52,28 +47,34 @@ function quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled
     end
 
     label = "$(label) ($(metric_name): $(score))"
-    fig = plot(xticklabels, obs,
-                label="Observed",
-                legend=:best,
-                ylabel="Streamflow",
-                xlabel="Date",
-                fg_legend=:transparent,
-                bg_legend=:transparent)
-    plot!(xticklabels, sim, label=label, alpha=0.7)
+    fig = plot(
+        xticklabels, obs,
+        label="Observed",
+        legend=:best,
+        ylabel="Streamflow",
+        xlabel="Date",
+        fg_legend=:transparent,
+        bg_legend=:transparent
+    )
+    plot!(xticklabels, sim, label=label, alpha=0.5)
 
     if log
         # modify yaxis
         yaxis!(fig, :log10)
     end
 
-    qqfig = qqplot(obs, sim, legend=false, markerstrokewidth=0, alpha=0.7, xlabel="Observed", ylabel="Modeled")
+    qqfig = qqplot(
+        obs, sim,
+        legend=false, markerstrokewidth=0.03, markerstrokealpha=0.1, markeralpha=0.2,
+        xlabel="Observed", ylabel="Modeled"
+    )
 
     if log
         xaxis!(qqfig, :log10)
         yaxis!(qqfig, :log10)
     end
 
-    combined = plot(fig, qqfig, size=(1000, 500), left_margin=5mm, bottom_margin=5mm, layout=(1,2))
+    combined = plot(fig, qqfig, size=(1000, 500), left_margin=10mm, bottom_margin=5mm, layout=(1,2))
 
     return combined
 end
