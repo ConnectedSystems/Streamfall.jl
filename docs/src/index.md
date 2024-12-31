@@ -16,6 +16,7 @@ This package includes implementations of the following:
 
 Performance is expected to be similar to implementations in C and Fortran.
 
+```@raw html
  <table align="center">
   <tr>
     <th>Model</th>
@@ -60,3 +61,4 @@ Performance is expected to be similar to implementations in C and Fortran.
     </td>
   </tr>
 </table>
+```
