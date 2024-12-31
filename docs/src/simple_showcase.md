@@ -11,7 +11,7 @@ The map below shows Lake Eppalock, along with relevant gauge locations/data
 This example uses the results as detailed in [Calibration setup](@ref).
 
 ```@raw html
-<iframe style="width: 720px; height: 600px; border: none;" src="https://nationalmap.gov.au/#share=s-kxvHElDvlHdB4D4XslDCT70YHZ3" allowFullScreen mozAllowFullScreen webkitAllowFullScreen></iframe>
+<iframe style="width: 720px; height: 600px; border: none; background-image:url(assets/lake_eppalock.png)" src="https://nationalmap.gov.au/#share=s-kxvHElDvlHdB4D4XslDCT70YHZ3" allowFullScreen mozAllowFullScreen webkitAllowFullScreen></iframe>
 ```
 
 ```julia
