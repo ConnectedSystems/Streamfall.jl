@@ -6,10 +6,9 @@ struct Climate
     rainfall_id::String
     et_id::String
     t_id::String
-
-    function Climate(data, p_id, et_id)
-        return new(data, p_id, et_id, "_T")
-    end
+end
+function Climate(data, p_id, et_id)
+    return Climate(data, p_id, et_id, "_T")
 end
 
 """
