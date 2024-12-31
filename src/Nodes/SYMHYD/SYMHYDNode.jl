@@ -155,15 +155,23 @@ function update_state!(node::SYMHYDNode, ts::Int64, sm_store, gw_store, total_st
     node.quickflow[ts] = quickflow
 end
 
+"""
+    update_params!(node::GR4JNode, X1::Float64, X2::Float64, X3::Float64, X4::Float64)::Nothing
 
-function update_params!(node::SYMHYDNode, baseflow_coef::Float64, impervious_threshold::Float64,
-                        infiltration_coef::Float64,
-                        infiltration_shape::Float64,
-                        interflow_coef::Float64,
-                        pervious_fraction::Float64,
-                        risc::Float64,
-                        recharge_coef::Float64,
-                        smsc::Float64)::Nothing
+Update model parameters.
+"""
+function update_params!(
+    node::SYMHYDNode,
+    baseflow_coef::Float64,
+    impervious_threshold::Float64,
+    infiltration_coef::Float64,
+    infiltration_shape::Float64,
+    interflow_coef::Float64,
+    pervious_fraction::Float64,
+    risc::Float64,
+    recharge_coef::Float64,
+    smsc::Float64
+)::Nothing
     node.baseflow_coef = Param(baseflow_coef, bounds=node.baseflow_coef.bounds)
     node.impervious_threshold = Param(impervious_threshold, bounds=node.impervious_threshold.bounds)
     node.infiltration_coef = Param(infiltration_coef, bounds=node.infiltration_coef.bounds)

@@ -76,7 +76,7 @@ end
 """
     get_node_id(mg::MetaDiGraph, node_name::String)::Int64
 
-Retrieve network node_id for a given gauge (by name).
+Retrieve network `node_id` for a given gauge (by name).
 """
 function get_node_id(mg::MetaDiGraph, node_name::String)::Int64
     v = collect(MetaGraphs.filter_vertices(mg, :name, node_name))
@@ -90,7 +90,7 @@ end
 """
     get_node(sn::StreamfallNetwork, node_name::String)
 
-Retrieve node_id and node property for a specified gauge.
+Retrieve `node_id` and node property for a specified gauge.
 
 # Arguments
 - sn : Streamfall Network
