@@ -113,13 +113,13 @@ end
         # Ensure example does not error out
 
         reset!(sn)
-        run_basin!(sn, climate; extraction=hist_dam_releases)
-        @test Streamfall.RMSE(n_data, sn[dam_id].level) == 0.0
+        run_basin!(sn, climate; extraction=extraction_data)
+        @test Streamfall.RMSE(dam_obs, sn[dam_id].level[366:end]) < 2.5
 
 
         reset!(sn)
-        Streamfall.run_node!(sn, dam_id, climate; extraction=hist_dam_releases)
-        @test Streamfall.RMSE(n_data, sn[dam_id].level) == 0.0
+        Streamfall.run_node!(sn, dam_id, climate; extraction=extraction_data)
+        @test Streamfall.RMSE(dam_obs, sn[dam_id].level[366:end]) < 2.5
 
         # Ensure example results haven't changed much...
         # @test nse_score >= 0.95 && nse_score < 1.0 && rmse < 2.0

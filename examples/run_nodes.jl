@@ -9,65 +9,67 @@ data_path = joinpath(here, "../test/data/campaspe/")
 # Load and generate stream network
 sn = load_network("Example Network", joinpath(data_path, "campaspe_network.yml"))
 
-# Load climate data
-date_format = "YYYY-mm-dd"
+# The Campaspe catchment is represented as a network of eight nodes, including one dam.
+# All nodes use the IHACRES_CMD rainfall-runoff model.
+plot_network(sn)
+
+# Load climate data - in this case from a CSV file with data for all nodes.
 climate_data = CSV.read(
-    joinpath(data_path, "climate/climate_historic.csv"),
+    joinpath(data_path, "climate", "climate.csv"),
     DataFrame;
-    comment="#",
-    dateformat=date_format
+    comment="#"
 )
 
-dam_level_fn = joinpath(data_path, "gauges/406000_historic_levels_for_fit.csv")
-dam_releases_fn = joinpath(data_path, "gauges/406000_historic_outflow.csv")
-hist_dam_levels = CSV.read(dam_level_fn, DataFrame; dateformat=date_format)
-hist_dam_releases = CSV.read(dam_releases_fn, DataFrame; dateformat=date_format)
-
-rename!(hist_dam_releases, ["406000_outflow_[ML]" => "406000_releases_[ML]"])
-
-# Subset to same range
-climate_data, hist_dam_levels, hist_dam_releases = Streamfall.align_time_frame(
-    climate_data,
-    hist_dam_levels,
-    hist_dam_releases
-)
-
+# Indicate which columns are precipitation and evaporation data based on partial identifiers
 climate = Climate(climate_data, "_rain", "_evap")
+
+# Historic flows and dam level data
+calib_data = CSV.read(
+    joinpath(data_path, "gauges", "outflow_and_level.csv"),
+    DataFrame;
+    comment="#"
+)
+
+# Historic extractions from the dam
+extraction_data = CSV.read(
+    joinpath(data_path, "gauges", "dam_extraction.csv"),
+    DataFrame;
+    comment="#"
+)
 
 @info "Running example stream..."
 
-reset!(sn)
-
 dam_id, dam_node = sn["406000"]
-Streamfall.run_node!(sn, dam_id, climate; extraction=hist_dam_releases)
+Streamfall.run_node!(sn, dam_id, climate; extraction=extraction_data)
 
-h_data = hist_dam_levels[:, "Dam Level [mAHD]"]
-n_data = dam_node.level
+# Extract data for comparison with 1-year burn-in period
+dam_obs = calib_data[:, "406000"][366:end]
+dam_sim = dam_node.level[366:end]
 
-nnse_score = Streamfall.NNSE(h_data, n_data)
-nse_score = Streamfall.NSE(h_data, n_data)
-rmse_score = Streamfall.RMSE(h_data, n_data)
+nnse_score = Streamfall.NNSE(dam_obs, dam_sim)
+nse_score = Streamfall.NSE(dam_obs, dam_sim)
+rmse_score = Streamfall.RMSE(dam_obs, dam_sim)
 
 @info "Obj Func Scores:" rmse_score nnse_score nse_score
 
 nse = round(nse_score, digits=4)
 rmse = round(rmse_score, digits=4)
 
-
 import Dates: month, monthday, yearmonth
 
-Streamfall.temporal_cross_section(climate_data.Date, h_data, n_data; period=monthday)
-savefig("temporal_xsection_monthday_ME.png")
+climate_burnin = climate_data[366:end, :Date]
+Streamfall.temporal_cross_section(climate_burnin, dam_obs, dam_sim; period=monthday)
+# savefig("temporal_xsection_monthday_ME.png")
 
-Streamfall.temporal_cross_section(climate_data.Date, h_data, n_data; period=yearmonth)
-savefig("temporal_xsection_yearmonth_ME.png")
+Streamfall.temporal_cross_section(climate_burnin, dam_obs, dam_sim; period=yearmonth)
+# savefig("temporal_xsection_yearmonth_ME.png")
 
 # Displaying results and saving figure
-# plot(h_data,
+# plot(dam_obs,
 #      legend=:bottomleft,
 #      title="Calibrated IHACRES\n(RMSE: $(rmse); NSE: $(nse))",
 #      label="Historic", xlabel="Day", ylabel="Dam Level [mAHD]")
 
-# display(plot!(n_data, label="IHACRES"))
+# display(plot!(dam_sim, label="IHACRES"))
 
 # savefig("calibrated_example.png")

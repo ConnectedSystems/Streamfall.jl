@@ -4,7 +4,7 @@
   parameters:
     d: 134.06756067826717
     d2: 1.547403668682315
-    e: 1.4999999999988058
+    e: 1.0
     f: 0.9782888516330152
     a: 1.878670093410396
     b: 0.09999999999990782
@@ -18,14 +18,14 @@
   node_type: "IHACRESBilinearNode"
   area: 1985.73
   parameters:
-    d: 362.4510877543127
-    d2: 1.7219537856770573
-    e: 0.7005591278054522
-    f: 1.4769086447109885
-    a: 5.065870561569431
-    b: 0.0966380343175847
-    storage_coef: 4.534349325043295
-    alpha: 0.7372499431622979
+    d: 205.9296682315772
+    d2: 1.5219519661190162
+    e: 1.0
+    f: 1.1612900313855028
+    a: 9.999999999175559
+    b: 0.0011479482142380236
+    storage_coef: 9.99999999952744
+    alpha: 0.8917155227322869
   initial_storage: 100.0
   inlets: ~
   outlets:
@@ -38,8 +38,6 @@
   initial_storage: 0.0
   max_storage: 306000.0
   functions:
-    # Define methods that convert volume to level, area, discharge, and outflow.
-    # Methods defined here must take volume as input
     calc_dam_level: |-
       function c_dam_level(volume)
           return 156.8 + 0.9463 * volume^0.2922
@@ -48,7 +46,6 @@
       function c_dam_area(volume)
           return 0.0021 * volume^0.762
       end
-    # Discharge calculation must take volume and max_storage parameters
     calc_dam_discharge: |-
       function c_dam_discharge(volume, max_storage)
           discharge = 0.0
@@ -58,7 +55,6 @@
 
           return max(0.0, discharge)
       end
-    # Outflow must accept discharge and extraction inputs
     calc_dam_outflow: |-
       function c_dam_outflow(discharge, irrigation_extraction)
           return discharge + irrigation_extraction
@@ -73,7 +69,7 @@
   parameters:
     d: 34.44232768248571
     d2: 0.032214212326022326
-    e: 0.2152471390979227
+    e: 1.0
     f: 2.9999999999999147
     a: 1.270124950108292
     b: 0.0999999117504344
@@ -91,7 +87,7 @@
   parameters:
     d: 48.38395701197697
     d2: 2.293996656199082
-    e: 1.1158650210585603
+    e: 1.0
     f: 1.4405724030125124
     a: 3.7408302145617087
     b: 0.0011959104715538137
@@ -107,7 +103,7 @@
   parameters:
     d: 152.62331896278664
     d2: 0.5399110983080897
-    e: 1.4729023737877482
+    e: 1.0
     f: 1.6458403364664287
     a: 9.400598795169456
     b: 0.04492942366402773
@@ -125,7 +121,7 @@
   parameters:
     d: 230.10173616444285
     d2: 0.3985548134635746
-    e: 1.3664818534158052
+    e: 1.0
     f: 1.525077957112293
     a: 4.114196548002251
     b: 0.026191008249266696
@@ -142,7 +138,7 @@
   parameters:
     d: 110.53645289579511
     d2: 4.354852331236118
-    e: 1.254596727030465
+    e: 1.0
     f: 2.5833889457293613
     a: 0.30247124389394187
     b: 0.012073002123341786
