@@ -103,7 +103,7 @@ run_node!(hymod_node, climate)
 
 # Display a basic overview plot (shows time series and Q-Q plot)
 # using a 366 day offset (e.g., ~1 year burn-in period)
-quickplot(Qo, hymod_node, climate, "HyMod"; burn_in=366, limit=nothing)
+quickplot(Qo, hymod_node, climate, "HyMod"; burn_in=366)
 
 # Save figure
 savefig("quick_example.png")
@@ -211,7 +211,6 @@ climate_data = CSV.read(
 
 # Indicate which columns are precipitation and evaporation data based on partial identifiers
 climate = Climate(climate_data, "_rain", "_evap")
-
 
 # This runs an entire stream network
 @info "Running an example stream..."
