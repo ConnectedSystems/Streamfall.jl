@@ -13,7 +13,11 @@ Base.@kwdef mutable struct GenericNode{A<:AbstractFloat} <: NetworkNode
 end
 
 
-"""Create node of a given type."""
+"""
+    create_node(node::Type{<:NetworkNode}, name::String, area::Float64)
+
+Create node of a given type.
+"""
 function create_node(node::Type{<:NetworkNode}, name::String, area::Float64)
     return node{Param, Float64}(; name=name, area=area)
 end
@@ -69,7 +73,11 @@ function param_info(node::NetworkNode; kwargs...)::Tuple
 end
 
 
-"""Retrieve network node_id for a given gauge (by name)."""
+"""
+    get_node_id(mg::MetaDiGraph, node_name::String)::Int64
+
+Retrieve network node_id for a given gauge (by name).
+"""
 function get_node_id(mg::MetaDiGraph, node_name::String)::Int64
     v = collect(MetaGraphs.filter_vertices(mg, :name, node_name))
 
