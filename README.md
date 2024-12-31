@@ -5,21 +5,21 @@
 [![DOI](https://zenodo.org/badge/345341654.svg)](https://zenodo.org/badge/latestdoi/345341654)
 </div>
 
-Streamfall leverages the Julia language and ecosystem to support:
-
-- Quick application and exploratory analysis
-- Modelling and assessment of interacting systems
+Streamfall leverages the Julia language and ecosystem to provide:
+- Quick hetrogenous modelling of a stream network
 - Use of different rainfall-runoff models and their ensembles in tandem
+- Modelling and assessment of interacting systems
+- A wide range of performance metrics
 
-Streamfall includes implementations of:
+This package includes implementations of the following:
 - GR4J
 - HyMod
 - IHACRES
 - SYMHYD
 
-Performance should be similar to implementations in C and Fortran.
+Performance is expected to be similar to implementations in C and Fortran.
 
-The IHACRES rainfall-runoff model was previously implemented with [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim), but has since been ported to pure Julia.
+The IHACRES rainfall-runoff model was previously implemented with [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim) but has since been ported to pure Julia.
 
 [Graphs](https://github.com/JuliaGraphs/Graphs.jl) and [MetaGraphs](https://github.com/JuliaGraphs/MetaGraphs.jl) are used underneath for network traversal/analysis.
 
@@ -61,6 +61,7 @@ Note that since start of development, an updated dataset is incoming (currently 
 
 > Fowler, K. J. A., Zhang, Z., and Hou, X.: CAMELS-AUS v2: updated hydrometeorological timeseries and landscape attributes for an enlarged set of catchments in Australia, Earth Syst. Sci. Data Discuss. [preprint], https://doi.org/10.5194/essd-2024-263, in review, 2024.
 
+Climate data was extracted from the [Long Paddock data silo](https://www.longpaddock.qld.gov.au/silo/)
 
 ## Quick start (single node)
 
@@ -107,7 +108,6 @@ quickplot(Qo, hymod_node, climate, "HyMod"; burn_in=366, limit=nothing)
 # Save figure
 savefig("quick_example.png")
 ```
-
 
 ## Quick start (network of nodes)
 
