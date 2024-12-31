@@ -313,9 +313,9 @@ end
         node::NetworkNode,
         climate::Climate,
         calib_data::AbstractArray,
-        metric::AbstractDict{String,F};
+        metric::Union{C,AbstractDict{String,C}};
         kwargs...
-    ) where {F}
+    ) where {C}
 
 Calibrate a given node using the BlackBoxOptim package.
 
@@ -330,24 +330,27 @@ function calibrate!(
     node::NetworkNode,
     climate::Climate,
     calib_data::AbstractArray,
-    metric::AbstractDict{String,F};
+    metric::AbstractDict{String,C};
     kwargs...
-) where {F}
+) where {C}
+    return calibrate!(node, climate, calib_data, metric[node.name]; kwargs...)
+end
+function calibrate!(
+    node::NetworkNode,
+    climate::Climate,
+    calib_data::AbstractArray,
+    metric::C;
+    kwargs...
+) where {C}
     _merge_defaults(kwargs)
-
-    next_node = sn[first(outlets(sn, node.name))]
 
     extraction = get(kwargs, :extraction, nothing)
     exchange = get(kwargs, :exchange, nothing)
 
-    # Create context-specific optimization function
-    if next_node <: DamNode
-        # If the next node represents a dam, attempt to calibrate considering the outflows
-        # from the current node and the Dam Levels of the next node.
-        opt_func = x -> next_node.obj_func(x, climate, node, next_node, calib_data; metric=metric[next_node.name], extraction=extraction, exchange=exchange)
-    else
-        opt_func = x -> node.obj_func(x, climate, node, calib_data; metric=metric[node.name], extraction=extraction, exchange=exchange)
-    end
+    opt_func = x -> node.obj_func(
+        x, climate, node, calib_data;
+        metric=metric, extraction=extraction, exchange=exchange
+    )
 
     # Get node parameters (default values and bounds)
     param_names, x0, param_bounds = param_info(node; with_level=false)
@@ -376,9 +379,9 @@ end
 """
     calibrate!(
         node::NetworkNode, climate::Climate, calib_data::DataFrame,
-        metric::AbstractDict{String,F};
+        metric::Union{C,AbstractDict{String,C}};
         kwargs...
-    )
+    ) where {C}
 
 Calibrate a given node using the BlackBoxOptim package.
 
@@ -386,12 +389,13 @@ Calibrate a given node using the BlackBoxOptim package.
 - `node::NetworkNode` : Streamfall node
 - `climate` : Climate data
 - `calib_data` : Calibration data for target node, where column names indicate node names
-- `metric::Function` : Optimization function to use. Defaults to RMSE.
+- `metric::Function` : Optimization function to use.
 """
 function calibrate!(
-    node::NetworkNode, climate::Climate, calib_data::DataFrame, metric::AbstractDict{String,F};
+    node::NetworkNode, climate::Climate, calib_data::DataFrame,
+    metric::Union{C,AbstractDict{String,C}};
     kwargs...
-) where {F}
+) where {C}
     return calibrate!(node, climate, calib_data[:, node.name], metric; kwargs...)
 end
 
