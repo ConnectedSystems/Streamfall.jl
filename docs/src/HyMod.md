@@ -3,5 +3,5 @@
 ```@autodocs
 Modules = [Streamfall]
 Order   = [:function, :type]
-Pages   = ["HyModNode.jl"]
+Pages   = ["Nodes/HyMod/HyModNode.jl"]
 ```
