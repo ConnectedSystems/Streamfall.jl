@@ -2,6 +2,6 @@
 
 ```@autodocs
 Modules = [Streamfall]
-Order   = [:function]
-Pages   = ["SYMHYDNode.jl"]
+Order   = [:function, :type]
+Pages   = ["Nodes/SYMHYD/SYMHYDNode.jl"]
 ```
