@@ -434,8 +434,17 @@ end
 
 
 """
-    update_params!(node::IHACRESBilinearNode, d::Float64, d2::Float64, e::Float64, f::Float64,
-                   a::Float64, b::Float64, s_coef::Float64, alpha::Float64)::Nothing
+    update_params!(
+        node::IHACRESBilinearNode,
+        d::F,
+        d2::F,
+        e::F,
+        f::F,
+        a::F,
+        b::F,
+        s_coef::F,
+        alpha::F
+    )::Nothing where {F<:Float64}
 
 Update model parameters.
 """
