@@ -15,7 +15,7 @@ Base.@kwdef mutable struct IHACRESBilinearNode{P, A<:AbstractFloat} <: IHACRESNo
     # https://wiki.ewater.org.au/display/SD41/IHACRES-CMD+-+SRG
     d::P = Param(200.0, bounds=(10.0, 550.0))  # flow threshold
     d2::P = Param(2.0, bounds=(0.0001, 10.0))   # flow threshold2
-    e::P = Param(1.0, bounds=(0.1, 1.5))  # temperature to PET conversion factor
+    e::P = Param(1.0, bounds=(0.999, 1.0))  # temperature to PET conversion factor
     f::P = Param(0.8, bounds=(0.01, 3.0))  # plant stress threshold factor (multiplicative factor of d)
     a::P = Param(0.9, bounds=(0.1, 10.0))  # quickflow storage coefficient == (1/tau_q)
     b::P = Param(0.1, bounds=(1e-3, 0.1))  # slowflow storage coefficent == (1/tau_s)
