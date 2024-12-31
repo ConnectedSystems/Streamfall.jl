@@ -80,4 +80,4 @@ display(combined_plot)
 # savefig("multi_model_comparison.png")
 ```
 
-![](assets/multi_model_comparison.png)
+![](../assets/multi_model_comparison.png)

@@ -67,4 +67,4 @@ nse = round(nse_score, digits=4)
 quickplot(dam_obs, dam_sim, climate, "IHACRES", false; burn_in=366)
 ```
 
-![](assets/calibrated_example.png)
+![](../assets/calibrated_example.png)

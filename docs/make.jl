@@ -14,27 +14,31 @@ makedocs(sitename="Streamfall Documentation",
     pages = [
         "index.md",
         "primer.md",
-        "Nodes" => [
-            "Node.md",
-            "IHACRES.md",
-            "HyMod.md",
-            "GR4J.md",
-            "SYMHYD.md",
-            "Dam.md"
-        ],
-        "network.md",
-        "use_methods.md",
-        "metrics.md",
         "Examples" => [
-            "Calibration" => [
-                "calibration_setup.md",
-                "calibration.md",
+            "examples/examples.md",
+            "Model evaluation" => [
+                "examples/simple_showcase.md",
+                "examples/model_comparison.md",
+                # "examples/multisystem_showcase.md",
             ],
-            "simple_showcase.md",
-            "model_comparison.md",
-            # "multisystem_showcase.md",
+            "Calibration" => [
+                # "examples/calibration_setup.md",
+                "examples/calibration.md",
+            ]
+        ],
+        "metrics.md",
+        "API" => [
+            "Nodes" => [
+                "API/nodes/Node.md",
+                "API/nodes/IHACRES.md",
+                "API/nodes/HyMod.md",
+                "API/nodes/GR4J.md",
+                "API/nodes/SYMHYD.md",
+                "API/nodes/Dam.md"
+            ],
+            "API/network.md",
+            "API/use_methods.md"
         ]
-
     ]
 )
 
