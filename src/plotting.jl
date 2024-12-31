@@ -23,14 +23,14 @@ function quickplot(node::NetworkNode, climate::Climate)
 end
 
 
-function quickplot(obs, node::NetworkNode, climate::Climate, label="", log=true; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
+function quickplot(obs, node::NetworkNode, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
     return quickplot(obs, node.outflow, climate, label, log; burn_in=burn_in, limit=limit, metric=metric)
 end
 
-function quickplot(obs::DataFrame, sim::Vector, climate::Climate, label="", log=true; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
+function quickplot(obs::DataFrame, sim::Vector, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
     return quickplot(Matrix(obs[:, Not("Date")])[:, 1], sim, climate, label, log; burn_in, limit, metric)
 end
-function quickplot(obs::Vector, sim::Vector, climate::Climate, label="", log=true; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
+function quickplot(obs::Vector, sim::Vector, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
     date = timesteps(climate)
     last_e = !isnothing(limit) ? limit : lastindex(obs)
     show_range = burn_in:last_e
@@ -38,7 +38,7 @@ function quickplot(obs::Vector, sim::Vector, climate::Climate, label="", log=tru
 end
 
 
-function quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled", log=true; metric=Streamfall.mKGE)
+function quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled", log=false; metric=Streamfall.mKGE)
     @assert length(xticklabels) == length(obs) || "x-axis tick label length and observed lengths do not match!"
     @assert length(xticklabels) == length(sim) || "x-axis tick label length and simulated lengths do not match!"
 
