@@ -2,6 +2,8 @@
 
 This example showcases a comparison of models using multi-processing.
 
+Here, the Gingera catchment along the Cotter River is examined.
+
 ```julia
 using Distributed
 using Plots
