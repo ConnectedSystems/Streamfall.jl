@@ -178,5 +178,6 @@ end
 
 include("test_metrics.jl")
 include("test_data_op.jl")
+include("test_nodes.jl")
 include("test_networks.jl")
 include("test_calibration.jl")

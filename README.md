@@ -252,6 +252,9 @@ through all relevant nodes upstream.
 ```julia
 @info "Running example stream..."
 timesteps = sim_length(climate)
+
+reset!(sn)
+prep_state!(sn, timesteps)
 for ts in (1:timesteps)
     for outlet in outlets
         run_node!(sn[outlet], climate, ts)

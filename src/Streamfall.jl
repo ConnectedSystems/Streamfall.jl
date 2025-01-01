@@ -82,6 +82,17 @@ function find_common_timeframe(timeseries::T...) where {T<:DataFrame}
     return (min_date, max_date)
 end
 
+"""
+    prep_state!(sn::StreamfallNetwork, timesteps::Int64)::Nothing
+
+Prepare a network for a run by pre-allocating result stores.
+"""
+function prep_state!(sn::StreamfallNetwork, timesteps::Int64)::Nothing
+    for node in sn
+        prep_state!(node, timesteps)
+    end
+end
+
 
 """
     align_time_frame(timeseries::T...)
@@ -268,7 +279,7 @@ export EnsembleNode, BaseEnsemble
 # Network
 export find_inlets_and_outlets, inlets, outlets
 export climate_values, node_names, get_node, get_node_id, get_prop, set_prop!
-export param_info, update_params!, sim_length, reset!
+export param_info, update_params!, sim_length, reset!, prep_state!
 export run_catchment!, run_basin!, run_node!, run_node_with_temp!
 export run_timestep!
 export calibrate!
