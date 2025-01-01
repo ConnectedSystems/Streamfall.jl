@@ -243,7 +243,7 @@ function run_node!(
     if checkbounds(Bool, node.outflow, ts)
         if node.outflow[ts] != undef
             # already ran for this time step so no need to run
-            return node.outflow[ts], node.level[ts]
+            return node.outflow[ts]
         end
     end
 

@@ -254,7 +254,7 @@ through all relevant nodes upstream.
 timesteps = sim_length(climate)
 for ts in (1:timesteps)
     for outlet in outlets
-        run_node!(sn, outlet, climate, ts)
+        run_node!(sn[outlet], climate, ts)
     end
 end
 ```
