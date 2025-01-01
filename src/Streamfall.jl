@@ -260,11 +260,14 @@ function run_node!(
 
     node_name = node.name
     rain, et = climate_values(node, climate, ts)
-    wo = timestep_value(ts, node_name, "releases", extraction)
-    ex = timestep_value(ts, node_name, "exchange", exchange)
-    in_flow = timestep_value(ts, node_name, "inflow", inflow)
+    # wo = timestep_value(ts, node_name, "releases", extraction)
+    # ex = timestep_value(ts, node_name, "exchange", exchange)
+    # in_flow = timestep_value(ts, node_name, "inflow", inflow)
 
-    return run_timestep!(node, rain, et, ts; inflow=in_flow, extraction=wo, exchange=ex)
+    return run_timestep!(
+        node, rain, et, ts;
+        inflow=inflow, extraction=extraction, exchange=exchange
+    )
 end
 
 include("Analysis/Analysis.jl")
