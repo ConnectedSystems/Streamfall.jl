@@ -98,7 +98,7 @@ calibrate!(
 run_catchment!(sn, climate; extraction=extraction_data)
 
 # Get performance metrics for dam levels
-dam_obs = aligned_dam_levels[:, "Dam Level [mAHD]"]
+dam_obs = calib_data[:, "406000"]
 dam_node = sn[3]
 dam_sim = dam_node.level
 

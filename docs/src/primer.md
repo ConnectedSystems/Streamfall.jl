@@ -205,6 +205,7 @@ inlets, outlets = find_inlets_and_outlets(sn)
 
 @info "Running example stream..."
 timesteps = sim_length(climate)
+prep_state!(sn, timesteps)
 for ts in (1:timesteps)
     for outlet in outlets
         run_node!(sn, outlet, climate, ts)
@@ -226,8 +227,9 @@ The following pattern can be used in such a context:
 
 ```julia
 @info "Running example stream..."
-timesteps = sim_length(climate)
-for ts in (1:timesteps)
+steps = sim_length(climate)
+prep_state!(sn, steps)
+for ts in 1:steps
     # Run external model that provides extraction **in the same units**
     # This does not have to be a model in Julia, but inter-language interoperability is
     # outside the scope of this example.
@@ -237,7 +239,7 @@ for ts in (1:timesteps)
     exchange = a_groundwater_model(...)
 
     for outlet in outlets
-        run_node!(outlet, climate, ts; extraction=extractions, exchange=exchange)
+        run_node!(sn, outlet, climate, ts; extraction=extractions, exchange=exchange)
     end
 end
 ```

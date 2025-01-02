@@ -1,6 +1,6 @@
 # A simple example
 
-In this example we showcase a two-node network: A gauge providing inflows into a dam.
+In this example we showcase a two-node network: a gauge providing inflows into a dam.
 
 The dam in question is Lake Eppalock, in the Lower Campaspe catchment located in
 North-Central Victoria, Australia.
@@ -68,3 +68,7 @@ quickplot(dam_obs, dam_sim, climate, "IHACRES", false; burn_in=366)
 ```
 
 ![](../assets/calibrated_example.png)
+
+The `quickplot()` function creates the figure displayed above which shows dam levels on the
+left (observed and modelled) with a [Q-Q plot](https://en.wikipedia.org/wiki/Q%E2%80%93Q_plot)
+on the right.
