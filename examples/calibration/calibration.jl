@@ -39,7 +39,7 @@ calib_data = CSV.read(
 )
 
 # Historic extractions from the dam
-extraction_data = CSV.read("gauges/dam_extraction.csv", DataFrame; comment="#")
+extraction_data = CSV.read("../test/data/campaspe/gauges/dam_extraction.csv", DataFrame; comment="#")
 
 # We now have a dataset for calibration (`calib_data`) and a dataset indicating the
 # historic dam extractions (`extraction_data`).
@@ -94,7 +94,7 @@ calibrate!(
 run_catchment!(sn, climate; extraction=extraction_data)
 
 # Get performance metrics for dam levels
-dam_obs = aligned_dam_levels[:, "Dam Level [mAHD]"]
+dam_obs = calib_data[:, "406000"]
 dam_node = sn[3]
 dam_sim = dam_node.level
 
