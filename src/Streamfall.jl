@@ -147,20 +147,25 @@ run_catchment! = run_basin!
 
 """
     run_node!(
-        sn::StreamfallNetwork, node_id::Int, climate::Climate;
+        sn::StreamfallNetwork, node_id::Int, climate::Climate, ts::Int64;
         inflow=nothing, extraction=nothing, exchange=nothing
     )::Nothing
 
-Generic run method that runs a model attached to a given node for all time steps.
+Generic run method that runs a model attached to a given node for a given timestep.
 Recurses upstream as needed.
 
 # Arguments
 - `sn::StreamfallNetwork`
-- `node_id::Int` : node to run in the network
-- `climate::Climate` : Climate object holding rainfall and evaporation data (or temperature)
-- `extraction::DataFrame` : water orders for each time step (defaults to nothing)
-- `exchange::DataFrame` : exchange with groundwater system at each time step (defaults to nothing)
+- `node_id` : Node to run in the network
+- `climate` : Climate object holding rainfall and evaporation data (or temperature)
+- `ts` : Timestep to run
+- `extraction` : Water orders for each time step (defaults to nothing)
+- `exchange` : Exchange with groundwater system at each time step (defaults to nothing)
 """
+function run_node!(
+    sn::StreamfallNetwork, node_id::Int, climate::Climate, ts::Int64;
+    inflow=nothing, extraction=nothing, exchange=nothing
+)::Nothing
 function run_node!(
     sn::StreamfallNetwork, node_id::Int, climate::Climate;
     inflow=nothing, extraction=nothing, exchange=nothing
@@ -251,18 +256,8 @@ function run_node!(
     node::NetworkNode, climate::Climate, ts::Int;
     inflow=nothing, extraction=nothing, exchange=nothing
 )
-    if checkbounds(Bool, node.outflow, ts)
-        if node.outflow[ts] != undef
-            # already ran for this time step so no need to run
-            return node.outflow[ts]
-        end
-    end
-
     node_name = node.name
     rain, et = climate_values(node, climate, ts)
-    # wo = timestep_value(ts, node_name, "releases", extraction)
-    # ex = timestep_value(ts, node_name, "exchange", exchange)
-    # in_flow = timestep_value(ts, node_name, "inflow", inflow)
 
     return run_timestep!(
         node, rain, et, ts;
