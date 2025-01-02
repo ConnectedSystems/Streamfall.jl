@@ -61,7 +61,8 @@ Note that since start of development, an updated dataset is incoming (currently 
 
 > Fowler, K. J. A., Zhang, Z., and Hou, X.: CAMELS-AUS v2: updated hydrometeorological timeseries and landscape attributes for an enlarged set of catchments in Australia, Earth Syst. Sci. Data Discuss. [preprint], https://doi.org/10.5194/essd-2024-263, in review, 2024.
 
-Climate data was extracted from the [Long Paddock data silo](https://www.longpaddock.qld.gov.au/silo/)
+Climate data was sourced from the Climate [Change in Australia](https://www.climatechangeinaustralia.gov.au)
+data service. Additional data was extracted from the [Long Paddock data silo](https://www.longpaddock.qld.gov.au/silo/).
 
 ## Quick start (single node)
 
@@ -145,7 +146,7 @@ To display an overview of a node or network:
 
 ```julia
 julia> node
-Name: 406219 [BilinearNode]
+Name: 406219 [IHACRESBilinearNode]
 Area: 1985.73
 ┌──────────────┬───────────┬─────────────┬─────────────┐
 │    Parameter │     Value │ Lower Bound │ Upper Bound │
@@ -257,7 +258,7 @@ reset!(sn)
 prep_state!(sn, timesteps)
 for ts in (1:timesteps)
     for outlet in outlets
-        run_node!(sn[outlet], climate, ts)
+        run_node!(sn, outlet, climate, ts)
     end
 end
 ```
