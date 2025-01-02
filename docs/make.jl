@@ -16,14 +16,16 @@ makedocs(sitename="Streamfall Documentation",
         "primer.md",
         "Examples" => [
             "examples/examples.md",
+            "examples/node_creation.md",
+            "examples/network_loading.md",
+            "Calibration" => [
+                # "examples/calibration_setup.md",
+                "examples/calibration.md",
+            ],
             "Model evaluation" => [
                 "examples/simple_showcase.md",
                 "examples/model_comparison.md",
                 # "examples/multisystem_showcase.md",
-            ],
-            "Calibration" => [
-                # "examples/calibration_setup.md",
-                "examples/calibration.md",
             ]
         ],
         "metrics.md",
