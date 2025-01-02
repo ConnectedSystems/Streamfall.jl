@@ -166,6 +166,31 @@ function run_node!(
     sn::StreamfallNetwork, node_id::Int, climate::Climate, ts::Int64;
     inflow=nothing, extraction=nothing, exchange=nothing
 )::Nothing
+    timesteps = sim_length(climate)
+
+    # Run all upstream nodes
+    sim_inflow = zeros(timesteps)
+    ins = inneighbors(sn.mg, node_id)
+    for i in ins
+        # Get inflow from previous node
+        run_node!(
+            sn, i, climate, ts;
+            inflow=inflow, extraction=extraction, exchange=exchange
+        )
+
+        # Add outflow from upstream to inflow
+        sim_inflow .+= sn[i].outflow
+    end
+
+    # Run this node
+    run_node!(
+        sn[node_id], climate, ts;
+        inflow=sim_inflow, extraction=extraction, exchange=exchange
+    )
+
+    return nothing
+end
+
 function run_node!(
     sn::StreamfallNetwork, node_id::Int, climate::Climate;
     inflow=nothing, extraction=nothing, exchange=nothing
