@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Example calibration · Streamfall Documentation</title><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.svg" alt="Streamfall Documentation logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Streamfall Documentation</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Streamfall.jl Documentation</a></li><li><a class="tocitem" href="../../primer/">Primer</a></li><li><a class="tocitem" href="../../expected_data_formats/">Input data format</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../examples/">Examples</a></li><li><a class="tocitem" href="../node_creation/">Node creation</a></li><li><a class="tocitem" href="../network_loading/">Network Loading</a></li><li><input class="collapse-toggle" id="menuitem-4-4" type="checkbox" checked/><label class="tocitem" for="menuitem-4-4"><span class="docs-label">Calibration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li class="is-active"><a class="tocitem" href>Example calibration</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4-5" type="checkbox"/><label class="tocitem" for="menuitem-4-5"><span class="docs-label">Model evaluation</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../simple_showcase/">A simple example</a></li><li><a class="tocitem" href="../model_comparison/">Model comparison example</a></li><li><a class="tocitem" href="../simple_multisystem/">Simple two-system interaction</a></li></ul></li></ul></li><li><span class="tocitem">API</span><ul><li><a class="tocitem" href="../../metrics/">Included metrics</a></li><li><input class="collapse-toggle" id="menuitem-5-2" type="checkbox"/><label class="tocitem" for="menuitem-5-2"><span class="docs-label">Nodes</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../API/nodes/Node/">Generic node methods</a></li><li><a class="tocitem" href="../../API/nodes/IHACRES/">IHACRES</a></li><li><a class="tocitem" href="../../API/nodes/HyMod/">HyMod</a></li><li><a class="tocitem" href="../../API/nodes/GR4J/">GR4J</a></li><li><a class="tocitem" href="../../API/nodes/SYMHYD/">SYMHYD</a></li><li><a class="tocitem" href="../../API/nodes/Dam/">Dam (Storage Level)</a></li></ul></li><li><a class="tocitem" href="../../API/plotting/">Plotting</a></li><li><a class="tocitem" href="../../API/network/">Network</a></li><li><a class="tocitem" href="../../API/climate/">Climate</a></li><li><a class="tocitem" href="../../API/use_methods/">Methods to run a network or node</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li><a class="is-disabled">Calibration</a></li><li class="is-active"><a href>Example calibration</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Example calibration</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ConnectedSystems/Streamfall.jl/blob/main/docs/src/examples/calibration.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Example-calibration"><a class="docs-heading-anchor" href="#Example-calibration">Example calibration</a><a id="Example-calibration-1"></a><a class="docs-heading-anchor-permalink" href="#Example-calibration" title="Permalink"></a></h1><pre><code class="language-julia hljs">&quot;&quot;&quot;
+Example showcasing calibrating and running a streamflow network.
+
+Data is prepped with the script `campaspe_data_prep.jl` in the `test/data/campaspe`
+directory.
+&quot;&quot;&quot;
+
+using OrderedCollections
+using Glob
+
+using Statistics
+using CSV, DataFrames, YAML
+using Streamfall
+
+using Plots
+
+
+sn = load_network(&quot;Example Network&quot;, &quot;../test/data/campaspe/campaspe_network.yml&quot;)
+
+# The Campaspe catchment is represented as a network of eight nodes, including one dam.
+# All nodes use the IHACRES_CMD rainfall-runoff model.
+plot_network(sn)
+
+# Load climate data - in this case from a CSV file with data for all nodes.
+# Indicate which columns are precipitation and evaporation data based on partial identifiers
+climate = Climate(&quot;../test/data/campaspe/climate/climate.csv&quot;, &quot;_rain&quot;, &quot;_evap&quot;)
+
+# Historic flows and dam level data
+calib_data = CSV.read(
+    &quot;../test/data/campaspe/gauges/outflow_and_level.csv&quot;,
+    DataFrame;
+    comment=&quot;#&quot;
+)
+
+# Historic extractions from the dam
+extraction_data = CSV.read(&quot;gauges/dam_extraction.csv&quot;, DataFrame; comment=&quot;#&quot;)
+
+# We now have a dataset for calibration (`calib_data`) and a dataset indicating the
+# historic dam extractions (`extraction_data`).
+# `extraction_data` may also hold water extractions at each &quot;reach&quot;.
+
+# Provide a metric to use to fit models against data.
+# Note that calibration always assumes minimization, so if the metric does not
+# provide this directionality, it must be wrapped to do so.
+metric = (y, y_hat) -&gt; 1.0 - Streamfall.NNSE(y, y_hat)
+# metric = (y, y_hat) -&gt; 1.0 - Streamfall.NmKGE(y, y_hat)
+# metric = (y, y_hat) -&gt; 1.0 - Streamfall.naive_split_metric(
+#     y, y_hat; n_members=7, metric=Streamfall.NmKGE, comb_method=mean
+# )
+# metric = Streamfall.RMSE
+
+# Alternatively, individual metrics for each node in a dictionary
+# (key-value pairs in the form of name =&gt; function).
+# Here, Normalized KGE′ is used for all nodes.
+# metrics = Dict{String,Function}(
+#     n.name =&gt; (y, y_hat) -&gt; 1.0 - Streamfall.NmKGE(y, y_hat) for n in sn
+# )
+
+# Calibrate all gauges in network using Adaptive Differential Evolution with the
+# BlackBoxOptim.jl package. Any BlackBoxOptim keyword arguments are passed through.
+# The parameter values provided in the network specification will be used as the initial
+# guess.
+# The default is to spend 5 mins on each node (MaxTime=300), but for this example we run
+# calibration for 1mins/node (MaxTime=60).
+# If the downstream node represents a dam, the current node is calibrated by fitting the
+# outflows such that it reproduces the observed dam levels.
+# The `weighting` parameter controls the weighting between nodes for calibration.
+# A choice can be made to calibrate against outflows (a weighting of 1) or dam levels
+# (a weighting of 0).
+# Here, we calibrate to downstream dam levels only (a zero weighting on node outflows)
+calibrate!(
+    sn, climate, calib_data, metric;
+    extraction=extraction_data, weighting=0.0,
+    MaxTime=60.0
+);
+
+# Could calibrate a specific node, assuming all nodes upstream have already been calibrated
+# Set `calibrate_all=true` to calibrate all upstream nodes as well.
+# To produce the results shown below, the node upstream from the dam was calibrated an
+# additional 2 hours.
+# calibrate!(
+#     sn, 2, climate, calib_data, metric;
+#     extraction=extraction_data, weighting=0.0, calibrate_all=false,
+#     MaxTime=7200.0
+# );
+
+# Run all nodes in the catchment
+run_catchment!(sn, climate; extraction=extraction_data)
+
+# Get performance metrics for dam levels
+dam_obs = calib_data[:, &quot;406000&quot;]
+dam_node = sn[3]
+dam_sim = dam_node.level
+
+Streamfall.RMSE(dam_obs[366:end], dam_sim[366:end])
+Streamfall.NSE(dam_obs[366:end], dam_sim[366:end])
+Streamfall.mKGE(dam_obs[366:end], dam_sim[366:end])
+
+# Plot results
+f = quickplot(dam_obs, dam_sim, climate, &quot;Modelled - 406000&quot;, false; burn_in=366)
+savefig(f, &quot;example_dam_level.png&quot;)
+
+# Save calibrated network to a file
+save_network(sn, &quot;example_network_calibrated.yml&quot;)
+
+# Illustrating that the re-loaded network reproduces the results as above
+sn2 = load_network(&quot;Calibrated Example&quot;, &quot;example_network_calibrated.yml&quot;)
+run_catchment!(sn2, climate; extraction=extraction_data)
+
+dam_node = sn2[3]
+dam_sim = dam_node.level
+
+rmse_score = Streamfall.RMSE(dam_obs[366:end], dam_sim[366:end])
+nse_score = Streamfall.NSE(dam_obs[366:end], dam_sim[366:end])
+mKGE_score = Streamfall.mKGE(dam_obs[366:end], dam_sim[366:end])
+
+@info &quot;Scores: &quot; rmse_score nse_score mKGE_score
+
+f2 = quickplot(dam_obs, dam_sim, climate, &quot;Modelled - 406000&quot;, false; burn_in=366)
+
+temporal_cross_section(sim_dates, calib_data[:, &quot;406000&quot;], sn2[3].level)</code></pre><p>The last two lines produces the plots below</p><p><img src="../../assets/calibrated_example.png" alt/></p><p>The <code>quickplot()</code> function creates the figure displayed above which shows dam levels on the left (observed and modelled) with a <a href="https://en.wikipedia.org/wiki/Q%E2%80%93Q_plot">Q-Q plot</a> on the right.</p><p><img src="../../assets/temporal_xsection_historic_calibrated.png" alt/></p><p>The above shows a &quot;cross-section&quot; of model predictions for each month-day across simulation time. It is useful to gain an understanding on when models may underperform and give a sense of a models predictive uncertainty. The units of the y-axis are the same as for the node (in this case, meters).</p><p>Ideally, the median error would be a straight line and the confidence intervals would be as thin and consistent as possible for all month-days.</p><p>Here, we see that while performance is generally good (mean of Median Error is near zero), the model can under-estimate dam levels in late-April to May and displays a tendency to over-estimate dam levels between January and June, relative to other times.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../network_loading/">« Network Loading</a><a class="docs-footer-nextpage" href="../simple_showcase/">A simple example »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Friday 3 January 2025 02:49">Friday 3 January 2025</span>. Using Julia version 1.11.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
