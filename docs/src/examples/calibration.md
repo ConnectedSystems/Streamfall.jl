@@ -37,7 +37,7 @@ calib_data = CSV.read(
 )
 
 # Historic extractions from the dam
-extraction_data = CSV.read("gauges/dam_extraction.csv", DataFrame; comment="#")
+extraction_data = CSV.read("../test/data/campaspe/gauges/dam_extraction.csv", DataFrame; comment="#")
 
 # We now have a dataset for calibration (`calib_data`) and a dataset indicating the
 # historic dam extractions (`extraction_data`).
