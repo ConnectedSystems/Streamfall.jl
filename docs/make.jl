@@ -41,6 +41,7 @@ makedocs(sitename="Streamfall Documentation",
             ],
             "API/plotting.md",
             "API/network.md",
+            "API/climate.md",
             "API/use_methods.md"
         ]
     ]

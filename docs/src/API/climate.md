@@ -1,4 +1,4 @@
-### Climate
+# Climate
 
 ```@autodocs
 Modules = [Streamfall]

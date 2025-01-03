@@ -60,10 +60,4 @@ Date, 406214_P, 406214_ET, 406219_P, 406219_ET
 
 where `P` indicates rainfall, and `ET` denotes evapotranspiration.
 
-### Climate data functions
-
-```@autodocs
-Modules = [Streamfall]
-Order   = [:function, :type]
-Pages   = ["Climate.jl"]
-```
+See [Climate](@ref) for more detail on climate data functions.
