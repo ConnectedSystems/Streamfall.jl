@@ -11,4 +11,7 @@ sn = load_network("Example Network", "../test/data/campaspe/campaspe_network.yml
 
 # Find all inlets and outlets
 inlets, outlets = find_inlets_and_outlets(sn)
+
+# Show figure of network
+plot_network(sn)
 ```
