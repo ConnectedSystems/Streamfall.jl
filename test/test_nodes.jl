@@ -14,7 +14,8 @@ using Streamfall
 
     # Load climate data, in this case from a CSV file with data for all nodes.
     climate_data = CSV.read(
-        "../test/data/campaspe/climate/climate_historic.csv", DataFrame,
+        "../test/data/campaspe/climate/climate_historic.csv",
+        DataFrame;
         comment="#",
         dateformat="YYYY-mm-dd"
     )
@@ -65,10 +66,6 @@ using Streamfall
 
     node_id, node = sn["406219"]
     perturbed3 = node.outflow
-
-    @info length(baseline_outflow) length(perturbed1) length(perturbed2) length(perturbed3)
-    @info all((baseline_outflow .+ 10.0) .== perturbed1)
-    @info sum((baseline_outflow .+ 10.0) .- perturbed1)
 
     @test all(baseline_outflow .!= perturbed1 .!= perturbed2 .!= perturbed3) || "Perturbations resulted in identical streamflows"
 

@@ -51,7 +51,8 @@ rmse = round(rmse_score, digits=4)
 
 import Dates: month, monthday, yearmonth
 
-climate_burnin = climate_data[366:end, :Date]
+sim_dates = Streamfall.timesteps(climate)
+climate_burnin = sim_dates[366:end]
 Streamfall.temporal_cross_section(climate_burnin, dam_obs, dam_sim; period=monthday)
 # savefig("temporal_xsection_monthday_ME.png")
 
