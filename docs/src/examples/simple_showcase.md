@@ -24,14 +24,8 @@ using Plots
 using Streamfall
 
 # Load climate data - in this case from a CSV file with data for all nodes.
-climate_data = CSV.read(
-    "../test/data/campaspe/climate/climate.csv",
-    DataFrame;
-    comment="#"
-)
-
 # Indicate which columns are precipitation and evaporation data based on partial identifiers
-climate = Climate(climate_data, "_rain", "_evap")
+climate = Climate("../test/data/campaspe/climate/climate.csv", "_rain", "_evap")
 
 calib_data = CSV.read(
     "../test/data/campaspe/gauges/outflow_and_level.csv",
@@ -67,8 +61,27 @@ nse = round(nse_score, digits=4)
 quickplot(dam_obs, dam_sim, climate, "IHACRES", false; burn_in=366)
 ```
 
-![](../assets/calibrated_example.png)
-
 The `quickplot()` function creates the figure displayed above which shows dam levels on the
 left (observed and modelled) with a [Q-Q plot](https://en.wikipedia.org/wiki/Q%E2%80%93Q_plot)
 on the right.
+
+![](../assets/calibrated_example.png)
+
+```julia
+sim_dates = Streamfall.timesteps(climate)
+Streamfall.temporal_cross_section(sim_dates, calib_data[:, "406000"], dam_sim)
+```
+
+The above shows a "cross-section" of model predictions for each month-day across simulation
+time. It is useful to gain an understanding on when models may underperform and give a
+sense of a models predictive uncertainty. The units of the y-axis are the same as for the
+node (in this case, meters).
+
+Ideally, the median error would be a straight line and the confidence intervals would
+be as thin and consistent as possible for all month-days.
+
+Here, we see that while performance is generally good (mean of Median Error is near zero),
+the model can under-estimate dam levels in late-April to May and displays a tendency to
+over-estimate dam levels between January and June, relative to other times.
+
+![](../assets/temporal_xsection_historic_calibrated.png)

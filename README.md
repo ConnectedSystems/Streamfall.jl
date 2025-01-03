@@ -204,14 +204,8 @@ using Streamfall
 sn = load_network("Example Network", "../test/data/campaspe/campaspe_network.yml")
 
 # Load climate data, in this case from a CSV file with data for all nodes.
-climate_data = CSV.read(
-    "../test/data/campaspe/climate/climate_historic.csv", DataFrame,
-    comment="#",
-    dateformat="YYYY-mm-dd"
-)
-
 # Indicate which columns are precipitation and evaporation data based on partial identifiers
-climate = Climate(climate_data, "_rain", "_evap")
+climate = Climate("../test/data/campaspe/climate/climate.csv", "_rain", "_evap")
 
 # This runs an entire stream network
 @info "Running an example stream..."

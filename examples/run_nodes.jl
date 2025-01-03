@@ -14,14 +14,8 @@ sn = load_network("Example Network", joinpath(data_path, "campaspe_network.yml")
 plot_network(sn)
 
 # Load climate data - in this case from a CSV file with data for all nodes.
-climate_data = CSV.read(
-    joinpath(data_path, "climate", "climate.csv"),
-    DataFrame;
-    comment="#"
-)
-
 # Indicate which columns are precipitation and evaporation data based on partial identifiers
-climate = Climate(climate_data, "_rain", "_evap")
+climate = Climate("../test/data/campaspe/climate/climate.csv", "_rain", "_evap")
 
 # Historic flows and dam level data
 calib_data = CSV.read(

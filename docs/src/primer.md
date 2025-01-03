@@ -74,7 +74,7 @@ Represented Area: 130.0
 
 Node 1
 --------
-Name: 410730 [BilinearNode]
+Name: 410730 [IHACRESBilinearNode]
 Area: 130.0
 ┌──────────────┬───────┬─────────────┬─────────────┐
 │    Parameter │ Value │ Lower Bound │ Upper Bound │
@@ -158,14 +158,8 @@ Date, 406214_rain, 406214_evap, 406219_rain, 406219_evap
 
 ```julia
 # Load data from CSV
-climate_data = CSV.read(
-    joinpath(data_path, "climate/climate_historic.csv"), DataFrame,
-    comment="#",
-    dateformat="YYYY-mm-dd"
-)
-
 # Create a climate object, specifying which identifiers to use.
-climate = Climate(climate_data, "_rain", "_evap")
+climate = Climate("../test/data/campaspe/climate/climate.csv", "_rain", "_evap")
 ```
 
 ## Running a network or node

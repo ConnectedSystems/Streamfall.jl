@@ -314,7 +314,7 @@ export best_candidate, best_fitness, best_params
 export extract_flow, extract_climate, align_time_frame
 
 # Plotting methods
-export quickplot, plot_network, save_figure
+export quickplot, plot_network, save_figure, temporal_cross_section
 
 # Data interface (climate)
 export timesteps

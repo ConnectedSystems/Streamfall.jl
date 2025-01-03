@@ -14,6 +14,7 @@ makedocs(sitename="Streamfall Documentation",
     pages = [
         "index.md",
         "primer.md",
+        "expected_data_formats.md",
         "Examples" => [
             "examples/examples.md",
             "examples/node_creation.md",
@@ -25,11 +26,11 @@ makedocs(sitename="Streamfall Documentation",
             "Model evaluation" => [
                 "examples/simple_showcase.md",
                 "examples/model_comparison.md",
-                # "examples/multisystem_showcase.md",
+                "examples/simple_multisystem.md",
             ]
         ],
-        "metrics.md",
         "API" => [
+            "metrics.md",
             "Nodes" => [
                 "API/nodes/Node.md",
                 "API/nodes/IHACRES.md",
@@ -38,6 +39,7 @@ makedocs(sitename="Streamfall Documentation",
                 "API/nodes/SYMHYD.md",
                 "API/nodes/Dam.md"
             ],
+            "API/plotting.md",
             "API/network.md",
             "API/use_methods.md"
         ]

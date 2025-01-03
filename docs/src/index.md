@@ -22,7 +22,7 @@ more "hands-on" overview.
 ---
 
 ```@raw html
- <table align="center">
+<table align="center">
   <tr>
     <th>Model</th>
     <th>Full name</th>

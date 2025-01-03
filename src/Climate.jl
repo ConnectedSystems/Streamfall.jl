@@ -1,3 +1,4 @@
+using CSV
 using DataFrames
 
 
@@ -9,6 +10,12 @@ struct Climate
 end
 function Climate(data, p_id, et_id)
     return Climate(data, p_id, et_id, "_T")
+end
+
+function Climate(file_path, p_id, et_id; t_id="_T")
+    climate_data = CSV.read(file_path, DataFrame; comment="#")
+
+    return Climate(climate_data, p_id, et_id, t_id)
 end
 
 """
