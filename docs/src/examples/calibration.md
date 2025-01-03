@@ -121,6 +121,28 @@ mKGE_score = Streamfall.mKGE(dam_obs[366:end], dam_sim[366:end])
 @info "Scores: " rmse_score nse_score mKGE_score
 
 f2 = quickplot(dam_obs, dam_sim, climate, "Modelled - 406000", false; burn_in=366)
+
+temporal_cross_section(sim_dates, calib_data[:, "406000"], sn2[3].level)
 ```
 
+The last two lines produces the plots below
+
 ![](../assets/calibrated_example.png)
+
+The `quickplot()` function creates the figure displayed above which shows dam levels on the
+left (observed and modelled) with a [Q-Q plot](https://en.wikipedia.org/wiki/Q%E2%80%93Q_plot)
+on the right.
+
+![](../assets/temporal_xsection_historic_calibrated.png)
+
+The above shows a "cross-section" of model predictions for each month-day across simulation
+time. It is useful to gain an understanding on when models may underperform and give a
+sense of a models predictive uncertainty. The units of the y-axis are the same as for the
+node (in this case, meters).
+
+Ideally, the median error would be a straight line and the confidence intervals would
+be as thin and consistent as possible for all month-days.
+
+Here, we see that while performance is generally good (mean of Median Error is near zero),
+the model can under-estimate dam levels in late-April to May and displays a tendency to
+over-estimate dam levels between January and June, relative to other times.
