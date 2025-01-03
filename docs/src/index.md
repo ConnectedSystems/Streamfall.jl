@@ -16,7 +16,13 @@ This package includes implementations of the following:
 
 Performance is expected to be similar to implementations in C and Fortran.
 
- <table align="center">
+The [Primer](@ref) details the overarching concepts while the [Examples](@ref) provide a
+more "hands-on" overview.
+
+---
+
+```@raw html
+<table align="center">
   <tr>
     <th>Model</th>
     <th>Full name</th>
@@ -60,3 +66,4 @@ Performance is expected to be similar to implementations in C and Fortran.
     </td>
   </tr>
 </table>
+```

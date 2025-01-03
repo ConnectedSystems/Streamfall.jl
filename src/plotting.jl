@@ -1,5 +1,6 @@
 using Plots, StatsPlots
 using Plots.Measures
+import Plots: plot, plot!
 using DataFrames, Dates, Statistics, Distributions, LaTeXStrings
 import Bootstrap: bootstrap, BalancedSampling
 
@@ -318,4 +319,34 @@ function temporal_cross_section(
     # end
 
     return fig
+end
+
+function plot(node::NetworkNode, climate::Climate)
+    return plot(
+        timesteps(climate),
+        node.outflow,
+        label=node.name,
+        xlabel="Date",
+        ylabel="Outflows",
+    )
+end
+
+function plot!(node::NetworkNode, climate::Climate)
+    plot!(
+        timesteps(climate),
+        node.outflow,
+        label=node.name
+    )
+end
+function plot!(f, node::NetworkNode, climate::Climate)
+    plot!(f, timesteps(climate), node.outflow, label=node.name)
+end
+
+function plot(node::DamNode, climate::Climate)
+    levels = plot(timesteps(climate), node.level, xlabel="Date", ylabel="Dam Level", label=node.name)
+    outflows = plot(timesteps(climate), node.outflow, xlabel="Date", ylabel="Discharge", label=node.name)
+
+    combined = plot(levels, outflows, size=(1000, 400), left_margin=10mm, bottom_margin=5mm, layout=(1,2))
+
+    return combined
 end

@@ -1,7 +1,7 @@
-# GR4J
+# Climate
 
 ```@autodocs
 Modules = [Streamfall]
 Order   = [:function, :type]
-Pages   = ["GR4JNode.jl"]
+Pages   = ["Climate.jl"]
 ```

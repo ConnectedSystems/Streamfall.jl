@@ -82,6 +82,17 @@ function find_common_timeframe(timeseries::T...) where {T<:DataFrame}
     return (min_date, max_date)
 end
 
+"""
+    prep_state!(sn::StreamfallNetwork, timesteps::Int64)::Nothing
+
+Prepare a network for a run by pre-allocating result stores.
+"""
+function prep_state!(sn::StreamfallNetwork, timesteps::Int64)::Nothing
+    for node in sn
+        prep_state!(node, timesteps)
+    end
+end
+
 
 """
     align_time_frame(timeseries::T...)
@@ -136,20 +147,50 @@ run_catchment! = run_basin!
 
 """
     run_node!(
-        sn::StreamfallNetwork, node_id::Int, climate::Climate;
+        sn::StreamfallNetwork, node_id::Int, climate::Climate, ts::Int64;
         inflow=nothing, extraction=nothing, exchange=nothing
     )::Nothing
 
-Generic run method that runs a model attached to a given node for all time steps.
+Generic run method that runs a model attached to a given node for a given timestep.
 Recurses upstream as needed.
 
 # Arguments
 - `sn::StreamfallNetwork`
-- `node_id::Int` : node to run in the network
-- `climate::Climate` : Climate object holding rainfall and evaporation data (or temperature)
-- `extraction::DataFrame` : water orders for each time step (defaults to nothing)
-- `exchange::DataFrame` : exchange with groundwater system at each time step (defaults to nothing)
+- `node_id` : Node to run in the network
+- `climate` : Climate object holding rainfall and evaporation data (or temperature)
+- `ts` : Timestep to run
+- `extraction` : Water orders for each time step (defaults to nothing)
+- `exchange` : Exchange with groundwater system at each time step (defaults to nothing)
 """
+function run_node!(
+    sn::StreamfallNetwork, node_id::Int, climate::Climate, ts::Int64;
+    inflow=nothing, extraction=nothing, exchange=nothing
+)::Nothing
+    timesteps = sim_length(climate)
+
+    # Run all upstream nodes
+    sim_inflow = zeros(timesteps)
+    ins = inneighbors(sn.mg, node_id)
+    for i in ins
+        # Get inflow from previous node
+        run_node!(
+            sn, i, climate, ts;
+            inflow=inflow, extraction=extraction, exchange=exchange
+        )
+
+        # Add outflow from upstream to inflow
+        sim_inflow .+= sn[i].outflow
+    end
+
+    # Run this node
+    run_node!(
+        sn[node_id], climate, ts;
+        inflow=sim_inflow, extraction=extraction, exchange=exchange
+    )
+
+    return nothing
+end
+
 function run_node!(
     sn::StreamfallNetwork, node_id::Int, climate::Climate;
     inflow=nothing, extraction=nothing, exchange=nothing
@@ -240,20 +281,13 @@ function run_node!(
     node::NetworkNode, climate::Climate, ts::Int;
     inflow=nothing, extraction=nothing, exchange=nothing
 )
-    if checkbounds(Bool, node.outflow, ts)
-        if node.outflow[ts] != undef
-            # already ran for this time step so no need to run
-            return node.outflow[ts], node.level[ts]
-        end
-    end
-
     node_name = node.name
     rain, et = climate_values(node, climate, ts)
-    wo = timestep_value(ts, node_name, "releases", extraction)
-    ex = timestep_value(ts, node_name, "exchange", exchange)
-    in_flow = timestep_value(ts, node_name, "inflow", inflow)
 
-    return run_timestep!(node, rain, et, ts; inflow=in_flow, extraction=wo, exchange=ex)
+    return run_timestep!(
+        node, rain, et, ts;
+        inflow=inflow, extraction=extraction, exchange=exchange
+    )
 end
 
 include("Analysis/Analysis.jl")
@@ -268,7 +302,7 @@ export EnsembleNode, BaseEnsemble
 # Network
 export find_inlets_and_outlets, inlets, outlets
 export climate_values, node_names, get_node, get_node_id, get_prop, set_prop!
-export param_info, update_params!, sim_length, reset!
+export param_info, update_params!, sim_length, reset!, prep_state!
 export run_catchment!, run_basin!, run_node!, run_node_with_temp!
 export run_timestep!
 export calibrate!
@@ -280,7 +314,7 @@ export best_candidate, best_fitness, best_params
 export extract_flow, extract_climate, align_time_frame
 
 # Plotting methods
-export quickplot, plot_network, save_figure
+export quickplot, plot_network, save_figure, temporal_cross_section
 
 # Data interface (climate)
 export timesteps

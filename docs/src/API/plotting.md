@@ -1,7 +1,7 @@
-# Generic node methods
+# Plotting
 
 ```@autodocs
 Modules = [Streamfall]
 Order   = [:function, :type]
-Pages   = ["Node.jl"]
+Pages   = ["plotting.jl"]
 ```

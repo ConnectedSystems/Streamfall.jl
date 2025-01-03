@@ -158,7 +158,11 @@ function run_hymod!(node::SimpleHyModNode, ts::Int64, P::F, PET::F, inflow::F, e
     return Q_t
 end
 
+"""
+    update_params!(node::HyModNode, Sm_max::F, B::F, alpha::F, Kf::F, Ks::F) where {F<:Float64}
 
+Update parameters for HyMod.
+"""
 function update_params!(node::HyModNode, Sm_max::F, B::F, alpha::F, Kf::F, Ks::F) where {F<:Float64}
     node.Sm_max = Param(Sm_max, bounds=node.Sm_max.bounds::Tuple)
     node.B = Param(B, bounds=node.B.bounds::Tuple)

@@ -209,7 +209,11 @@ function update_state!(node::GR4JNode, ts::Int64, ps, rs, q, UH1, UH2)::Nothing
     return nothing
 end
 
+"""
+    update_params!(node::GR4JNode, X1::Float64, X2::Float64, X3::Float64, X4::Float64)::Nothing
 
+Update parameters for GR4J.
+"""
 function update_params!(node::GR4JNode, X1::Float64, X2::Float64, X3::Float64, X4::Float64)::Nothing
     node.X1 = Param(X1, bounds=node.X1.bounds)
     node.X2 = Param(X2, bounds=node.X2.bounds)
