@@ -19,7 +19,7 @@
   area: 30.11
   parameters:
     storage_coef: 5.243068550275504
-  initial_storage: 0.0
+  initial_storage: 304398.6
   max_storage: 306000.0
   functions:
     calc_dam_level: |-
