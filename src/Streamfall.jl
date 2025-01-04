@@ -275,6 +275,7 @@ end
 
 include("Analysis/Analysis.jl")
 include("plotting.jl")
+include("viz/viz.jl")
 
 # Nodes
 export NetworkNode, GenericNode, GenericDirectNode
