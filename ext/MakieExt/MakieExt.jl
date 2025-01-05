@@ -3,9 +3,11 @@ module MakieExt
 using Statistics
 using DataFrames
 using Dates
+using LaTeXStrings
 
 using Streamfall
-import Streamfall: TemporalCrossSection
+import Streamfall: StreamfallNetwork
+import Streamfall.Analysis: TemporalCrossSection
 
 using Makie
 
@@ -24,6 +26,15 @@ function Streamfall.Viz.quickplot(node::NetworkNode, climate::Climate)
 
     return f
 end
+function Streamfall.Viz.quickplot(node::DamNode, climate::Climate)
+    date = timesteps(climate)
+
+    @assert length(date) == length(node.level) || "Date length and result lengths do not match!"
+
+    f, ax, sp = lines(date, node.level)
+
+    return f
+end
 
 function Streamfall.Viz.quickplot(
     obs::Vector, node::NetworkNode, climate::Climate;
@@ -31,12 +42,24 @@ function Streamfall.Viz.quickplot(
 )
     return quickplot(obs, node.outflow, climate; label, log, burn_in=burn_in, limit=limit, metric=metric)
 end
+function Streamfall.Viz.quickplot(
+    obs::Vector, node::DamNode, climate::Climate;
+    label="Modeled", log=false, burn_in=1, limit=nothing, metric=Streamfall.mKGE
+)
+    return quickplot(obs, node.level, climate; label, log, burn_in=burn_in, limit=limit, metric=metric)
+end
 
 function Streamfall.Viz.quickplot(
     obs::DataFrame, node::NetworkNode, climate::Climate;
     label="", log=false, burn_in=1, limit=nothing, metric=Streamfall.mKGE
 )
     return Streamfall.Viz.quickplot(obs[:, node.name], node.outflow, climate; label, log, burn_in, limit, metric)
+end
+function Streamfall.Viz.quickplot(
+    obs::DataFrame, node::DamNode, climate::Climate;
+    label="", log=false, burn_in=1, limit=nothing, metric=Streamfall.mKGE
+)
+    return Streamfall.Viz.quickplot(obs[:, node.name], node.level, climate; label, log, burn_in, limit, metric)
 end
 
 function Streamfall.Viz.quickplot(
@@ -82,9 +105,6 @@ function Streamfall.Viz.quickplot(obs::Vector, sim::Vector, xticklabels::Vector,
 
     return f
 end
-
-
-using LaTeXStrings
 
 """
     temporal_cross_section(
@@ -375,6 +395,19 @@ function Streamfall.Viz.temporal_cross_section(
     end
 
     return fig
+end
+
+"""
+    save_figure(f::Figure, fn::String)
+
+Save a figure.
+"""
+function Streamfall.Viz.save_figure(f::Figure, fn::String)
+    save(fn, f, update=false)
+end
+function Streamfall.Viz.save_figure!(fn::String)
+    f = current_figure()
+    Streamfall.Viz.save_figure(f, fn)
 end
 
 end
