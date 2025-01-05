@@ -1,3 +1,4 @@
+using GLMakie, GraphMakie
 using YAML, DataFrames, CSV, Plots
 using Statistics
 using Streamfall

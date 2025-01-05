@@ -1,10 +1,7 @@
 module NetworkViz
 
-using GraphMakie
-using Streamfall
+function plot_network end
 
-function plot end
-
-export plot
+export plot_network
 
 end
