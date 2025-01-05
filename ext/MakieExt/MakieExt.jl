@@ -10,12 +10,12 @@ import Streamfall: TemporalCrossSection
 using Makie
 
 
-function Streamfall.viz.quickplot(node::NetworkNode)
+function Streamfall.Viz.quickplot(node::NetworkNode)
     fig = lines(node.outflow)
     return fig
 end
 
-function Streamfall.viz.quickplot(node::NetworkNode, climate::Climate)
+function Streamfall.Viz.quickplot(node::NetworkNode, climate::Climate)
     date = timesteps(climate)
 
     @assert length(date) == length(node.outflow) || "Date length and result lengths do not match!"
@@ -25,30 +25,30 @@ function Streamfall.viz.quickplot(node::NetworkNode, climate::Climate)
     return f
 end
 
-function Streamfall.viz.quickplot(
+function Streamfall.Viz.quickplot(
     obs::Vector, node::NetworkNode, climate::Climate;
     label="Modeled", log=false, burn_in=1, limit=nothing, metric=Streamfall.mKGE
 )
     return quickplot(obs, node.outflow, climate; label, log, burn_in=burn_in, limit=limit, metric=metric)
 end
 
-function Streamfall.viz.quickplot(
+function Streamfall.Viz.quickplot(
     obs::DataFrame, node::NetworkNode, climate::Climate;
     label="", log=false, burn_in=1, limit=nothing, metric=Streamfall.mKGE
 )
-    return Streamfall.viz.quickplot(obs[:, node.name], node.outflow, climate; label, log, burn_in, limit, metric)
+    return Streamfall.Viz.quickplot(obs[:, node.name], node.outflow, climate; label, log, burn_in, limit, metric)
 end
 
-function Streamfall.viz.quickplot(
+function Streamfall.Viz.quickplot(
     obs::Vector, sim::Vector, climate::Climate;
     label="Modeled", log=false, burn_in=1, limit=nothing, metric=Streamfall.mKGE
 )
     date = timesteps(climate)
     last_e = !isnothing(limit) ? limit : lastindex(obs)
     show_range = burn_in:last_e
-    return Streamfall.viz.quickplot(obs[show_range], sim[show_range], date[show_range], label, log; metric=metric)
+    return Streamfall.Viz.quickplot(obs[show_range], sim[show_range], date[show_range], label, log; metric=metric)
 end
-function Streamfall.viz.quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled", log=false; metric=Streamfall.mKGE)
+function Streamfall.Viz.quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled", log=false; metric=Streamfall.mKGE)
     @assert length(xticklabels) == length(obs) || "x-axis tick label length and observed lengths do not match!"
     @assert length(xticklabels) == length(sim) || "x-axis tick label length and simulated lengths do not match!"
 
@@ -110,7 +110,7 @@ Filters out leap days.
 - `period` : Method from `Dates` package to group (defaults to `monthday`)
 - `kwargs` : Additional plotting keyword arguments
 """
-function Streamfall.viz.temporal_cross_section(
+function Streamfall.Viz.temporal_cross_section(
     dates, obs;
     title="", ylabel="Mean", label=nothing,
     period::Function=monthday,
@@ -248,7 +248,7 @@ Filters out leap days.
 - `label` : Optional legend label. Uses `ylabel` if not provided.
 - `period` : Method from `Dates` package to group (defaults to `month`)
 """
-function Streamfall.viz.temporal_cross_section(
+function Streamfall.Viz.temporal_cross_section(
     dates, obs, sim;
     title="", ylabel="Median Error", label=nothing, period::Function=monthday, kwargs...
 )
