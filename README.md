@@ -6,7 +6,7 @@
 </div>
 
 Streamfall leverages the Julia language and ecosystem to provide:
-- Quick hetrogenous modelling of a stream network
+- Quick heterogeneous modelling of a stream network
 - Use of different rainfall-runoff models and their ensembles in tandem
 - Modelling and assessment of interacting systems
 - A wide range of performance metrics
