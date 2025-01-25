@@ -1,7 +1,7 @@
 using OrderedCollections
 
 using Cairo, Compose
-using Graphs, MetaGraphs, GraphPlot
+using Graphs, MetaGraphs
 using ModelParameters
 
 import YAML: load_file, write_file
