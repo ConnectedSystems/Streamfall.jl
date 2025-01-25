@@ -22,7 +22,6 @@ end
 const IHACRES = joinpath(MODPATH, "../deps", "usr", "lib", "ihacres$(libext)")
 
 
-
 include("Network.jl")
 include("Nodes/Node.jl")
 include("Climate.jl")
