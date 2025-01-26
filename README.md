@@ -2,7 +2,8 @@
 <img align="center" src="docs/src/assets/logo.svg" alt="Streamfall.jl" fill="currentColor"/>
 <p>A graph-based streamflow modelling system written in Julialang.</p>
 
-[![DOI](https://zenodo.org/badge/345341654.svg)](https://zenodo.org/badge/latestdoi/345341654)
+[![DOI](https://zenodo.org/badge/345341654.svg)](https://zenodo.org/badge/latestdoi/345341654)  [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://connectedsystems.github.io/Streamfall.jl/dev)
+
 </div>
 
 Streamfall leverages the Julia language and ecosystem to provide:
@@ -23,9 +24,24 @@ The IHACRES rainfall-runoff model was previously implemented with [ihacres_nim](
 
 [Graphs](https://github.com/JuliaGraphs/Graphs.jl) and [MetaGraphs](https://github.com/JuliaGraphs/MetaGraphs.jl) are used underneath for network traversal/analysis.
 
-Development version of the documentation can be found here: [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://connectedsystems.github.io/Streamfall.jl/dev).
-
 > [NOTE] Streamfall is currently in its early stages and under active development. Although it is fairly usable for small networks and assessing/analyzing single sub-catchments, things may change drastically and unexpectedly.
+
+## Installation
+
+Streamfall is now registered! The latest release version can be installed with:
+
+```julia
+] add Streamfall
+```
+
+or the latest development version from GitHub with `dev` () or `add`:
+
+```julia
+# Editable install
+] dev Streamfall#main
+
+] add https://github.com/ConnectedSystems/Streamfall.jl#main
+```
 
 ## Development
 

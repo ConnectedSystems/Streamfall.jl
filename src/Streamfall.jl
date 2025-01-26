@@ -22,7 +22,6 @@ end
 const IHACRES = joinpath(MODPATH, "../deps", "usr", "lib", "ihacres$(libext)")
 
 
-
 include("Network.jl")
 include("Nodes/Node.jl")
 include("Climate.jl")
@@ -34,7 +33,7 @@ include("Nodes/GR4J/GR4JNode.jl")
 include("Nodes/HyMod/HyModNode.jl")
 include("Nodes/SYMHYD/SYMHYDNode.jl")
 include("Nodes/DamNode.jl")
-include("Nodes/EnsembleNode.jl")
+include("Nodes/Ensembles/EnsembleNode.jl")
 
 
 function timestep_value(ts::Int, gauge_id::String, col_partial::String, dataset::DataFrame)::Float64
@@ -297,7 +296,7 @@ include("plotting.jl")
 export NetworkNode, GenericNode, GenericDirectNode
 export IHACRES, IHACRESNode, IHACRESBilinearNode, ExpuhNode, DamNode, Climate
 export create_node, GR4JNode, HyModNode, SimpleHyModNode, SYMHYDNode
-export EnsembleNode, BaseEnsemble
+export EnsembleNode, WeightedEnsembleNode
 
 # Network
 export find_inlets_and_outlets, inlets, outlets
@@ -305,7 +304,7 @@ export climate_values, node_names, get_node, get_node_id, get_prop, set_prop!
 export param_info, update_params!, sim_length, reset!, prep_state!
 export run_catchment!, run_basin!, run_node!, run_node_with_temp!
 export run_timestep!
-export calibrate!
+export calibrate!, calibrate_instances!, calibrate_weights!
 export create_network, load_network, save_network
 
 export best_candidate, best_fitness, best_params
@@ -321,5 +320,7 @@ export timesteps
 
 # Analysis
 export Analysis
+
+export apply_bias_correction
 
 end  # end module

@@ -49,7 +49,7 @@ Base.@kwdef mutable struct IHACRESBilinearNode{P, A<:AbstractFloat} <: IHACRESNo
 end
 
 
-function prep_state!(node::IHACRESNode, timesteps::Int64)::Nothing
+function prep_state!(node::T, timesteps::Int64)::Nothing where {T<:IHACRESNode}
     resize!(node.storage, timesteps+1)
     node.storage[2:end] .= 0.0
 
