@@ -27,6 +27,9 @@ makedocs(sitename="Streamfall Documentation",
                 "examples/simple_showcase.md",
                 "examples/model_comparison.md",
                 "examples/simple_multisystem.md",
+            ],
+            "Ensemble modeling" => [
+                "examples/weighted_ensembles.md"
             ]
         ],
         "API" => [
