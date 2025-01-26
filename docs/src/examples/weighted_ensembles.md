@@ -1,4 +1,4 @@
-# Ensemble Modeling
+# Weighted Ensemble Modeling
 
 Streamfall supports ensemble modeling using individual instances of rainfall-runoff models
 as the ensemble constituents. The default ensemble is a normalized weighted sum.
