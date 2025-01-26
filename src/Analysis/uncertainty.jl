@@ -55,7 +55,7 @@ function cross_section(tr::TemporalCrossSection)
         boxframe[i, 8:9] .= mean(vi), std(vi)
     end
 
-    cols = [:abs_min, :lower_95, :lower_75, :median, 
+    cols = [:abs_min, :lower_95, :lower_75, :median,
             :upper_75, :upper_95, :abs_max, :mean, :std]
 
     x_section = DataFrame(boxframe, cols)
@@ -68,9 +68,9 @@ end
 
 
 """
-    offsets(tr::TemporalCrossSection, period::Function=monthday)
+    offsets(tr::TemporalCrossSection)
 
-Determine (median) offsets, assuming mean error-based temporal cross-sectional analysis 
+Determine (median) offsets, assuming mean error-based temporal cross-sectional analysis
 was performed. Only supports daily time series.
 """
 function offsets(tr::TemporalCrossSection)
@@ -84,11 +84,11 @@ function offsets(tr::TemporalCrossSection)
     mds = monthday.(dates)
     for (idx, (d, md)) in enumerate(zip(doy, mds))
         if md == (2, 29) || d == 366
-            offset_vals[idx] = offset[d-1] * -1.0
+            offset_vals[idx] = -offset[d-1]
             continue
         end
 
-        offset_vals[idx] = offset[d] * -1.0
+        offset_vals[idx] = -offset[d]
     end
 
     return offset_vals
