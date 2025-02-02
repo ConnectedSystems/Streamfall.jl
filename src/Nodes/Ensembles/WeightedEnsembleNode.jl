@@ -55,16 +55,6 @@ function WeightedEnsembleNode(nodes::Vector{<:NetworkNode}; weights::Vector{Floa
     return tmp
 end
 
-function prep_state!(node::WeightedEnsembleNode, timesteps::Int64)::Nothing
-    node.outflow = fill(0.0, timesteps)
-
-    for n in node.instances
-        prep_state!(n, timesteps)
-    end
-
-    return nothing
-end
-
 
 function param_info(node::WeightedEnsembleNode; kwargs...)::Tuple
     values = Float64[w.val for w in node.weights]
