@@ -6,7 +6,8 @@ as the ensemble constituents. The default ensemble is a normalized weighted sum.
 The usual setup process is shown here, detailed in previous sections of this guide.
 
 ```julia
-using YAML, DataFrames, CSV, Plots
+using Plots
+using CSV, DataFrames
 using Statistics
 using Streamfall
 
@@ -28,7 +29,6 @@ Specific node representations can then be created, each representing the same su
 A stream network is not considered for this demonstration.
 
 ```julia
-
 # Create one instance each of IHACRES_CMD and GR4J
 ihacres_node = create_node(IHACRESBilinearNode, "410730", 129.2)
 gr4j_node = create_node(GR4JNode, "410730", 129.2)
@@ -87,12 +87,15 @@ low flows as with GR4J.
 Comparing the temporal cross section:
 
 ```julia
-ihacres_xs = temporal_cross_section(burn_dates, burn_obs, ihacres_node.outflow[burn_in:end]; title="IHACRES")
-gr4j_xs = temporal_cross_section(burn_dates, burn_obs, gr4j_node.outflow[burn_in:end]; title="GR4J")
-ensemble_xs = temporal_cross_section(burn_dates, burn_obs, ensemble.outflow[burn_in:end]; title="Weighted Ensemble (IHACRES-GR4J)")
+ihacres_xs = temporal_cross_section(burn_dates, burn_obs, ihacres_node.outflow[burn_in:end]; title="IHACRES", yscale=:log10)
+gr4j_xs = temporal_cross_section(burn_dates, burn_obs, gr4j_node.outflow[burn_in:end]; title="GR4J", yscale=:log10)
+ensemble_xs = temporal_cross_section(burn_dates, burn_obs, ensemble.outflow[burn_in:end]; title="Weighted Ensemble (IHACRES-GR4J)", yscale=:log10)
 
 plot(ihacres_xs, gr4j_xs, ensemble_xs; layout=(3, 1), size=(800, 1200))
 ```
+
+!!! note "Log scale"
+    Note that the metrics shown here are in **log** scale (Median Error when comparing the log of results)
 
 A reduction in the median error can be seen with extreme errors reduced somewhat (according to
 the 95% CI).
@@ -111,7 +114,8 @@ bias_corrected_xs = temporal_cross_section(
     burn_dates,
     burn_obs,
     q_star[burn_in:end];
-    title="Bias Corrected Ensemble"
+    title="Bias Corrected Ensemble",
+    yscale=:log10
 )
 
 plot(bc_ensemble_qp, bias_corrected_xs; layout=(2,1), size=(800, 800))
