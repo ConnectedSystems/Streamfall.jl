@@ -94,11 +94,7 @@ ensemble_xs = temporal_cross_section(burn_dates, burn_obs, ensemble.outflow[burn
 plot(ihacres_xs, gr4j_xs, ensemble_xs; layout=(3, 1), size=(800, 1200))
 ```
 
-!!! note "Log scale"
-    Note that the metrics shown here are in **log** scale (Median Error when comparing the log of results)
-
-A reduction in the median error can be seen with extreme errors reduced somewhat (according to
-the 95% CI).
+A reduction in the median error can be seen with extreme errors reduced somewhat.
 
 ![](../assets/ensemble_xsection.png)
 
@@ -108,7 +104,7 @@ form of bias correction.
 ```julia
 q_star = Streamfall.apply_temporal_correction(ensemble, climate, Qo[:, "410730"])
 
-bc_ensemble_qp = quickplot(burn_obs, q_star[burn_in:end], climate, "Bias Corrected Ensemble")
+bc_ensemble_qp = quickplot(burn_obs, q_star[burn_in:end], climate, "Bias Corrected Ensemble", true)
 
 bias_corrected_xs = temporal_cross_section(
     burn_dates,
