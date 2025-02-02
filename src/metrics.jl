@@ -690,7 +690,7 @@ end
 
 
 """
-    inverse_metric(obs, sim; metric, comb_method::Function=mean)
+    inverse_metric(obs, sim, metric; comb_method::Function=mean, ϵ=1e-2)
 
 A meta-objective function which combines the performance of the
 given metric as applied to the discharge and the inverse of the
@@ -704,7 +704,6 @@ By default, the combination method is to take the mean.
 - `metric::Function` : objective function
 - `comb_method::Function` : mean
 - ϵ : offset value to use (enables use with zero-flow time steps), defaults to 1e-2
-
 
 # References
 1. Garcia, F., Folton, N., Oudin, L., 2017.
