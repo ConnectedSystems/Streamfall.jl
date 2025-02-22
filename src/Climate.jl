@@ -19,6 +19,10 @@ function Climate(file_path::String, p_id, et_id; t_id="_T")
 end
 
 """
+    extract_flow(
+        data::DataFrame, gauge_id::String; suffix::String="_Q"
+    )::DataFrame
+
 Extract streamflow data from file.
 
 Streamflow (Q) column is identified the Gauge ID.
@@ -35,13 +39,13 @@ e.g., ("000001_Q")
 DataFrame of observations for selected gauge.
 """
 @inline function extract_flow(
-    data::DataFrame, gauge_id::String, suffix::String="_Q"
+    data::DataFrame, gauge_id::String; suffix::String="_Q"
 )::DataFrame
     target = data[:, ["Date", gauge_id * suffix]]
     try
-        target[!, gauge_id * suffix] = convert.(Float64, target[!, gauge_id * suffix])
+        target[!, gauge_id*suffix] = convert.(Float64, target[!, gauge_id*suffix])
     catch
-        target[!, gauge_id * suffix] = convert.(Union{Float64,Missing}, target[!, gauge_id * suffix])
+        target[!, gauge_id*suffix] = convert.(Union{Float64,Missing}, target[!, gauge_id*suffix])
     end
 
     rename!(target, gauge_id * suffix => gauge_id)
@@ -78,8 +82,9 @@ Extract rainfall data for a given node.
 function rainfall_data(node::NetworkNode, climate::Climate)::DataFrame
     data = climate.climate_data
     rain_col = filter(x -> occursin(node.name, x)
-                            & occursin(climate.rainfall_id, x),
-                            names(data))[1]
+                           &
+                           occursin(climate.rainfall_id, x),
+        names(data))[1]
 
     return data[:, rain_col]
 end
@@ -107,15 +112,18 @@ function climate_values(node::NetworkNode, climate::Climate, timestep::Int)
 
     # TODO : Catch instances where data is not found (raises BoundsError)
     rain_col = filter(x -> occursin(node_name, x)
-                        & occursin(climate.rainfall_id, x),
-                        names(data))[1]
+                           &
+                           occursin(climate.rainfall_id, x),
+        names(data))[1]
     et_col = filter(x -> occursin(node_name, x)
-                        & occursin(climate.et_id, x),
-                        names(data))[1]
+                         &
+                         occursin(climate.et_id, x),
+        names(data))[1]
     t_col = try
         filter(x -> occursin(node_name, x)
-                            & occursin(climate.t_id, x),
-                            names(data))[1]
+                    &
+                    occursin(climate.t_id, x),
+            names(data))[1]
     catch err
         if !(err isa BoundsError)
             rethrow(err)
@@ -148,11 +156,13 @@ function climate_values(node::NetworkNode, climate::Climate)
 
     # TODO : Catch instances where data is not found (raises BoundsError)
     rain_col = filter(x -> occursin(node.name, x)
-                            & occursin(climate.rainfall_id, x),
-                            names(data))[1]
+                           &
+                           occursin(climate.rainfall_id, x),
+        names(data))[1]
     et_col = filter(x -> occursin(node.name, x)
-                            & occursin(climate.et_id, x),
-                            names(data))[1]
+                         &
+                         occursin(climate.et_id, x),
+        names(data))[1]
 
     if isempty(rain_col) | isempty(et_col)
         throw(ArgumentError("No climate data found for $(node.name) at time step: $(timestep)"))

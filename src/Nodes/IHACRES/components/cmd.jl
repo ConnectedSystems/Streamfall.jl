@@ -1,5 +1,8 @@
 """
-    calc_cmd(prev_cmd::Float64, rainfall::Float64, et::Float64, effective_rainfall::Float64, recharge::Float64)::Float64
+    calc_cmd(
+        prev_cmd::Float64, rainfall::Float64, et::Float64,
+        effective_rainfall::Float64, recharge::Float64
+    )::Float64
 
 Calculate Catchment Moisture Deficit (CMD).
 
@@ -75,7 +78,7 @@ function calc_trig_interim_cmd(cmd::Float64, param_d::Float64, rainfall::Float64
 end
 
 """
-    calc_ft_interim_cmd(cmd::Float64, rain::Float64, d::Float64, d2::Float64, alpha::Float64)
+    calc_ft_interim_cmd(cmd::Float64, rain::Float64, d::Float64, d2::Float64, alpha::Float64)::Tuple{Float64,Float64,Float64}
 
 Direct port of original Fortran implementation to calculate interim CMD (M_f).
 Calculates estimates of effective rainfall and recharge as a by-product.
@@ -90,9 +93,9 @@ Calculates estimates of effective rainfall and recharge as a by-product.
 # Returns
 A tuple of (interim CMD value, effective rainfall, recharge)
 """
-function calc_ft_interim_cmd(cmd::Float64, rain::Float64, d::Float64, d2_factor::Float64, alpha::Float64)::Tuple{Float64, Float64, Float64}
+function calc_ft_interim_cmd(cmd::Float64, rain::Float64, d::Float64, d2::Float64, alpha::Float64)::Tuple{Float64,Float64,Float64}
     # Initialize variables
-    d2 = d * d2_factor
+    d2 = d * d2
     tmp_cmd = cmd
     e_rain = 0.0
     recharge = 0.0

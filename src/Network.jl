@@ -41,7 +41,11 @@ function get_prop(sn::StreamfallNetwork, nid::Int64, prop::Symbol)::Any
 end
 
 
-"""Determine a node's connection"""
+"""
+    in_or_out(g, v)
+
+Determine a node's connection
+"""
 function in_or_out(g, v)
     ins = length(inneighbors(g, v))
     outs = length(outneighbors(g, v))
@@ -58,7 +62,11 @@ function in_or_out(g, v)
 end
 
 
-"""Find all inlets and outlets in a network."""
+"""
+    find_inlets_and_outlets(sn::StreamfallNetwork)::Tuple
+
+Find all inlets and outlets in a network.
+"""
 function find_inlets_and_outlets(sn::StreamfallNetwork)::Tuple
     g = sn.mg
     vs = vertices(g)
@@ -161,9 +169,14 @@ function create_node(mg::MetaDiGraph, node_name::String, details::AbstractDict, 
             func = run_node!
         end
 
-        set_props!(mg, nid, Dict(:name=>node_name,
-                                 :node=>n,
-                                 :nfunc=>func))
+        set_props!(
+            mg, nid,
+            Dict(
+                :name => node_name,
+                :node => n,
+                :nfunc => func
+            )
+        )
 
         this_id = nid
     else
@@ -307,7 +320,7 @@ function Base.show(io::IO, sn::StreamfallNetwork)
 
     show_verts = vs
     if length(vs) > 4
-        show_verts = [1, 2, nothing, length(vs)-1, length(vs)]
+        show_verts = [1, 2, nothing, length(vs) - 1, length(vs)]
     end
 
     for nid in show_verts
@@ -328,7 +341,7 @@ end
 Simple plot of stream network.
 """
 function plot_network(sn::StreamfallNetwork; as_html=false)
-    node_labels = ["$(sn[i].name)\n"*string(nameof(typeof(sn[i]))) for i in vertices(sn.mg)]
+    node_labels = ["$(sn[i].name)\n" * string(nameof(typeof(sn[i]))) for i in vertices(sn.mg)]
 
     if as_html
         plot_func = gplothtml
@@ -355,7 +368,7 @@ function Base.iterate(sn::StreamfallNetwork, state=1)
         return nothing
     end
 
-    return (sn[state], state+1)
+    return (sn[state], state + 1)
 end
 
 
