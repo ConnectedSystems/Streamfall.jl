@@ -62,13 +62,6 @@ julia>] test
 
 ## Usage
 
-Streamfall is currently unregistered but can be added to a Julia environment directly from
-the Package manager:
-
-```bash
-julia>] add https://github.com/ConnectedSystems/Streamfall.jl#main
-```
-
 The examples below use data from the CAMEL-AUS dataset, available here:
 
 > Fowler, K. J. A., Acharya, S. C., Addor, N., Chou, C., and Peel, M. C.: CAMELS-AUS: hydrometeorological time   series and landscape attributes for 222 catchments in Australia, Earth Syst. Sci. Data, 13, 3847–3867, https://doi.org/10.5194/essd-13-3847-2021, 2021.
