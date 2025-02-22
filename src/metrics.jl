@@ -110,7 +110,7 @@ end
 
 
 """
-Applies split meta metric approach
+Applies split meta metric approach.
 
 If using with other macros such as `@normalize` or `@bound`,
 these must come first.
@@ -136,25 +136,45 @@ macro split(metric, obs, sim, n, agg_func=mean)
 end
 
 
-"""The Nash-Sutcliffe Efficiency score"""
-NSE(obs, sim) = 1.0 - sum((obs .- sim) .^ 2) / sum((obs .- mean(obs)) .^ 2)
+"""
+    NSE(obs, sim)
+
+The Nash-Sutcliffe Efficiency score
+"""
+function NSE(obs, sim)
+    return 1.0 - sum((obs .- sim) .^ 2) / sum((obs .- mean(obs)) .^ 2)
+end
 
 
-"""Normalized Nash-Sutcliffe Efficiency score (bounded between 0 and 1).
+"""
+    NNSE(obs, sim)
+
+Normalized Nash-Sutcliffe Efficiency score (bounded between 0 and 1).
 
 # References
 1. Nossent, J., Bauwens, W., 2012.
     Application of a normalized Nash-Sutcliffe efficiency to improve the accuracy of the Sobol’ sensitivity analysis of a hydrological model.
     EGU General Assembly Conference Abstracts 237.
 """
-NNSE(obs, sim) = 1.0 / (2.0 - NSE(obs, sim))
+function NNSE(obs, sim)
+    return 1.0 / (2.0 - NSE(obs, sim))
+end
 
 
-"""Root Mean Square Error"""
-RMSE(obs, sim) = (sum((sim .- obs) .^ 2) / length(sim))^0.5
+"""
+    RMSE(obs, sim)
+
+Root Mean Square Error
+"""
+function RMSE(obs, sim)
+    return (sum((sim .- obs) .^ 2) / length(sim))^0.5
+end
 
 
-"""Coefficient of determination (R^2)
+"""
+    R2(obs, sim)::Float64
+
+Coefficient of determination (R²)
 
 Aliases `NSE()`
 """
@@ -163,12 +183,15 @@ function R2(obs, sim)::Float64
 end
 
 
-"""Adjusted R^2
+"""
+    ADJ_R2(obs, sim, p::Int64)::Float64
+
+Adjusted R²
 
 # Arguments
 - `obs::Vector` : observations
 - `sim::Vector` : modeled results
-- `p::Int` : number of explanatory variables
+- `p::Int64` : number of explanatory variables
 """
 function ADJ_R2(obs, sim, p::Int64)::Float64
     n = length(obs)
@@ -179,12 +202,16 @@ end
 
 
 """
+    MAE(obs, sim)
+
 Mean Absolute Error
 """
 MAE(obs, sim) = mean(abs.(sim .- obs))
 
 
 """
+    ME(obs, sim)
+
 Mean Error
 """
 ME(obs, sim) = mean(sim .- obs)
@@ -249,6 +276,8 @@ end
 
 
 """
+    relative_skill_score(Sb::Float64, Sm::Float64)::Float64
+
 Relative Skill Score.
 
 Provides an indication of model performance relative to a known benchmark score.
@@ -266,13 +295,13 @@ Suitable for use with least-squares approaches that provide skill scores ranging
     Catchment hydrology/Modelling approaches.
     https://doi.org/10.5194/hess-2019-327
 """
-function relative_skill_score(Sb::Float64, Sm::Float64)
+function relative_skill_score(Sb::Float64, Sm::Float64)::Float64
     return (Sm - Sb) / (1.0 - Sb)
 end
 
 
 """
-    NSE_logbias(obs, sim; metric::Function=NSE, bias_threshold::Float64=5.0, shape::Float64=2.5)
+    NSE_logbias(obs, sim; metric=NSE, bias_threshold=5.0, shape=2.5)
 
 The NSE_logbias meta-metric provides a weighted combination of a least-squares approach and a
 logarithmic function of bias. The metric penalizes predictions with an overall bias above a
@@ -313,7 +342,7 @@ end
 
 
 """
-    KGE(obs::Vector, sim::Vector; scaling::Tuple=nothing)::Float64
+    KGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
 
 Calculate the 2009 Kling-Gupta Efficiency (KGE) metric.
 
@@ -348,11 +377,7 @@ Note: Although similar, NSE and KGE cannot be directly compared.
     Hydrology and Earth System Sciences 23, 2601–2614.
     https://doi.org/10.5194/hess-23-2601-2019
 """
-function KGE(obs, sim; scaling=nothing)::Float64
-    if isnothing(scaling)
-        scaling = (1, 1, 1)
-    end
-
+function KGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
     # Correlation
     r = Statistics.cor(obs, sim)
     if isnan(r)
@@ -375,7 +400,10 @@ function KGE(obs, sim; scaling=nothing)::Float64
 end
 
 
-"""Bounded KGE, bounded between -1 and 1.
+"""
+    BKGE(obs, sim)::Float64
+
+Bounded KGE, bounded between -1 and 1.
 
 # Arguments
 - `obs::Vector` : observations
@@ -387,18 +415,24 @@ function BKGE(obs, sim)::Float64
 end
 
 
-"""Normalized KGE between 0 and 1.
+"""
+    NKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
+
+Normalized KGE between 0 and 1.
 
 # Arguments
 - `obs::Vector` : observations
 - `sim::Vector` : modeled results
 """
-function NKGE(obs, sim; scaling=nothing)::Float64
+function NKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
     return 1 / (2 - KGE(obs, sim; scaling=scaling))
 end
 
 
-"""Calculate the modified KGE metric (2012).
+"""
+    mKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
+
+Calculate the modified KGE metric (2012).
 
 Also known as KGE prime (KGE').
 
@@ -433,11 +467,7 @@ This is to:
     Hydrology and Earth System Sciences 22, 4583–4591.
     https://doi.org/10.5194/hess-22-4583-2018
 """
-function mKGE(obs, sim; scaling=nothing)::Float64
-    if isnothing(scaling)
-        scaling = (1, 1, 1)
-    end
-
+function mKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
     # Timing (Pearson's correlation)
     r = Statistics.cor(obs, sim)
     if isnan(r)
@@ -475,9 +505,7 @@ function mKGE(obs, sim; scaling=nothing)::Float64
         β = μ_s / μ_o
     end
 
-    rs = scaling[1]
-    βs = scaling[2]
-    γs = scaling[3]
+    rs, βs, γs = scaling
 
     mod_kge = 1.0 - sqrt(rs * (r - 1)^2 + βs * (β - 1)^2 + γs * (γ - 1)^2)
 
@@ -485,34 +513,41 @@ function mKGE(obs, sim; scaling=nothing)::Float64
 end
 
 
-"""Bounded modified KGE between -1 and 1.
+"""
+    BmKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
+
+Bounded modified KGE between -1 and 1.
 
 # Arguments
 - `obs::Vector` : observations
 - `sim::Vector` : modeled results
 """
-function BmKGE(obs, sim; scaling=nothing)::Float64
+function BmKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
     mkge = mKGE(obs, sim; scaling=scaling)
     return mkge / (2 - mkge)
 end
 
 
-"""Normalized modified KGE between 0 and 1.
+"""
+    NmKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
+
+Normalized modified KGE between 0 and 1.
 
 # Arguments
 - `obs::Vector` : observations
 - `sim::Vector` : modeled results
 """
-function NmKGE(obs, sim; scaling=nothing)::Float64
+function NmKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
     return 1 / (2 - mKGE(obs, sim; scaling=scaling))
 end
 
 
 """
+    mean_NmKGE(obs, sim; scaling=(1.0, 1.0, 1.0), ϵ=1e-2)
+
 Mean Inverse NmKGE
 
-Said to produce better fits for low-flow indices
-compared to mKGE (see [1]).
+Said to produce better fits for low-flow indices compared to mKGE (see [1]).
 
 # Arguments
 - `obs::Vector` : observations
@@ -527,15 +562,23 @@ compared to mKGE (see [1]).
     Hydrological Sciences Journal 62, 1149–1166.
     https://doi.org/10.1080/02626667.2017.1308511
 """
-mean_NmKGE(obs, sim; scaling=nothing, ϵ=1e-2) = mean([Streamfall.NmKGE(obs, sim; scaling=scaling), Streamfall.NmKGE(1.0 ./ (obs .+ ϵ), 1.0 ./ (sim .+ ϵ); scaling=scaling)])
+function mean_NmKGE(obs, sim; scaling=(1.0, 1.0, 1.0), ϵ=1e-2)
+    return mean([
+        Streamfall.NmKGE(obs, sim; scaling=scaling),
+        Streamfall.NmKGE(1.0 ./ (obs .+ ϵ), 1.0 ./ (sim .+ ϵ); scaling=scaling)
+    ])
+end
 
 
-"""Calculate the non-parametric Kling-Gupta Efficiency (KGE) metric.
+"""
+    npKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
+
+Calculate the non-parametric Kling-Gupta Efficiency (KGE) metric.
 
 # Arguments
-- `obs::Vector` : observations
-- `sim::Vector` : modeled
-- `scaling::Tuple` : scaling factors for timing (s), variability (α), magnitude (β)
+- `obs` : observations
+- `sim` : modeled
+- `scaling` : scaling factors for timing (s), variability (α), magnitude (β)
 
 # References
 1. Pool, S., Vis, M., Seibert, J., 2018.
@@ -544,12 +587,8 @@ mean_NmKGE(obs, sim; scaling=nothing, ϵ=1e-2) = mean([Streamfall.NmKGE(obs, sim
     https://doi.org/10.1080/02626667.2018.1552002
 
 """
-function npKGE(obs, sim; scaling=nothing)::Float64
-    if isnothing(scaling)
-        scaling = (1, 1, 1)
-    end
-
-    # flow duration curves
+function npKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
+    # Flow duration curves
     μ_s = mean(sim)
     if μ_s == 0.0
         fdc_sim = repeat([0.0], length(sim))
@@ -581,9 +620,7 @@ function npKGE(obs, sim; scaling=nothing)::Float64
         r = 1.0  # can occur if identical sequences are used (e.g., 0 flows)
     end
 
-    rs = scaling[1]
-    αs = scaling[2]
-    βs = scaling[3]
+    rs, αs, βs = scaling
 
     kge = 1 - sqrt(rs * (r - 1)^2 + αs * (α - 1)^2 + βs * (β - 1)^2)
 
@@ -591,13 +628,16 @@ function npKGE(obs, sim; scaling=nothing)::Float64
 end
 
 
-"""Bounded non-parametric KGE between -1 and 1.
+"""
+    BnpKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
+
+Bounded non-parametric KGE between -1 and 1.
 
 # Arguments
 - `obs::Vector` : observations
 - `sim::Vector` : modeled results
 """
-function BnpKGE(obs, sim; scaling=nothing)::Float64
+function BnpKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
     npkge = npKGE(obs, sim; scaling=scaling)
     return npkge / (2 - npkge)
 end
@@ -606,18 +646,20 @@ end
 """Normalized non-parametric KGE between 0 and 1.
 
 # Arguments
-- `obs::Vector` : observations
-- `sim::Vector` : modeled results
+- `obs` : observations
+- `sim` : modeled results
 """
-function NnpKGE(obs, sim; scaling=nothing)::Float64
+function NnpKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
     return 1 / (2 - npKGE(obs, sim; scaling=scaling))
 end
 
 
-"""Liu Mean Efficiency metric (LME).
+"""
+    LME(obs, sim)::Float64
 
-Reformulation of the KGE metric said to be advantageous for capturing extreme
-flow events.
+Liu Mean Efficiency metric (LME).
+
+Reformulation of the KGE metric said to be advantageous for capturing extreme flow events.
 
 # Arguments
 - `obs::Vector` : observations
@@ -659,7 +701,10 @@ function naive_split_metric(obs::Vector, sim::Vector, n_members::Int, metric::Fu
 end
 
 
-"""Naive approach to split metrics.
+"""
+    naive_split_metric(obs, sim; n_members::Int=365, metric::Function=NNSE, comb_method::Function=mean)
+
+Naive approach to split metrics.
 
 Split metrics are a meta-objective optimization approach which "splits" data
 into subperiods. The objective function is calculated for each subperiod and
@@ -690,20 +735,19 @@ end
 
 
 """
-    inverse_metric(obs, sim, metric; comb_method::Function=mean, ϵ=1e-2)
+    inverse_metric(obs, sim, metric::Function; comb_method::Function=mean, ϵ=1e-2)
 
-A meta-objective function which combines the performance of the
-given metric as applied to the discharge and the inverse of the
-discharge.
+A meta-objective function which combines the performance of the given metric as applied to
+the discharge and the inverse of the discharge.
 
 By default, the combination method is to take the mean.
 
 # Arguments
-- obs : observed
-- sim : modeled results
-- `metric::Function` : objective function
-- `comb_method::Function` : mean
-- ϵ : offset value to use (enables use with zero-flow time steps), defaults to 1e-2
+- `obs` : observed
+- `sim` : modeled results
+- `metric` : objective function
+- `comb_method` : Method to combine outputs (default: `mean`)
+- `ϵ` : offset value to use (enables use with zero-flow time steps), defaults to 1e-2
 
 # References
 1. Garcia, F., Folton, N., Oudin, L., 2017.
@@ -718,6 +762,8 @@ end
 
 
 """
+    skill_score(model_score, benchmark_score)
+
 Allows comparison of any model compared against a pre-defined benchmark, assuming both scores were obtained with
 the same objective function.
 

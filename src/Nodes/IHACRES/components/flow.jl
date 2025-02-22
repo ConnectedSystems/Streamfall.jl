@@ -60,8 +60,8 @@ Tuple of (quickflow, slowflow, outflow) in ML/day
     doi: 10.1016/j.envsoft.2004.11.004
 """
 function calc_flows(prev_quick::Float64, prev_slow::Float64, v_s::Float64,
-                   e_rainfall::Float64, area::Float64, tau_q::Float64, tau_s::Float64
-                   )::Tuple{Float64,Float64,Float64}
+    e_rainfall::Float64, area::Float64, tau_q::Float64, tau_s::Float64
+)::Tuple{Float64,Float64,Float64}
     v_q = 1.0 - v_s  # proportional quick flow
     areal_rainfall = e_rainfall * area
     quick = calc_stores(tau_q, prev_quick, v_q, areal_rainfall)
@@ -77,19 +77,19 @@ end
 Stream routing, taking into account groundwater interactions and water extractions.
 
 # Arguments
-- gw_vol       : groundwater store at t-1
-- storage_coef : groundwater storage factor
-- inflow       : incoming streamflow (flow from previous node)
-- flow         : outflow for the node (local flow)
-- irrig_ext    : volume of irrigation extraction in ML
-- gw_exchange  : groundwater flux. Defaults to 0.0
-                 Negative values represent infiltration into aquifer
+- `gw_vol`       : groundwater store at t-1
+- `storage_coef` : groundwater storage factor
+- `inflow`       : incoming streamflow (flow from previous node)
+- `flow`         : outflow for the node (local flow)
+- `irrig_ext`    : volume of irrigation extraction in ML
+- `gw_exchange`  : groundwater flux. Defaults to 0.0
+                   Negative values represent infiltration into aquifer
 
 # Returns
 Tuple of (gw_store, streamflow) in ML/day
 """
 function routing(gw_vol::Float64, storage_coef::Float64, inflow::Float64, flow::Float64,
-                irrig_ext::Float64, gw_exchange::Float64=0.0)::Tuple{Float64,Float64}
+    irrig_ext::Float64, gw_exchange::Float64=0.0)::Tuple{Float64,Float64}
     tmp_gw_store = gw_vol + (inflow + flow + gw_exchange) - irrig_ext
 
     if tmp_gw_store > 0.0
@@ -141,8 +141,8 @@ Unit Hydrograph module ported from Fortran.
 Tuple of (quick_store, slow_store, outflow)
 """
 function calc_ft_flows(prev_quick::Float64, prev_slow::Float64, e_rain::Float64,
-                      recharge::Float64, area::Float64, a::Float64, b::Float64
-                      )::Tuple{Float64,Float64,Float64}
+    recharge::Float64, area::Float64, a::Float64, b::Float64
+)::Tuple{Float64,Float64,Float64}
     tmp_calc = max(0.0, prev_quick + (e_rain * area))
 
     if tmp_calc > 0.0
@@ -190,9 +190,9 @@ function calc_ft_level(outflow::Float64, level_params::Vector{Float64})::Float64
     end
 
     level = (exp(p1) * outflow^p2) *
-        (1.0 / (
-            1.0 + ((outflow / p3)^p4)^(p5/p4) * exp(p6 / (1.0 + exp(-p7*p8)) * outflow^p7)
-        ))
+            (1.0 / (
+        1.0 + ((outflow / p3)^p4)^(p5 / p4) * exp(p6 / (1.0 + exp(-p7 * p8)) * outflow^p7)
+    ))
     level = max(level, 0.0)
     level += CTF  # add Cease to Flow (base height of stream in local datum)
 

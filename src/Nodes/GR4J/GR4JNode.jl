@@ -49,10 +49,10 @@ GR4J Node
 A four-parameter model with two stores.
 
 # Parameters
-- x1 : maximum capacity of the production store (mm) (> 0)
-- x2 : groundwater exchange coefficient (mm) (value < and > 0 possible)
-- x3 : one day ahead maximum capacity of the routing store (mm, > 0)
-- x4 : time base of unit hydrograph UH1 (days, > 0.5)
+- `x1` : maximum capacity of the production store (mm) (> 0)
+- `x2` : groundwater exchange coefficient (mm) (value < and > 0 possible)
+- `x3` : one day ahead maximum capacity of the routing store (mm, > 0)
+- `x4` : time base of unit hydrograph UH1 (days, > 0.5)
 
 # References
 1. Perrin, C., Michel, C., Andréassian, V., 2003.
@@ -64,20 +64,19 @@ A four-parameter model with two stores.
     Python GR4J
     https://github.com/amacd31/gr4j
 """
-Base.@kwdef mutable struct GR4JNode{P, A<:AbstractFloat} <: GRNJNode
+Base.@kwdef mutable struct GR4JNode{P,A<:AbstractFloat} <: GRNJNode
     const name::String
     const area::A
 
-    # parameters
-    X1::P = Param(350.0, bounds=(1.0, 1500.0))
-    X2::P = Param(0.0, bounds=(-10.0, 5.0))
-    X3::P = Param(40.0, bounds=(1.0, 500.0))
-    X4::P = Param(0.5, bounds=(0.5, 10.0))
-
+    # Parameters
     # x1 : maximum capacity of the production store (mm) (> 0)
     # x2 : groundwater exchange coefficient (mm) (value < and > 0 possible)
     # x3 : one day ahead maximum capacity of the routing store (mm, > 0)
     # x4 : time base of unit hydrograph UH1 (days, > 0.5)
+    X1::P = Param(350.0, bounds=(1.0, 1500.0))
+    X2::P = Param(0.0, bounds=(-10.0, 5.0))
+    X3::P = Param(40.0, bounds=(1.0, 500.0))
+    X4::P = Param(0.5, bounds=(0.5, 10.0))
 
     # stores
     p_store::Vector{A} = [0.0]
@@ -96,15 +95,15 @@ end
 
 
 function prep_state!(node::GR4JNode, timesteps::Int64)
-    resize!(node.p_store, timesteps+1)
-    resize!(node.r_store, timesteps+1)
+    resize!(node.p_store, timesteps + 1)
+    resize!(node.r_store, timesteps + 1)
     node.p_store[2:end] .= 0.0
     node.r_store[2:end] .= 0.0
 
     # Prep cache
     X4 = node.X4.val
     nUH1 = Int(ceil(X4))
-    nUH2 = Int(ceil(2.0*X4))
+    nUH2 = Int(ceil(2.0 * X4))
     cUH1, cUH2 = fill(0.0, nUH1), fill(0.0, nUH2)
     node.UH1 = fill(cUH1, timesteps)
     node.UH2 = fill(cUH2, timesteps)
@@ -113,7 +112,6 @@ function prep_state!(node::GR4JNode, timesteps::Int64)
 
     node.outflow = fill(0.0, timesteps)
 end
-
 
 function GR4JNode(name::String, spec::AbstractDict)
     n = create_node(GR4JNode, name, spec["area"])
@@ -173,7 +171,11 @@ function run_timestep!(
 )
     uh1_cache = node.uh1_ordinates
     uh2_cache = node.uh2_ordinates
-    res = run_gr4j(rain, et, node.X1.val, node.X2.val, node.X3.val, node.X4.val, node.area, node.UH1[ts], node.UH2[ts], uh1_cache, uh2_cache, node.p_store[ts], node.r_store[ts])
+    res = run_gr4j(
+        rain, et, node.X1.val, node.X2.val, node.X3.val, node.X4.val, node.area,
+        node.UH1[ts], node.UH2[ts], uh1_cache, uh2_cache;
+        p_store=node.p_store[ts], r_store=node.r_store[ts]
+    )
     Q, p_s, r_s, UH1, UH2 = res
 
     node_name = node.name
@@ -190,13 +192,20 @@ function run_timestep!(
     return Q
 end
 
+"""
+    update_state!(node::GR4JNode, ps, rs, q, UH1, UH2)::Nothing
+    update_state!(node::GR4JNode, ts::Int64, ps, rs, q, UH1, UH2)::Nothing
 
-function update_state!(node::GR4JNode, ps, rs, q, UH1, UH2)
+Update GR4J node state.
+"""
+function update_state!(node::GR4JNode, ps, rs, q, UH1, UH2)::Nothing
     append!(node.p_store, ps)
     append!(node.r_store, rs)
     append!(node.outflow, q)
     push!(node.UH1, UH1)
     push!(node.UH2, UH2)
+
+    return nothing
 end
 function update_state!(node::GR4JNode, ts::Int64, ps, rs, q, UH1, UH2)::Nothing
     node.p_store[ts+1] = ps
@@ -230,7 +239,7 @@ end
 Reset node. Clears all states back to their initial values.
 """
 function reset!(node::GR4JNode)::Nothing
-    # stores
+    # Stores
     node.p_store = [node.p_store[1]]
     node.r_store = [node.r_store[1]]
 
@@ -248,17 +257,17 @@ end
 
 Determine unit hydrograph ordinates.
 """
-function s_curve(t::F, x4::F; uh2::Bool = false)::F where {F<:Float64}
+function s_curve(t::F, x4::F; uh2::Bool=false)::F where {F<:Float64}
     if t <= 0.0
         return 0.0
     end
 
     ordinate::F = 0.0
     if t < x4
-        ordinate = (t/x4)^2.5
+        ordinate = (t / x4)^2.5
     else
-        if uh2 && (t < 2*x4)
-            ordinate = 1.0 - 0.5*(2 - t/x4)^2.5
+        if uh2 && (t < 2 * x4)
+            ordinate = 1.0 - 0.5 * (2 - t / x4)^2.5
         else
             # t >= x4 if uh1, or
             # t >= 2*x4 if uh2
@@ -271,56 +280,77 @@ end
 
 
 """
-    run_gr4j(P::Float64, E::Float64,
-             X1::Float64, X2::Float64, X3::Float64, X4::Float64, area::Float64,
-             p_store::Float64=0.0, r_store::Float64=0.0)::Tuple
+    run_gr4j(
+        P::F, E::F, X1::F, X2::F, X3::F, X4::F, area::F,
+        UH1::Vector{Float64}, UH2::Vector{Float64},
+        uh1_ordinates::Vector{Float64}, uh2_ordinates::Vector{Float64};
+        p_store=0.0, r_store=0.0
+    )::Tuple where {F<:Float64}
 
 Generated simulated streamflow for given rainfall and potential evaporation.
 
 # Parameters
-- P : Catchment average rainfall
-- E : Catchment average potential evapotranspiration
-- X1 - X4 : X parameters
-- area : Catchment area
-- p_store : Initial production store
-- r_store : Initial state store
+- `P` : Catchment average rainfall
+- `E` : Catchment average potential evapotranspiration
+- `X1` : Maximum capacity of production store (in mm; > 0)
+- `X2` : Groundwater exchange coefficient (in mm; value < and > 0 possible)
+- `X3` : Maximum capacity of routing store (in mm; > 0)
+- `X4` : Time base of the unit hydrograph (in days, > 0.5)
+- `area` : Catchment area
+- `UH1` : Quickflow store
+- `UH2` : Baseflow store
+- `uh1_ordinates` : The proportion of rainfall converted to quickflow for each timestep
+- `uh2_ordinates` : The proportion of rainfall converted to slowflow for each timestep
+- `p_store` : Initial production store
+- `r_store` : Initial state store
 
 # Returns
-- tuple of simulated outflow [ML/day], and intermediate states: p_store, r_store, UH1, UH2
+Tuple of:
+- Simulated outflow [ML/day]
+- intermediate states:
+  - p_store (initial production / percolation)
+  - r_store (initial state)
+  - UH1 (Quickflow)
+  - UH2 (Slowflow)
 """
-function run_gr4j(P::F, E::F, X1::F, X2::F, X3::F, X4::F, area::F, UH1::Vector{Float64}, UH2::Vector{Float64}, uh1_ordinates::Vector{Float64}, uh2_ordinates::Vector{Float64}, p_store=0.0, r_store=0.0)::Tuple where {F<:Float64}
+function run_gr4j(
+    P::F, E::F, X1::F, X2::F, X3::F, X4::F, area::F,
+    UH1::Vector{F}, UH2::Vector{F},
+    uh1_ordinates::Vector{F}, uh2_ordinates::Vector{F};
+    p_store=0.0, r_store=0.0
+)::Tuple where {F<:Float64}
     nUH1::Int64 = Int(ceil(X4))
-    nUH2::Int64 = Int(ceil(2.0*X4))
+    nUH2::Int64 = Int(ceil(2.0 * X4))
 
     @inbounds for t in 2:(nUH1+1)
         t_f = Float64(t)
-        uh1_ordinates[t - 1] = s_curve(t_f, X4) - s_curve(t_f-1.0, X4)
+        uh1_ordinates[t-1] = s_curve(t_f, X4) - s_curve(t_f - 1.0, X4)
     end
 
     @inbounds for t in 2:(nUH2+1)
         t_f = Float64(t)
-        uh2_ordinates[t - 1] = s_curve(t_f, X4, uh2=true) - s_curve(t_f-1.0, X4, uh2=true)
+        uh2_ordinates[t-1] = s_curve(t_f, X4, uh2=true) - s_curve(t_f - 1.0, X4, uh2=true)
     end
 
     Q::F = 0.0
     if P > E
         net_evap = 0.0
-        scaled_net_precip = min((P - E)/X1, 13.0)
+        scaled_net_precip = min((P - E) / X1, 13.0)
         tanh_scaled_net_precip = tanh(scaled_net_precip)
 
-        tmp_a = (p_store/X1)^2
+        tmp_a = (p_store / X1)^2
         numer = (X1 * (1.0 - tmp_a) * tanh_scaled_net_precip)
-        denom = (1.0 + p_store/X1 * tanh_scaled_net_precip)
+        denom = (1.0 + p_store / X1 * tanh_scaled_net_precip)
         reservoir_production = numer / denom
 
         routed_volume = P - E - reservoir_production
     else
-        scaled_net_evap = min((E - P)/X1, 13.0)
+        scaled_net_evap = min((E - P) / X1, 13.0)
         tanh_scaled_net_evap = tanh(scaled_net_evap)
 
-        ps_div_x1 = (2.0 - p_store/X1) * tanh_scaled_net_evap
+        ps_div_x1 = (2.0 - p_store / X1) * tanh_scaled_net_evap
         net_evap = (p_store * (ps_div_x1) /
-                    (1.0 + (1.0 - p_store/X1) * tanh_scaled_net_evap))
+                    (1.0 + (1.0 - p_store / X1) * tanh_scaled_net_evap))
 
         reservoir_production = 0.0
         routed_volume = 0.0
@@ -332,15 +362,15 @@ function run_gr4j(P::F, E::F, X1::F, X2::F, X3::F, X4::F, area::F, UH1::Vector{F
     tmp_b::F = (1 + tmp_a)^0.25
     percolation = p_store / tmp_b
 
-    routed_volume = routed_volume + (p_store-percolation)
+    routed_volume = routed_volume + (p_store - percolation)
 
     @inbounds for i in 1:nUH1-1
-        UH1[i] = UH1[i+1] + uh1_ordinates[i]*routed_volume
+        UH1[i] = UH1[i+1] + uh1_ordinates[i] * routed_volume
     end
     UH1[end] = uh1_ordinates[end] * routed_volume
 
     @inbounds for j in 1:nUH2-1
-        UH2[j] = UH2[j+1] + uh2_ordinates[j]*routed_volume
+        UH2[j] = UH2[j+1] + uh2_ordinates[j] * routed_volume
     end
     UH2[end] = uh2_ordinates[end] * routed_volume
 
@@ -353,7 +383,7 @@ function run_gr4j(P::F, E::F, X1::F, X2::F, X3::F, X4::F, area::F, UH1::Vector{F
     R2 = r_store / tmp_b
     QR = r_store - R2
     r_store = R2
-    QD = max(0.0, UH2[1]*0.1+groundwater_exchange)
+    QD = max(0.0, UH2[1] * 0.1 + groundwater_exchange)
 
     Q = (QR + QD) * area
 

@@ -20,7 +20,7 @@ Adapted with kind permission from: https://github.com/jdherman/GRA-2020-SALib
     tion of hydrological models, Hydrol. Earth Syst. Sci., 5, 13-26,
     https://doi.org/10.5194/hess-5-13-2001.
 """
-Base.@kwdef mutable struct SimpleHyModNode{P, A<:AbstractFloat} <: HyModNode
+Base.@kwdef mutable struct SimpleHyModNode{P,A<:AbstractFloat} <: HyModNode
     const name::String
     const area::A
 
@@ -56,9 +56,16 @@ function SimpleHyModNode(name::String, spec::AbstractDict)
     return n
 end
 
-
-function SimpleHyModNode(name::String, area::Float64, sm_max::Float64, B::Float64,
-                         alpha::Float64, Kf::Float64, Ks::Float64)
+"""
+    SimpleHyModNode(
+        name::String, area::Float64, sm_max::Float64, B::Float64,
+        alpha::Float64, Kf::Float64, Ks::Float64
+    )
+"""
+function SimpleHyModNode(
+    name::String, area::Float64, sm_max::Float64, B::Float64,
+    alpha::Float64, Kf::Float64, Ks::Float64
+)
     n = create_node(SimpleHyModNode, name, area)
     update_params!(n, sm_max, B, alpha, Kf, Ks)
 
@@ -75,11 +82,11 @@ end
 
 
 function prep_state!(node::SimpleHyModNode, sim_length::Int64)::Nothing
-    resize!(node.Sm, sim_length+1)
-    resize!(node.Sf1, sim_length+1)
-    resize!(node.Sf2, sim_length+1)
-    resize!(node.Sf3, sim_length+1)
-    resize!(node.Ss1, sim_length+1)
+    resize!(node.Sm, sim_length + 1)
+    resize!(node.Sf1, sim_length + 1)
+    resize!(node.Sf2, sim_length + 1)
+    resize!(node.Sf3, sim_length + 1)
+    resize!(node.Ss1, sim_length + 1)
 
     node.Sm[2:end] .= 0.0
     node.Sf1[2:end] .= 0.0
@@ -94,8 +101,10 @@ function prep_state!(node::SimpleHyModNode, sim_length::Int64)::Nothing
 end
 
 """
-    run_timestep!(node::HyModNode, climate::Climate, timestep::Int,
-                  inflow::Float64, extraction::Float64, exchange::Float64)
+    run_timestep!(
+        node::SimpleHyModNode, climate::Climate, timestep::Int;
+        inflow=nothing, extraction=nothing, exchange=nothing
+    )::Float64
 
 Run given HyMod node for a time step.
 """
@@ -136,20 +145,20 @@ function run_hymod!(node::SimpleHyModNode, ts::Int64, P::F, PET::F, inflow::F, e
     Ks::F = node.Ks.val::F
 
     # Calculate fluxes
-    Peff::F = P*(1.0 - max(1.0 - Sm/Sm_max, 0.0)^B)  # PDM model Moore 1985
-    ETa::F = min(PET*(Sm/Sm_max), Sm)
+    Peff::F = P * (1.0 - max(1.0 - Sm / Sm_max, 0.0)^B)  # PDM model Moore 1985
+    ETa::F = min(PET * (Sm / Sm_max), Sm)
 
-    Qf1::F = Kf*Sf1
-    Qf2::F = Kf*Sf2
-    Qf3::F = Kf*Sf3
-    Qs1::F = Ks*Ss1
+    Qf1::F = Kf * Sf1
+    Qf2::F = Kf * Sf2
+    Qf3::F = Kf * Sf3
+    Qs1::F = Ks * Ss1
 
     # update state variables
     Sm_t1::F = max(Sm + P - Peff - ETa, 0.0)
-    Sf1_t1::F = Sf1 + alpha*Peff - Qf1
+    Sf1_t1::F = Sf1 + alpha * Peff - Qf1
     Sf2_t1::F = Sf2 + Qf1 - Qf2
     Sf3_t1::F = Sf3 + Qf2 - Qf3
-    Ss1_t1::F = Ss1 + (1-alpha)*Peff - Qs1
+    Ss1_t1::F = Ss1 + (1 - alpha) * Peff - Qs1
 
     Qtmp::F = (Qs1 + Qf3) * node.area
     Q_t::F = inflow + Qtmp - ext + flux
@@ -171,17 +180,6 @@ function update_params!(node::HyModNode, Sm_max::F, B::F, alpha::F, Kf::F, Ks::F
     node.Ks = Param(Ks, bounds=node.Ks.bounds::Tuple)
 end
 
-
-# function update_state!(node::HyModNode, Sm, Sf1, Sf2, Sf3, Ss1, Q)::Nothing
-#     append!(node.Sm, Sm)
-#     append!(node.Sf1, Sf1)
-#     append!(node.Sf2, Sf2)
-#     append!(node.Sf3, Sf3)
-#     append!(node.Ss1, Ss1)
-#     append!(node.outflow, Q)
-
-#     return nothing
-# end
 function update_state!(
     node::HyModNode, ts::Int, Sm::F, Sf1::F, Sf2::F, Sf3::F, Ss1::F, Q::F
 )::Nothing where {F<:Float64}

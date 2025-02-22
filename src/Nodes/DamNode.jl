@@ -26,7 +26,7 @@ function c_dam_outflow(discharge, irrigation_extraction)
 end
 
 
-Base.@kwdef mutable struct DamNode{P, A<:AbstractFloat} <: NetworkNode
+Base.@kwdef mutable struct DamNode{P,A<:AbstractFloat} <: NetworkNode
     name::String
     area::A
 
@@ -74,12 +74,12 @@ function DamNode(
     calc_dam_outflow::Function
 ) where {F<:Float64}
     return DamNode(name, area, max_storage, storage_coef,
-                   calc_dam_level, calc_dam_area, calc_dam_discharge, calc_dam_outflow,
-                   F[initial_storage], F[], F[], F[], F[], F[], F[], F[])
+        calc_dam_level, calc_dam_area, calc_dam_discharge, calc_dam_outflow,
+        F[initial_storage], F[], F[], F[], F[], F[], F[], F[])
 end
 
 """
-    DamNode(name::String, spec::Dict)
+    DamNode(name::String, spec::AbstractDict)
 
 Create DamNode from a given specification.
 """
@@ -136,7 +136,7 @@ function storage(node::DamNode)
 end
 
 function prep_state!(node::DamNode, timesteps::Int64)
-    resize!(node.storage, timesteps+1)
+    resize!(node.storage, timesteps + 1)
     node.storage[2:end] .= 0.0
 
     node.effective_rainfall = zeros(timesteps)
@@ -204,13 +204,13 @@ end
 
 
 function run_node!(node::DamNode, climate::Climate;
-                   inflow=nothing, extraction=nothing, exchange=nothing)
+    inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
     prep_state!(node, timesteps)
 
     for ts in 1:timesteps
         run_node!(node, climate, ts;
-                  inflow=inflow, extraction=extraction, exchange=exchange)
+            inflow=inflow, extraction=extraction, exchange=exchange)
     end
 
     return nothing
@@ -289,7 +289,7 @@ function run_node!(
     discharge = node.calc_dam_discharge(volume, node.max_storage)
 
     updated_store = update_volume(volume, inflow, gw_flux, rain, et,
-                                  dam_area, extractions, discharge, node.max_storage)
+        dam_area, extractions, discharge, node.max_storage)
     outflow = node.calc_dam_outflow(discharge, extractions)
 
     update_state!(node, ts, updated_store, rain, et, dam_area, discharge, outflow)

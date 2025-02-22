@@ -8,7 +8,7 @@ include("./components/flow.jl")
 abstract type IHACRESNode <: NetworkNode end
 
 
-Base.@kwdef mutable struct IHACRESBilinearNode{P, A<:AbstractFloat} <: IHACRESNode
+Base.@kwdef mutable struct IHACRESBilinearNode{P,A<:AbstractFloat} <: IHACRESNode
     const name::String
     const area::A
 
@@ -21,7 +21,7 @@ Base.@kwdef mutable struct IHACRESBilinearNode{P, A<:AbstractFloat} <: IHACRESNo
     b::P = Param(0.1, bounds=(1e-3, 0.1))  # slowflow storage coefficent == (1/tau_s)
 
     storage_coef::P = Param(2.9, bounds=(1e-10, 10.0))
-    alpha::P = Param(0.1, bounds=(1e-5, 1 - 1/10^9))
+    alpha::P = Param(0.1, bounds=(1e-5, 1 - 1 / 10^9))
 
     # const level_params::Array{P, 1} = [
     #     Param(-0.01, bounds=(-10.0, -0.01)),  # p1
@@ -50,13 +50,13 @@ end
 
 
 function prep_state!(node::T, timesteps::Int64)::Nothing where {T<:IHACRESNode}
-    resize!(node.storage, timesteps+1)
+    resize!(node.storage, timesteps + 1)
     node.storage[2:end] .= 0.0
 
-    resize!(node.quick_store, timesteps+1)
+    resize!(node.quick_store, timesteps + 1)
     node.quick_store[2:end] .= 0.0
 
-    resize!(node.slow_store, timesteps+1)
+    resize!(node.slow_store, timesteps + 1)
     node.slow_store[2:end] .= 0.0
 
     node.outflow = fill(0.0, timesteps)
@@ -65,7 +65,7 @@ function prep_state!(node::T, timesteps::Int64)::Nothing where {T<:IHACRESNode}
     node.inflow = fill(0.0, timesteps)
     # node.level = fill(0.0, timesteps)
 
-    resize!(node.gw_store, timesteps+1)
+    resize!(node.gw_store, timesteps + 1)
     node.gw_store[2:end] .= 0.0
 
     return nothing
@@ -126,8 +126,8 @@ end
 Create a IHACRES node that adopts the bilinear CMD module.
 """
 function IHACRESBilinearNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
-                      a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
-                      store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
+    a::Float64, b::Float64, s_coef::Float64, alpha::Float64,
+    store::Float64, quick::Float64, slow::Float64, gw_store::Float64)
     n = create_node(IHACRESBilinearNode, name, area)
 
     update_params!(n, d, d2, e, f, a, b, s_coef, alpha)
@@ -192,9 +192,9 @@ end
 
 """
     run_timestep!(
-        node::IHACRESBilinearNode, climate::Climate, timestep::Int,
-        inflow::Float64, extraction::Float64, exchange::Float64
-    )
+        node::IHACRESNode, climate::Climate, timestep::Int64;
+        inflow=nothing, extraction=nothing, exchange=nothing
+    )::Float64
 
 Run the given IHACRESBilinearNode for a timestep.
 """
@@ -310,12 +310,12 @@ end
 
 
 function run_node_with_temp!(sn::StreamfallNetwork, nid::Int64, climate::Climate;
-                             inflow=nothing, extraction=nothing, exchange=nothing)
+    inflow=nothing, extraction=nothing, exchange=nothing)
     node = sn[nid]
     timesteps = sim_length(climate)
     @inbounds for ts in 1:timesteps
         run_node_with_temp!(node, climate, ts;
-                            inflow=inflow, extraction=extraction, exchange=exchange)
+            inflow=inflow, extraction=extraction, exchange=exchange)
     end
 
     return node.outflow, node.level
@@ -323,11 +323,11 @@ end
 
 
 function run_node_with_temp!(node::IHACRESBilinearNode, climate::Climate;
-                             inflow=nothing, extraction=nothing, exchange=nothing)
+    inflow=nothing, extraction=nothing, exchange=nothing)
     timesteps = sim_length(climate)
     @inbounds for ts in 1:timesteps
         run_node_with_temp!(node, climate, ts;
-                            inflow=inflow, extraction=extraction, exchange=exchange)
+            inflow=inflow, extraction=extraction, exchange=exchange)
     end
 
     return node.outflow, node.level
@@ -335,7 +335,7 @@ end
 
 
 function run_node_with_temp!(node::IHACRESBilinearNode, climate::Climate, timestep::Int64;
-                             inflow=nothing, extraction=nothing, exchange=nothing)
+    inflow=nothing, extraction=nothing, exchange=nothing)
     ts = timestep
     P, T = climate_values(node, climate, ts)
     i = timestep_value(ts, node.name, "_inflow", inflow)
@@ -346,36 +346,39 @@ end
 
 
 """
-    run_node_with_temp!(s_node::IHACRESBilinearNode,
-                        rain::Float64,
-                        temp::Float64,
-                        inflow::Float64,
-                        ext::Float64,
-                        gw_exchange::Float64=0.0;
-                        current_store=nothing,
-                        quick_store=nothing,
-                        slow_store=nothing
-                        gw_store=nothing)::Tuple{Float64, Float64}
+    run_node_with_temp!(
+        s_node::IHACRESBilinearNode,
+        rain::Float64,
+        temp::Float64,
+        inflow::Float64,
+        ext::Float64,
+        gw_exchange::Float64=0.0;
+        current_store=nothing,
+        quick_store=nothing,
+        slow_store=nothing,
+        gw_store=nothing
+    )::Tuple{Float64,Float64}
 
 Run node with temperature data to calculate outflow and update state.
 """
-function run_node_with_temp!(s_node::IHACRESBilinearNode,
-                             rain::Float64,
-                             temp::Float64,
-                             inflow::Float64,
-                             ext::Float64,
-                             gw_exchange::Float64=0.0;
-                             current_store=nothing,
-                             quick_store=nothing,
-                             slow_store=nothing,
-                             gw_store=nothing)::Tuple{Float64, Float64}
+function run_node_with_temp!(
+    s_node::IHACRESBilinearNode,
+    rain::Float64,
+    temp::Float64,
+    inflow::Float64,
+    ext::Float64,
+    gw_exchange::Float64=0.0;
+    current_store=nothing,
+    quick_store=nothing,
+    slow_store=nothing,
+    gw_store=nothing
+)::Tuple{Float64,Float64}
     current_store = s_node.storage[end]
     quick_store = s_node.quick_store[end]
     slow_store = s_node.slow_store[end]
     gw_store = s_node.gw_store[end]
 
     (mf, e_rainfall, recharge) = calc_ft_interim_cmd(
-        interim_results,
         current_store,
         rain,
         s_node.d,
