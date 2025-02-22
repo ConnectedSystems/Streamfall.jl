@@ -82,15 +82,15 @@ function Streamfall.Viz.quickplot(obs::Vector, sim::Vector, xticklabels::Vector,
         # Add small constant in case of 0-flow
         obs = copy(obs)
         sim = copy(sim)
-        obs[obs .== 0.0] .+= 1e-4
-        sim[sim .== 0.0] .+= 1e-4
+        obs[obs.==0.0] .+= 1e-4
+        sim[sim.==0.0] .+= 1e-4
     end
 
     scale = log == false ? identity : log10
 
-    f = Figure(size=(850,400))
-    flow_ax = Axis(f[1,1]; xlabel="Date", ylabel="Streamflow", yscale=scale)
-    qq_ax = Axis(f[1,2]; xlabel="Observed", ylabel="Modeled", xscale=scale, yscale=scale)
+    f = Figure(size=(850, 400))
+    flow_ax = Axis(f[1, 1]; xlabel="Date", ylabel="Streamflow", yscale=scale)
+    qq_ax = Axis(f[1, 2]; xlabel="Observed", ylabel="Modeled", xscale=scale, yscale=scale)
 
     label = "$(label) ($(metric_name): $(score))"
     lines!(flow_ax, xticklabels, obs, label="Observed")
@@ -218,7 +218,7 @@ function Streamfall.Viz.temporal_cross_section(
         ax.xticks = (1:12:length(xlabels), xlabels[1:12:end])
     end
 
-    ax.xticklabelrotation = π/4
+    ax.xticklabelrotation = π / 4
 
     # Apply log scale if specified
     if !isnothing(tmp) && (tmp in logscale)
@@ -360,7 +360,7 @@ function Streamfall.Viz.temporal_cross_section(
         ax.xticks = (1:12:length(xlabels), xlabels[1:12:end])
     end
 
-    ax.xticklabelrotation = π/4
+    ax.xticklabelrotation = π / 4
 
     # Apply log scale if specified
     if !isnothing(tmp) && (tmp in logscale)
