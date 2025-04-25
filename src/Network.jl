@@ -334,35 +334,6 @@ function Base.show(io::IO, sn::StreamfallNetwork)
     end
 end
 
-
-"""
-    plot_network(sn::StreamfallNetwork)
-
-Simple plot of stream network.
-"""
-function plot_network(sn::StreamfallNetwork; as_html=false)
-    node_labels = ["$(sn[i].name)\n" * string(nameof(typeof(sn[i]))) for i in vertices(sn.mg)]
-
-    if as_html
-        plot_func = gplothtml
-    else
-        plot_func = gplot
-    end
-
-    plot_func(sn.mg, nodelabel=node_labels)
-end
-
-
-"""
-    save_figure(sn::StreamfallNetwork, fn::String)
-
-Save a figure of the network in SVG format.
-"""
-function save_figure(sn::StreamfallNetwork, fn::String)
-    draw(SVG(fn, 16cm, 16cm), plot_network(sn))
-end
-
-
 function Base.iterate(sn::StreamfallNetwork, state=1)
     if state > length(sn)
         return nothing

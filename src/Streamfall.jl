@@ -274,7 +274,6 @@ function run_node!(
 end
 
 include("Analysis/Analysis.jl")
-# include("plotting.jl")
 include("viz/Viz.jl")
 include("viz/NetworkViz.jl")
 
@@ -302,7 +301,7 @@ export extract_flow, extract_climate, align_time_frame
 import .Viz: quickplot, temporal_cross_section, save_figure, save_figure!
 import .NetworkViz: plot_network
 
-export plot_network, quickplot,temporal_cross_section, save_figure, save_figure!
+export plot_network, quickplot, temporal_cross_section, save_figure, save_figure!
 
 # Data interface (climate)
 export timesteps

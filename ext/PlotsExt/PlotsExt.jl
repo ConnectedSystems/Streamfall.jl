@@ -1,40 +1,72 @@
+module PlotsExt
+
 using Plots, StatsPlots
 using Plots.Measures
-import Plots: plot, plot!
+
 using DataFrames, Dates, Statistics, Distributions, LaTeXStrings
 import Bootstrap: bootstrap, BalancedSampling
 
-import .Analysis: TemporalCrossSection
+using Streamfall
+import Streamfall: Analysis.TemporalCrossSection
 
+function Streamfall.Viz.plot(node::NetworkNode, climate::Climate)
+    return Plots.plot(
+        timesteps(climate),
+        node.outflow,
+        label=node.name,
+        xlabel="Date",
+        ylabel="Outflows",
+    )
+end
 
-function quickplot(node::NetworkNode)
-    fig = plot(node.outflow)
+function Streamfall.Viz.plot!(node::NetworkNode, climate::Climate)
+    Plots.plot!(
+        timesteps(climate),
+        node.outflow,
+        label=node.name
+    )
+end
+function Streamfall.Viz.plot!(f, node::NetworkNode, climate::Climate)
+    Plots.plot!(f, timesteps(climate), node.outflow, label=node.name)
+end
+
+function Streamfall.Viz.plot(node::DamNode, climate::Climate)
+    levels = Plots.plot(timesteps(climate), node.level, xlabel="Date", ylabel="Dam Level", label=node.name)
+    outflows = Plots.plot(timesteps(climate), node.outflow, xlabel="Date", ylabel="Discharge", label=node.name)
+
+    combined = Plots.plot(levels, outflows, size=(1000, 400), left_margin=10mm, bottom_margin=5mm, layout=(1, 2))
+
+    return combined
+end
+
+function Streamfall.Viz.quickplot(node::NetworkNode)
+    fig = Plots.plot(node.outflow)
     return fig
 end
 
 
-function quickplot(node::NetworkNode, climate::Climate)
-    date = timesteps(climate)
+function Streamfall.Viz.quickplot(node::NetworkNode, climate::Climate)
+    all_dates = timesteps(climate)
 
-    @assert length(date) == length(node.outflow) || "Date length and result lengths do not match!"
+    @assert length(all_dates) == length(node.outflow) || "Date length and result lengths do not match!"
 
-    fig = plot(date, node.outflow)
+    fig = plot(all_dates, node.outflow)
 
     return fig
 end
-function quickplot(obs, node::NetworkNode, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
-    return quickplot(obs, node.outflow, climate, label, log; burn_in=burn_in, limit=limit, metric=metric)
+function Streamfall.Viz.quickplot(obs, node::NetworkNode, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
+    return Streamfall.Viz.quickplot(obs, node.outflow, climate, label, log; burn_in=burn_in, limit=limit, metric=metric)
 end
-function quickplot(obs::DataFrame, sim::Vector, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
-    return quickplot(Matrix(obs[:, Not("Date")])[:, 1], sim, climate, label, log; burn_in, limit, metric)
+function Streamfall.Viz.quickplot(obs::DataFrame, sim::Vector, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
+    return Streamfall.Viz.quickplot(Matrix(obs[:, Not("Date")])[:, 1], sim, climate, label, log; burn_in, limit, metric)
 end
-function quickplot(obs::Vector, sim::Vector, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
+function Streamfall.Viz.quickplot(obs::Vector, sim::Vector, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
     date = timesteps(climate)
     last_e = !isnothing(limit) ? limit : lastindex(obs)
     show_range = burn_in:last_e
     return quickplot(obs[show_range], sim[show_range], date[show_range], label, log; metric=metric)
 end
-function quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled", log=false; metric=Streamfall.mKGE)
+function Streamfall.Viz.quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled", log=false; metric=Streamfall.mKGE)
     @assert length(xticklabels) == length(obs) || "x-axis tick label length and observed lengths do not match!"
     @assert length(xticklabels) == length(sim) || "x-axis tick label length and simulated lengths do not match!"
 
@@ -48,8 +80,8 @@ function quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled
     end
 
     label = "$(label) ($(metric_name): $(score))"
-    fig = plot(
-        xticklabels, obs,
+    fig = Plots.plot(
+        xticklabels, obs;
         label="Observed",
         legend=:best,
         ylabel="Streamflow",
@@ -75,14 +107,14 @@ function quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled
         yaxis!(qqfig, :log10)
     end
 
-    combined = plot(fig, qqfig, size=(1000, 500), left_margin=10mm, bottom_margin=5mm, layout=(1, 2))
+    combined = Plots.plot(fig, qqfig, size=(1000, 500), left_margin=10mm, bottom_margin=5mm, layout=(1, 2))
 
     return combined
 end
 
 
 """
-    plot_residuals(obs::Array, sim::Array; xlabel="", ylabel="", title="")
+    plot_residuals(obs::AbstractVector, sim::AbstractVector; xlabel="", ylabel="", title="")
 
 Plot residual between two sequences.
 
@@ -93,24 +125,16 @@ Plot residual between two sequences.
 - ylabel : y-axis label
 - title : title text
 """
-function plot_residuals(x::Array, y::Array; xlabel="", ylabel="", title="")
+function Streamfall.Viz.plot_residuals(x::AbstractVector, y::AbstractVector; xlabel="", ylabel="", title="")
     # 1:1 Plot
-    fig_1to1 = scatter(x, y, legend=false,
-        markerstrokewidth=0, markerstrokealpha=0, alpha=0.2)
-    plot!(x, y, color=:red, markersize=0.1, markerstrokewidth=0,
-        xlabel=xlabel, ylabel=ylabel, title=title)
+    fig_1to1 = scatter(
+        x, y;
+        legend=false,
+        markerstrokewidth=0, markerstrokealpha=0, alpha=0.2, smooth=true,
+        xlabel=xlabel, ylabel=ylabel, title=title
+    )
 
     return fig_1to1
-end
-
-
-"""Symmetrical log values.
-
-https://kar.kent.ac.uk/32810/2/2012_Bi-symmetric-log-transformation_v5.pdf
-https://discourse.julialang.org/t/symmetrical-log-plot/45709/3
-"""
-function symlog(y)
-    return sign.(y) .* log10.(1.0 .+ abs.(y))
 end
 
 
@@ -129,7 +153,8 @@ Filters out leap days.
 - ylabel : Optional replacement ylabel. Uses name of `func` if not provided.
 - `period::Function` : Method from `Dates` package to group (defaults to `monthday`)
 """
-function temporal_cross_section(dates, obs;
+function Streamfall.Viz.temporal_cross_section(
+    dates, obs;
     title="", ylabel="ME", label=nothing,
     period::Function=monthday,
     kwargs...)  # show_extremes::Bool=false,
@@ -188,10 +213,9 @@ function temporal_cross_section(dates, obs;
     wr95_m_ind = round(xsect_res.mean_95, digits=2)
     wr95_sd_ind = round(xsect_res.std_95, digits=2)
 
-    fig = plot(xlabels, lower_95, fillrange=upper_95, color="lightblue", alpha=0.3, label="CI₉₅ μ: $(wr95_m_ind), σ: $(wr95_sd_ind)", linealpha=0)
-    plot!(fig, xlabels, lower_75, fillrange=upper_75, color="lightblue", alpha=0.5, label="CI₇₅ μ: $(wr75_m_ind), σ: $(wr75_sd_ind)", linealpha=0)
-    plot!(
-        fig, xlabels, x_section,
+    fig = Plots.plot(xlabels, lower_95; fillrange=upper_95, color="lightblue", alpha=0.3, label="CI₉₅ μ: $(wr95_m_ind), σ: $(wr95_sd_ind)", linealpha=0)
+    Plots.plot!(fig, xlabels, lower_75; fillrange=upper_75, color="lightblue", alpha=0.5, label="CI₇₅ μ: $(wr75_m_ind), σ: $(wr75_sd_ind)", linealpha=0)
+    Plots.plot!(fig, xlabels, x_section;
         label="Mean of $(label) μ: $(m_ind), σ: $(sd_ind)",
         color="black",
         xlabel=nameof(period),
@@ -203,9 +227,8 @@ function temporal_cross_section(dates, obs;
         left_margin=5mm,
         bottom_margin=5mm,
         title=title,
-        yformatter=format_func;
-        kwargs...
-    )
+        yformatter=format_func,
+        kwargs...)
 
     # if show_extremes
     #     scatter!(fig, xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
@@ -237,7 +260,7 @@ Filters out leap days.
 - `label` : Optional legend label. Uses `ylabel` if not provided.
 - `period` : Method from `Dates` package to group (defaults to `month`)
 """
-function temporal_cross_section(
+function Streamfall.Viz.temporal_cross_section(
     dates, obs, sim;
     title="", ylabel="Median Error", label=nothing, period::Function=monthday, kwargs...
 )  # show_extremes::Bool=false,
@@ -296,9 +319,9 @@ function temporal_cross_section(
     wr95_m_ind = round(xsect_res.mean_95, digits=2)
     wr95_sd_ind = round(xsect_res.std_95, digits=2)
 
-    fig = plot(xlabels, lower_95, fillrange=upper_95, color="lightblue", alpha=0.3, label="CI₉₅ μ: $(wr95_m_ind), σ: $(wr95_sd_ind)", linealpha=0)
-    plot!(fig, xlabels, lower_75, fillrange=upper_75, color="lightblue", alpha=0.5, label="CI₇₅ μ: $(wr75_m_ind), σ: $(wr75_sd_ind)", linealpha=0)
-    plot!(
+    fig = Plots.plot(xlabels, lower_95, fillrange=upper_95, color="lightblue", alpha=0.3, label="CI₉₅ μ: $(wr95_m_ind), σ: $(wr95_sd_ind)", linealpha=0)
+    Plots.plot!(fig, xlabels, lower_75, fillrange=upper_75, color="lightblue", alpha=0.5, label="CI₇₅ μ: $(wr75_m_ind), σ: $(wr75_sd_ind)", linealpha=0)
+    Plots.plot!(
         fig, xlabels, x_section,
         label="$(label) μ: $(m_ind), σ: $(sd_ind)",
         color="black",
@@ -323,32 +346,4 @@ function temporal_cross_section(
     return fig
 end
 
-function plot(node::NetworkNode, climate::Climate)
-    return plot(
-        timesteps(climate),
-        node.outflow,
-        label=node.name,
-        xlabel="Date",
-        ylabel="Outflows",
-    )
-end
-
-function plot!(node::NetworkNode, climate::Climate)
-    plot!(
-        timesteps(climate),
-        node.outflow,
-        label=node.name
-    )
-end
-function plot!(f, node::NetworkNode, climate::Climate)
-    plot!(f, timesteps(climate), node.outflow, label=node.name)
-end
-
-function plot(node::DamNode, climate::Climate)
-    levels = plot(timesteps(climate), node.level, xlabel="Date", ylabel="Dam Level", label=node.name)
-    outflows = plot(timesteps(climate), node.outflow, xlabel="Date", ylabel="Discharge", label=node.name)
-
-    combined = plot(levels, outflows, size=(1000, 400), left_margin=10mm, bottom_margin=5mm, layout=(1, 2))
-
-    return combined
 end

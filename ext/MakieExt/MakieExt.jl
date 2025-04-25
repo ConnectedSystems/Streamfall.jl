@@ -97,11 +97,52 @@ function Streamfall.Viz.quickplot(obs::Vector, sim::Vector, xticklabels::Vector,
     lines!(flow_ax, xticklabels, sim; label=label, alpha=0.5)
 
     qqplot!(
-        qq_ax, obs, sim;
+        qq_ax, obs[burn_in:end], sim[burn_in:end];
         qqline=:identity, strokewidth=0.01, strokecolor=(:blue, 0.01), # legend=false, strokewidth=0.03, strokealpha=0.1,
         markercolor=(:blue, 0.02)
     )
     leg = Legend(f[2, 1:2], flow_ax; orientation=:horizontal)
+
+    return f
+end
+
+"""
+    plot_residuals(obs::AbstractVector, sim::AbstractVector; xlabel="", ylabel="", title="")
+
+Plot residual between two sequences.
+
+# Arguments
+- x : x-axis data
+- y : y-axis data
+- xlabel : x-axis label
+- ylabel : y-axis label
+- title : title text
+"""
+function Streamfall.Viz.plot_residuals(x::AbstractVector, y::AbstractVector; xlabel="", ylabel="", title="")
+    # 1:1 Plot
+    f, ax, sp = scatter(x, y, strokewidth=0, alpha=0.2)
+
+    # Calculate means
+    x_mean = mean(x)
+    y_mean = mean(y)
+
+    # Calculate slope (β)
+    β = sum((x .- x_mean) .* (y .- y_mean)) / sum((x .- x_mean) .^ 2)
+
+    # Calculate intercept (α)
+    α = y_mean - β * x_mean
+
+    # Approximate x values for the line
+    x_line = range(minimum(x), maximum(x), length=length(x))
+
+    # Calculate corresponding y values
+    y_line = α .+ β .* x_line
+
+    ax.xlabel = xlabel
+    ax.ylabel = ylabel
+    ax.title = title
+
+    lines!(ax, y_line; color=(:black, 0.3))
 
     return f
 end
