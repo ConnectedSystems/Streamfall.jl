@@ -4,8 +4,6 @@ using Statistics
 using Graphs, MetaGraphs, Distributed, DataFrames
 
 
-const MODPATH = @__DIR__
-
 include("Network.jl")
 include("Nodes/Node.jl")
 include("Climate.jl")

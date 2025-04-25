@@ -71,7 +71,7 @@ function Streamfall.Viz.quickplot(
     show_range = burn_in:last_e
     return Streamfall.Viz.quickplot(obs[show_range], sim[show_range], date[show_range], label, log; metric=metric)
 end
-function Streamfall.Viz.quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled", log=false; metric=Streamfall.mKGE)
+function Streamfall.Viz.quickplot(obs::Vector, sim::Vector, xticklabels::Vector; label="Modeled", log=false, metric=Streamfall.mKGE)
     @assert length(xticklabels) == length(obs) || "x-axis tick label length and observed lengths do not match!"
     @assert length(xticklabels) == length(sim) || "x-axis tick label length and simulated lengths do not match!"
 

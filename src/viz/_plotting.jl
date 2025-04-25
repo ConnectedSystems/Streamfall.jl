@@ -1,6 +1,6 @@
-using Plots, StatsPlots
-using Plots.Measures
-import Plots: plot, plot!
+using StatsPlots
+using StatsPlots.Plots
+import StatsPlots: plot, plot!
 using DataFrames, Dates, Statistics, Distributions, LaTeXStrings
 import Bootstrap: bootstrap, BalancedSampling
 
@@ -142,7 +142,7 @@ function temporal_cross_section(dates, obs;
     logscale = [:log, :log10]
     tmp = nothing
 
-    xsect_res = TemporalCrossSection(dates, obs, period)
+    xsect_res = TemporalCrossSection(dates, obs; period)
 
     if :yscale in arg_keys || :yaxis in arg_keys
         tmp = (:yscale in arg_keys) ? kwargs[:yscale] : kwargs[:yaxis]
@@ -153,7 +153,7 @@ function temporal_cross_section(dates, obs;
             # Format function for y-axis tick labels (e.g., 10^x)
             format_func = y -> (y != 0) ? L"%$(Int(round(sign(y)) * 10))^{%$(round(abs(y), digits=1))}" : L"0"
 
-            log_xsect_res = TemporalCrossSection(dates, log_obs, period)
+            log_xsect_res = TemporalCrossSection(dates, log_obs; period)
             target = log_xsect_res.cross_section
         else
             target = xsect_res.cross_section
@@ -250,7 +250,7 @@ function temporal_cross_section(
     logscale = [:log, :log10]
     tmp = nothing
 
-    xsect_res = TemporalCrossSection(dates, obs, sim, period)
+    xsect_res = TemporalCrossSection(dates, obs, sim; period)
     target = xsect_res.cross_section
 
     if :yscale in arg_keys || :yaxis in arg_keys
@@ -263,7 +263,7 @@ function temporal_cross_section(
             # Format function for y-axis tick labels (e.g., 10^x)
             format_func = y -> (y != 0) ? L"%$(Int(round(sign(y)) * 10))^{%$(round(abs(y), digits=1))}" : L"0"
 
-            log_xsect_res = TemporalCrossSection(dates, log_obs, log_sim, period)
+            log_xsect_res = TemporalCrossSection(dates, log_obs, log_sim; period)
             target = log_xsect_res.cross_section
         end
     end

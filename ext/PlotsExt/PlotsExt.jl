@@ -1,13 +1,14 @@
 module PlotsExt
 
-using Plots, StatsPlots
-using Plots.Measures
+using StatsPlots
+using StatsPlots.Plots.Measures
 
 using DataFrames, Dates, Statistics, Distributions, LaTeXStrings
 import Bootstrap: bootstrap, BalancedSampling
 
 using Streamfall
 import Streamfall: Analysis.TemporalCrossSection
+import Streamfall.Viz: symlog
 
 function Streamfall.Viz.plot(node::NetworkNode, climate::Climate)
     return Plots.plot(
@@ -50,23 +51,23 @@ function Streamfall.Viz.quickplot(node::NetworkNode, climate::Climate)
 
     @assert length(all_dates) == length(node.outflow) || "Date length and result lengths do not match!"
 
-    fig = plot(all_dates, node.outflow)
+    fig = Plots.plot(all_dates, node.outflow)
 
     return fig
 end
-function Streamfall.Viz.quickplot(obs, node::NetworkNode, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
-    return Streamfall.Viz.quickplot(obs, node.outflow, climate, label, log; burn_in=burn_in, limit=limit, metric=metric)
+function Streamfall.Viz.quickplot(obs::Vector, node::NetworkNode, climate::Climate; label::String="", log::Bool=false, burn_in=1, limit=nothing, metric=Streamfall.mKGE)
+    return Streamfall.Viz.quickplot(obs, node.outflow, climate; label, log, burn_in, limit, metric)
 end
-function Streamfall.Viz.quickplot(obs::DataFrame, sim::Vector, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
+function Streamfall.Viz.quickplot(obs::DataFrame, sim::Vector, climate::Climate; label::String="", log::Bool=false, burn_in=1, limit=nothing, metric=Streamfall.mKGE)
     return Streamfall.Viz.quickplot(Matrix(obs[:, Not("Date")])[:, 1], sim, climate, label, log; burn_in, limit, metric)
 end
-function Streamfall.Viz.quickplot(obs::Vector, sim::Vector, climate::Climate, label="", log=false; burn_in=1, limit=nothing, metric=Streamfall.mKGE)
+function Streamfall.Viz.quickplot(obs::Vector, sim::Vector, climate::Climate; label::String="", log::Bool=false, burn_in=1, limit=nothing, metric=Streamfall.mKGE)
     date = timesteps(climate)
     last_e = !isnothing(limit) ? limit : lastindex(obs)
     show_range = burn_in:last_e
-    return quickplot(obs[show_range], sim[show_range], date[show_range], label, log; metric=metric)
+    return quickplot(obs[show_range], sim[show_range], date[show_range]; label, log, metric)
 end
-function Streamfall.Viz.quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled", log=false; metric=Streamfall.mKGE)
+function Streamfall.Viz.quickplot(obs::Vector, sim::Vector, xticklabels::Vector; label="Modeled", log=false, metric=Streamfall.mKGE)
     @assert length(xticklabels) == length(obs) || "x-axis tick label length and observed lengths do not match!"
     @assert length(xticklabels) == length(sim) || "x-axis tick label length and simulated lengths do not match!"
 
@@ -167,7 +168,7 @@ function Streamfall.Viz.temporal_cross_section(
     logscale = [:log, :log10]
     tmp = nothing
 
-    xsect_res = TemporalCrossSection(dates, obs, period)
+    xsect_res = TemporalCrossSection(dates, obs; period)
 
     if :yscale in arg_keys || :yaxis in arg_keys
         tmp = (:yscale in arg_keys) ? kwargs[:yscale] : kwargs[:yaxis]
@@ -178,7 +179,7 @@ function Streamfall.Viz.temporal_cross_section(
             # Format function for y-axis tick labels (e.g., 10^x)
             format_func = y -> (y != 0) ? L"%$(Int(round(sign(y)) * 10))^{%$(round(abs(y), digits=1))}" : L"0"
 
-            log_xsect_res = TemporalCrossSection(dates, log_obs, period)
+            log_xsect_res = TemporalCrossSection(dates, log_obs; period)
             target = log_xsect_res.cross_section
         else
             target = xsect_res.cross_section
@@ -273,7 +274,7 @@ function Streamfall.Viz.temporal_cross_section(
     logscale = [:log, :log10]
     tmp = nothing
 
-    xsect_res = TemporalCrossSection(dates, obs, sim, period)
+    xsect_res = TemporalCrossSection(dates, obs, sim; period)
     target = xsect_res.cross_section
 
     if :yscale in arg_keys || :yaxis in arg_keys
@@ -286,7 +287,7 @@ function Streamfall.Viz.temporal_cross_section(
             # Format function for y-axis tick labels (e.g., 10^x)
             format_func = y -> (y != 0) ? L"%$(Int(round(sign(y)) * 10))^{%$(round(abs(y), digits=1))}" : L"0"
 
-            log_xsect_res = TemporalCrossSection(dates, log_obs, log_sim, period)
+            log_xsect_res = TemporalCrossSection(dates, log_obs, log_sim; period)
             target = log_xsect_res.cross_section
         end
     end

@@ -1,6 +1,6 @@
 module GraphPlotExt
 
-using Plots, GraphPlot
+using StatsPlots, GraphPlot
 using Streamfall
 import Streamfall: vertices
 import Streamfall: StreamfallNetwork
