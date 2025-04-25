@@ -6,22 +6,6 @@ using Graphs, MetaGraphs, Distributed, DataFrames
 
 const MODPATH = @__DIR__
 
-if Sys.iswindows()
-    libext = ".dll"
-elseif Sys.islinux()
-    libext = ".so"
-elseif Sys.isapple()
-    libext = ".dynlib"
-else
-    throw(DomainError("Unsupported platform"))
-end
-
-# Can't use string, DLL location has to be a const
-# (which makes sense but still, many hours wasted!)
-# https://github.com/JuliaLang/julia/issues/29602
-const IHACRES = joinpath(MODPATH, "../deps", "usr", "lib", "ihacres$(libext)")
-
-
 include("Network.jl")
 include("Nodes/Node.jl")
 include("Climate.jl")
@@ -37,9 +21,9 @@ include("Nodes/Ensembles/EnsembleNode.jl")
 
 
 function timestep_value(ts::Int, gauge_id::String, col_partial::String, dataset::DataFrame)::Float64
-    target_col = filter(x -> occursin(gauge_id, x)
-                                & occursin(col_partial, x),
-                                names(dataset)
+    target_col = filter(
+        x -> occursin(gauge_id, x) & occursin(col_partial, x),
+        names(dataset)
     )
 
     amount = 0.0
@@ -107,7 +91,7 @@ julia> climate, streamflow = align_time_frame(climate, streamflow)
 """
 function align_time_frame(timeseries::T...) where {T<:DataFrame}
     min_date, max_date = find_common_timeframe(timeseries...)
-    modded = [t[min_date .<= t.Date .<= max_date, :] for t in timeseries]
+    modded = [t[min_date.<=t.Date.<=max_date, :] for t in timeseries]
 
     for t in modded
         ts_diff = diff(t.Date)
@@ -137,7 +121,7 @@ function run_basin!(
     _, outlets = find_inlets_and_outlets(sn)
     @inbounds for outlet_id in outlets
         run_node!(sn, outlet_id, climate;
-                  inflow=inflow, extraction=extraction, exchange=exchange)
+            inflow=inflow, extraction=extraction, exchange=exchange)
     end
 end
 
@@ -296,7 +280,7 @@ include("plotting.jl")
 export NetworkNode, GenericNode, GenericDirectNode
 export IHACRES, IHACRESNode, IHACRESBilinearNode, ExpuhNode, DamNode, Climate
 export create_node, GR4JNode, HyModNode, SimpleHyModNode, SYMHYDNode
-export EnsembleNode, WeightedEnsembleNode
+export EnsembleNode, WeightedEnsembleNode, GREnsembleNode
 
 # Network
 export find_inlets_and_outlets, inlets, outlets
