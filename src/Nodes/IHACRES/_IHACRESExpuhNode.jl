@@ -1,8 +1,14 @@
+"""
+Current disabled. 
+
+Expuh node implementation needs to be updated to use pure julia methods.
+"""
+
 using Parameters
 using ModelParameters
 
 
-Base.@kwdef mutable struct ExpuhNode{P, A<:AbstractFloat} <: IHACRESNode
+Base.@kwdef mutable struct ExpuhNode{P,A<:AbstractFloat} <: IHACRESNode
     name::String
     area::A
 
@@ -95,9 +101,9 @@ end
 
 
 function ExpuhNode(name::String, area::Float64, d::Float64, d2::Float64, e::Float64, f::Float64,
-                    tau_q::Float64, tau_s::Float64, v_s::Float64, s_coef::Float64,
-                    store::Float64, quick::Float64, slow::Float64)
-    return ExpuhNode{Param, Float64}(
+    tau_q::Float64, tau_s::Float64, v_s::Float64, s_coef::Float64,
+    store::Float64, quick::Float64, slow::Float64)
+    return ExpuhNode{Param,Float64}(
         name=name,
         area=area,
         d=d,
@@ -165,22 +171,20 @@ function run_node!(
 
     flow_res = [0.0, 0.0, 0.0]
     @ccall IHACRES.calc_flows(flow_res::Ptr{Cdouble}, prev_q::Cdouble, prev_s::Cdouble, s_node.v_s::Cdouble, e_rainfall::Cdouble,
-                              s_node.area::Cdouble, s_node.tau_q::Cdouble, s_node.tau_s::Cdouble)::Cvoid
+        s_node.area::Cdouble, s_node.tau_q::Cdouble, s_node.tau_s::Cdouble)::Cvoid
     (quick_store, slow_store, outflow) = flow_res
 
     gw_store = s_node.gw_store[end]
     routing_res = [0.0, 0.0]
     @ccall IHACRES.routing(
-            routing_res::Ptr{Cdouble},
-            gw_store::Cdouble,
-            s_node.storage_coef::Cdouble,
-            inflow::Cdouble,
-            outflow::Cdouble,
-            ext::Cdouble,
-            gw_exchange::Cdouble)::Cvoid
+        routing_res::Ptr{Cdouble},
+        gw_store::Cdouble,
+        s_node.storage_coef::Cdouble,
+        inflow::Cdouble,
+        outflow::Cdouble,
+        ext::Cdouble,
+        gw_exchange::Cdouble)::Cvoid
     (gw_store, outflow) = routing_res
-
-    # level::Float64 = @ccall IHACRES.calc_ft_level(outflow::Cdouble, s_node.level_params::Ptr{Cdouble})::Cdouble
 
     update_state!(s_node, cmd, e_rainfall, et, quick_store, slow_store, outflow, gw_store)
 
@@ -211,19 +215,19 @@ function run_node_with_temp!(s_node::ExpuhNode, rain::Float64, temp::Float64, in
 
     flow_res = [0.0, 0.0, 0.0]
     @ccall IHACRES.calc_flows(flow_res::Ptr{Cdouble}, prev_q::Cdouble, prev_s::Cdouble, s_node.v_s::Cdouble, e_rainfall::Cdouble,
-                              s_node.area::Cdouble, s_node.tau_q::Cdouble, s_node.tau_s::Cdouble)::Cvoid
+        s_node.area::Cdouble, s_node.tau_q::Cdouble, s_node.tau_s::Cdouble)::Cvoid
     (quick_store, slow_store, outflow) = flow_res
 
     gw_store = s_node.gw_store[end]
     routing_res = [0.0, 0.0]
     @ccall IHACRES.routing(
-            routing_res::Ptr{Cdouble},
-            gw_store::Cdouble,
-            s_node.storage_coef::Cdouble,
-            inflow::Cdouble,
-            outflow::Cdouble,
-            ext::Cdouble,
-            gw_exchange::Cdouble)::Cvoid
+        routing_res::Ptr{Cdouble},
+        gw_store::Cdouble,
+        s_node.storage_coef::Cdouble,
+        inflow::Cdouble,
+        outflow::Cdouble,
+        ext::Cdouble,
+        gw_exchange::Cdouble)::Cvoid
     (gw_store, outflow) = routing_res
 
     # level::Float64 = @ccall IHACRES.calc_ft_level(outflow::Cdouble, s_node.level_params::Ptr{Cdouble})::Cdouble
@@ -235,7 +239,7 @@ end
 
 
 function update_params!(node::ExpuhNode, d::Float64, d2::Float64, e::Float64, f::Float64,
-                        tau_q::Float64, tau_s::Float64, v_s::Float64, s_coef::Float64)::Nothing
+    tau_q::Float64, tau_s::Float64, v_s::Float64, s_coef::Float64)::Nothing
     node.d = Param(d, bounds=node.d.bounds)
     node.d2 = Param(d2, bounds=node.d2.bounds)
     node.e = Param(e, bounds=node.e.bounds)

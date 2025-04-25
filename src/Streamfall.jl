@@ -12,7 +12,7 @@ include("Climate.jl")
 include("metrics.jl")
 include("calibration.jl")
 include("Nodes/IHACRES/IHACRESNode.jl")
-include("Nodes/IHACRES/IHACRESExpuhNode.jl")
+# include("Nodes/IHACRES/IHACRESExpuhNode.jl")
 include("Nodes/GR4J/GR4JNode.jl")
 include("Nodes/HyMod/HyModNode.jl")
 include("Nodes/SYMHYD/SYMHYDNode.jl")
@@ -278,7 +278,7 @@ include("plotting.jl")
 
 # Nodes
 export NetworkNode, GenericNode, GenericDirectNode
-export IHACRES, IHACRESNode, IHACRESBilinearNode, ExpuhNode, DamNode, Climate
+export IHACRES, IHACRESNode, IHACRESBilinearNode, DamNode, Climate
 export create_node, GR4JNode, HyModNode, SimpleHyModNode, SYMHYDNode
 export EnsembleNode, WeightedEnsembleNode, GREnsembleNode
 

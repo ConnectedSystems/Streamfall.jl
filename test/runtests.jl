@@ -10,7 +10,7 @@ TEST_DIR = @__DIR__
     ihacres = create_node(IHACRESBilinearNode, "IHACRES", 100.0)
 
     # Expuh form does not yet support time stepping
-    expuh = create_node(ExpuhNode, "Expuh", 100.0)
+    # expuh = create_node(ExpuhNode, "Expuh", 100.0)
 
     gr4j = create_node(GR4JNode, "GR4J", 100.0)
     hymod = create_node(SimpleHyModNode, "HyMod", 100.0)
