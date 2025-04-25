@@ -4,13 +4,13 @@ using Statistics
 using Graphs, MetaGraphs, Distributed, DataFrames
 
 
-const MODPATH = @__DIR__
-
 include("Network.jl")
 include("Nodes/Node.jl")
 include("Climate.jl")
 include("metrics.jl")
 include("calibration.jl")
+include("Analysis/Analysis.jl")
+
 include("Nodes/IHACRES/IHACRESNode.jl")
 # include("Nodes/IHACRES/IHACRESExpuhNode.jl")
 include("Nodes/GR4J/GR4JNode.jl")
@@ -18,6 +18,9 @@ include("Nodes/HyMod/HyModNode.jl")
 include("Nodes/SYMHYD/SYMHYDNode.jl")
 include("Nodes/DamNode.jl")
 include("Nodes/Ensembles/EnsembleNode.jl")
+
+include("viz/Viz.jl")
+include("viz/NetworkViz.jl")
 
 
 function timestep_value(ts::Int, gauge_id::String, col_partial::String, dataset::DataFrame)::Float64
@@ -273,9 +276,6 @@ function run_node!(
     )
 end
 
-include("Analysis/Analysis.jl")
-include("plotting.jl")
-
 # Nodes
 export NetworkNode, GenericNode, GenericDirectNode
 export IHACRES, IHACRESNode, IHACRESBilinearNode, DamNode, Climate
@@ -297,7 +297,10 @@ export best_candidate, best_fitness, best_params
 export extract_flow, extract_climate, align_time_frame
 
 # Plotting methods
-export quickplot, plot_network, save_figure, temporal_cross_section
+import .Viz: quickplot, temporal_cross_section, save_figure, save_figure!
+import .NetworkViz: plot_network
+
+export plot_network, quickplot, temporal_cross_section, save_figure, save_figure!
 
 # Data interface (climate)
 export timesteps

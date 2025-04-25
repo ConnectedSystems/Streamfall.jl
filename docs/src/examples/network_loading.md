@@ -4,6 +4,7 @@ Loading a pre-defined network from a YAML file.
 
 ```julia
 using YAML
+using Plots, GraphPlot
 using Streamfall
 
 

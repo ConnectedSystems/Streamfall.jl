@@ -16,7 +16,8 @@ using Statistics
 using CSV, DataFrames, YAML
 using Streamfall
 
-using Plots
+# Import visualization packages to compile extensions
+using Plots, GraphPlot
 
 
 sn = load_network("Example Network", "../test/data/campaspe/campaspe_network.yml")

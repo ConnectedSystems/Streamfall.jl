@@ -1,6 +1,6 @@
-using Plots, StatsPlots
-using Plots.Measures
-import Plots: plot, plot!
+using StatsPlots
+using StatsPlots.Plots
+import StatsPlots: plot, plot!
 using DataFrames, Dates, Statistics, Distributions, LaTeXStrings
 import Bootstrap: bootstrap, BalancedSampling
 
@@ -75,7 +75,7 @@ function quickplot(obs::Vector, sim::Vector, xticklabels::Vector, label="Modeled
         yaxis!(qqfig, :log10)
     end
 
-    combined = plot(fig, qqfig, size=(1000, 500), left_margin=10mm, bottom_margin=5mm, layout=(1,2))
+    combined = plot(fig, qqfig, size=(1000, 500), left_margin=10mm, bottom_margin=5mm, layout=(1, 2))
 
     return combined
 end
@@ -96,9 +96,9 @@ Plot residual between two sequences.
 function plot_residuals(x::Array, y::Array; xlabel="", ylabel="", title="")
     # 1:1 Plot
     fig_1to1 = scatter(x, y, legend=false,
-                       markerstrokewidth=0, markerstrokealpha=0, alpha=0.2)
+        markerstrokewidth=0, markerstrokealpha=0, alpha=0.2)
     plot!(x, y, color=:red, markersize=0.1, markerstrokewidth=0,
-    xlabel=xlabel, ylabel=ylabel, title=title)
+        xlabel=xlabel, ylabel=ylabel, title=title)
 
     return fig_1to1
 end
@@ -130,9 +130,9 @@ Filters out leap days.
 - `period::Function` : Method from `Dates` package to group (defaults to `monthday`)
 """
 function temporal_cross_section(dates, obs;
-                                title="", ylabel="ME", label=nothing,
-                                period::Function=monthday,
-                                kwargs...)  # show_extremes::Bool=false,
+    title="", ylabel="ME", label=nothing,
+    period::Function=monthday,
+    kwargs...)  # show_extremes::Bool=false,
     if isnothing(label)
         label = ylabel
     end
@@ -142,7 +142,7 @@ function temporal_cross_section(dates, obs;
     logscale = [:log, :log10]
     tmp = nothing
 
-    xsect_res = TemporalCrossSection(dates, obs, period)
+    xsect_res = TemporalCrossSection(dates, obs; period)
 
     if :yscale in arg_keys || :yaxis in arg_keys
         tmp = (:yscale in arg_keys) ? kwargs[:yscale] : kwargs[:yaxis]
@@ -153,7 +153,7 @@ function temporal_cross_section(dates, obs;
             # Format function for y-axis tick labels (e.g., 10^x)
             format_func = y -> (y != 0) ? L"%$(Int(round(sign(y)) * 10))^{%$(round(abs(y), digits=1))}" : L"0"
 
-            log_xsect_res = TemporalCrossSection(dates, log_obs, period)
+            log_xsect_res = TemporalCrossSection(dates, log_obs; period)
             target = log_xsect_res.cross_section
         else
             target = xsect_res.cross_section
@@ -190,20 +190,22 @@ function temporal_cross_section(dates, obs;
 
     fig = plot(xlabels, lower_95, fillrange=upper_95, color="lightblue", alpha=0.3, label="CI₉₅ μ: $(wr95_m_ind), σ: $(wr95_sd_ind)", linealpha=0)
     plot!(fig, xlabels, lower_75, fillrange=upper_75, color="lightblue", alpha=0.5, label="CI₇₅ μ: $(wr75_m_ind), σ: $(wr75_sd_ind)", linealpha=0)
-    plot!(fig, xlabels, x_section,
-            label="Mean of $(label) μ: $(m_ind), σ: $(sd_ind)",
-            color="black",
-            xlabel=nameof(period),
-            ylabel=ylabel,
-            legend=:bottomleft,
-            legendfont=Plots.font(10),
-            fg_legend=:transparent,
-            bg_legend=:transparent,
-            left_margin=5mm,
-            bottom_margin=5mm,
-            title=title,
-            yformatter=format_func;
-            kwargs...)
+    plot!(
+        fig, xlabels, x_section,
+        label="Mean of $(label) μ: $(m_ind), σ: $(sd_ind)",
+        color="black",
+        xlabel=nameof(period),
+        ylabel=ylabel,
+        legend=:bottomleft,
+        legendfont=Plots.font(10),
+        fg_legend=:transparent,
+        bg_legend=:transparent,
+        left_margin=5mm,
+        bottom_margin=5mm,
+        title=title,
+        yformatter=format_func;
+        kwargs...
+    )
 
     # if show_extremes
     #     scatter!(fig, xlabels, min_section, label="", alpha=0.5, color="lightblue", markerstrokewidth=0; kwargs...)
@@ -248,7 +250,7 @@ function temporal_cross_section(
     logscale = [:log, :log10]
     tmp = nothing
 
-    xsect_res = TemporalCrossSection(dates, obs, sim, period)
+    xsect_res = TemporalCrossSection(dates, obs, sim; period)
     target = xsect_res.cross_section
 
     if :yscale in arg_keys || :yaxis in arg_keys
@@ -261,7 +263,7 @@ function temporal_cross_section(
             # Format function for y-axis tick labels (e.g., 10^x)
             format_func = y -> (y != 0) ? L"%$(Int(round(sign(y)) * 10))^{%$(round(abs(y), digits=1))}" : L"0"
 
-            log_xsect_res = TemporalCrossSection(dates, log_obs, log_sim, period)
+            log_xsect_res = TemporalCrossSection(dates, log_obs, log_sim; period)
             target = log_xsect_res.cross_section
         end
     end
@@ -346,7 +348,7 @@ function plot(node::DamNode, climate::Climate)
     levels = plot(timesteps(climate), node.level, xlabel="Date", ylabel="Dam Level", label=node.name)
     outflows = plot(timesteps(climate), node.outflow, xlabel="Date", ylabel="Discharge", label=node.name)
 
-    combined = plot(levels, outflows, size=(1000, 400), left_margin=10mm, bottom_margin=5mm, layout=(1,2))
+    combined = plot(levels, outflows, size=(1000, 400), left_margin=10mm, bottom_margin=5mm, layout=(1, 2))
 
     return combined
 end

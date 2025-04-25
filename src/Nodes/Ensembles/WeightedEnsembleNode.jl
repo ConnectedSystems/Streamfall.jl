@@ -1,10 +1,12 @@
-Base.@kwdef mutable struct WeightedEnsembleNode{N<:NetworkNode, P, A<:Real} <: EnsembleNode
+import ..Analysis: TemporalCrossSection
+
+Base.@kwdef mutable struct WeightedEnsembleNode{N<:NetworkNode,P,A<:Real} <: EnsembleNode
     name::String
     area::A
 
     instances::Array{N} = NetworkNode[]
     weights::Array{P} = [
-        Param(1.0; bounds=[0.0,1.0])
+        Param(1.0; bounds=[0.0, 1.0])
     ]
 
     # Default to normalized weighted sum
@@ -25,8 +27,8 @@ function create_node(
 end
 
 function WeightedEnsembleNode(nodes::Vector{<:NetworkNode}; weights::Vector{Float64},
-                      bounds::Union{Nothing, Vector{Tuple}}=nothing,
-                      comb_method::Union{Nothing, Function}=nothing)::WeightedEnsembleNode
+    bounds::Union{Nothing,Vector{Tuple}}=nothing,
+    comb_method::Union{Nothing,Function}=nothing)::WeightedEnsembleNode
     if isnothing(bounds)
         num_nodes = length(nodes)
         @assert(length(weights) == num_nodes, "Number of nodes do not match provided number of weights")
@@ -39,7 +41,7 @@ function WeightedEnsembleNode(nodes::Vector{<:NetworkNode}; weights::Vector{Floa
     p_weights = [Param(w; bounds=b) for (w, b) in zip(weights, bounds)]
 
     n1 = nodes[1]
-    tmp = WeightedEnsembleNode{NetworkNode, Param, Float64}(;
+    tmp = WeightedEnsembleNode{NetworkNode,Param,Float64}(;
         name=n1.name,
         area=n1.area,
         instances=nodes,
@@ -157,12 +159,12 @@ function calibrate!(
     ensemble::WeightedEnsembleNode,
     climate::Climate,
     calib_data::DataFrame,
-    metric::Union{AbstractDict{String, C}, C};
+    metric::Union{AbstractDict{String,C},C};
     kwargs...
 ) where {C<:Function}
     return invoke(
         calibrate!,
-        Tuple{NetworkNode, Climate, DataFrame, typeof(metric)},
+        Tuple{NetworkNode,Climate,DataFrame,typeof(metric)},
         ensemble,
         climate,
         calib_data,
@@ -208,7 +210,7 @@ function apply_bias_correction(
     period=monthday
 ) where {T<:Real}
     dates = timesteps(climate)
-    tcs = TemporalCrossSection(dates, obs, ensemble.outflow)
+    tcs = TemporalCrossSection(dates, obs, ensemble.outflow; period)
 
     return ensemble.outflow .+ (-tcs.ts)
 end

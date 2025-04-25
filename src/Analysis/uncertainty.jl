@@ -4,23 +4,23 @@ using OrderedCollections
 import ..ME, ..MAE
 
 
-mutable struct TemporalCrossSection{A<:Dates.Date, B<:Real, D<:OrderedDict}
+mutable struct TemporalCrossSection{A<:Dates.Date,B<:Real,D<:OrderedDict}
     dates::Array{A}
     ts::Array{B}
     subperiods::D
-    cross_section::Union{DataFrame, Nothing}
+    cross_section::Union{DataFrame,Nothing}
 end
 
 
-function TemporalCrossSection(dates::Array, ts::Array, period::Function=monthday)
+function TemporalCrossSection(dates::Array, ts::Array; period::Function=monthday)
     df = DataFrame(Date=dates, data=ts)
     sp = sort(unique(period.(dates)))
 
     # Remove leap days (when using monthday)
-    deleteat!(sp, findall(x -> x == (2,29), sp))
+    deleteat!(sp, findall(x -> x == (2, 29), sp))
 
     res = OrderedDict(
-        sp_i => df[period.(df.Date) .== [sp_i], :].data for sp_i in sp
+        sp_i => df[period.(df.Date).==[sp_i], :].data for sp_i in sp
     )
 
     return TemporalCrossSection(dates, ts, res, nothing)
@@ -30,10 +30,12 @@ end
 """
 TemporalCrossSection constructor that handles two time series
 """
-function TemporalCrossSection(dates::Array, obs::Array, sim::Array,
-                              period::Function=monthday)
+function TemporalCrossSection(
+    dates::Array, obs::Array, sim::Array;
+    period::Function=monthday
+)
     Y = ME.(obs, sim)
-    return TemporalCrossSection(dates, Y, period)
+    return TemporalCrossSection(dates, Y; period)
 end
 
 
@@ -56,7 +58,7 @@ function cross_section(tr::TemporalCrossSection)
     end
 
     cols = [:abs_min, :lower_95, :lower_75, :median,
-            :upper_75, :upper_95, :abs_max, :mean, :std]
+        :upper_75, :upper_95, :abs_max, :mean, :std]
 
     x_section = DataFrame(boxframe, cols)
     x_section[:, :subperiod] = collect(keys(sp))
