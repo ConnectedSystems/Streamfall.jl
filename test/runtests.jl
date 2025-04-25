@@ -86,7 +86,7 @@ end
     params = (214.6561105573191, 76.6251447, 200.0, 2.0, 0.727)
     current_store, rain, d, d2, alpha = params
 
-    (mf, e_rainfall, recharge) = calc_ft_interim_cmd(
+    (mf, e_rainfall, recharge) = Streamfall.calc_ft_interim_cmd(
         current_store,
         rain,
         d,
@@ -106,7 +106,7 @@ end
     recharge = 3.84930005080411E-06
     rain = 0.0000188
 
-    n_cmd = IHACRES.calc_cmd(cmd, rain, et, e_rain, recharge)
+    n_cmd = Streamfall.calc_cmd(cmd, rain, et, e_rain, recharge)
 
     @test isapprox(n_cmd, 106.22, atol=0.001)
 end
