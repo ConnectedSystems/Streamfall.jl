@@ -9,7 +9,7 @@
 Streamfall leverages the Julia language and ecosystem to provide:
 - Quick heterogeneous modelling of a stream network
 - Use of different rainfall-runoff models and their ensembles in tandem
-- Modelling and assessment of interacting systems
+- Support for modelling and assessment of interacting systems
 - A wide range of performance metrics
 
 This package includes implementations of the following:
@@ -20,11 +20,20 @@ This package includes implementations of the following:
 
 Performance is expected to be similar to implementations in C and Fortran.
 
+Naive timings (using `@time`) for an example dataset spanning 1963-07-05 - 2014-12-31 (18808 days, approximately 51.5 years)
+
+- SimpleHyModNode \
+  0.016502 seconds (469.25 k allocations: 12.902 MiB)
+- GR4JNode \
+  0.015274 seconds (224.75 k allocations: 5.584 MiB)
+- SYMHYDNode \
+  0.039540 seconds (638.01 k allocations: 15.190 MiB, 46.99% gc time)
+- IHACRESBilinearNode \
+  0.021734 seconds (675.63 k allocations: 17.773 MiB)
+
 The IHACRES rainfall-runoff model was previously implemented with [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim) but has since been ported to pure Julia.
 
 [Graphs](https://github.com/JuliaGraphs/Graphs.jl) and [MetaGraphs](https://github.com/JuliaGraphs/MetaGraphs.jl) are used underneath for network traversal/analysis.
-
-> [NOTE] Streamfall is currently in its early stages and under active development. Although it is fairly usable for small networks and assessing/analyzing single sub-catchments, things may change drastically and unexpectedly.
 
 ## Installation
 

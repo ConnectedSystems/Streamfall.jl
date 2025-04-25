@@ -139,7 +139,10 @@ end
 """
     NSE(obs, sim)
 
-The Nash-Sutcliffe Efficiency score
+The Nash-Sutcliffe Efficiency score.
+
+Ranges from 1.0 to -∞, where values below zero indicate the mean of
+observations would outperform a model.
 """
 function NSE(obs, sim)
     return 1.0 - sum((obs .- sim) .^ 2) / sum((obs .- mean(obs)) .^ 2)
@@ -164,7 +167,7 @@ end
 """
     RMSE(obs, sim)
 
-Root Mean Square Error
+Root Mean Square Error.
 """
 function RMSE(obs, sim)
     return (sum((sim .- obs) .^ 2) / length(sim))^0.5
@@ -186,7 +189,7 @@ end
 """
     ADJ_R2(obs, sim, p::Int64)::Float64
 
-Adjusted R²
+Adjusted R².
 
 # Arguments
 - `obs::Vector` : observations
@@ -204,7 +207,7 @@ end
 """
     MAE(obs, sim)
 
-Mean Absolute Error
+Mean Absolute Error.
 """
 MAE(obs, sim) = mean(abs.(sim .- obs))
 
@@ -212,7 +215,7 @@ MAE(obs, sim) = mean(abs.(sim .- obs))
 """
     ME(obs, sim)
 
-Mean Error
+Mean Error.
 """
 ME(obs, sim) = mean(sim .- obs)
 
@@ -471,7 +474,7 @@ function mKGE(obs, sim; scaling=(1.0, 1.0, 1.0))::Float64
     # Timing (Pearson's correlation)
     r = Statistics.cor(obs, sim)
     if isnan(r)
-        # can happen if obs or sim is a constant (std of 0)
+        # Can happen if obs or sim is a constant (std of 0)
         r = all(obs .== sim) ? 1.0 : 0.0
     end
 

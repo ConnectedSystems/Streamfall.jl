@@ -1,4 +1,6 @@
-using Distributed, Plots, StatsPlots
+using Distributed
+using Plots
+
 
 N = 4
 if nworkers() < N
@@ -18,7 +20,7 @@ end
         comment="#",
         dateformat=date_format) |> DataFrame
 
-    hist_streamflow = obs_data[:, ["Date", "410730_Q"]]
+    hist_streamflow = extract_flow(obs_data, "410730")
     climate_data = obs_data[:, ["Date", "410730_P", "410730_PET"]]
     climate = Climate(climate_data, "_P", "_PET")
 
@@ -26,7 +28,7 @@ end
 
     # Create objective function to minimize (here we use Normalized KGE')
     func = (obs, sim) -> 1.0 - Streamfall.NmKGE(obs[burn_in:end], sim[burn_in:end])
-    opt_func = (node) -> calibrate!(node, climate, hist_streamflow[:, "410730_Q"]; metric=func, MaxTime=900)
+    opt_func = (node) -> calibrate!(node, climate, hist_streamflow[:, "410730"], func; MaxTime=30)
 end
 
 
@@ -34,7 +36,7 @@ end
 hymod_node = create_node(SimpleHyModNode, "410730", 129.2)
 gr4j_node = create_node(GR4JNode, "410730", 129.2)
 symhyd_node = create_node(SYMHYDNode, "410730", 129.2)
-ihacres_node = create_node(BilinearNode, "410730", 129.2)
+ihacres_node = create_node(IHACRESBilinearNode, "410730", 129.2)
 
 
 # Calibrate each node separately using multiprocessing
@@ -44,14 +46,14 @@ result = pmap(opt_func, node_list)
 
 
 # Create comparison plot
-Qo = hist_streamflow[:, "410730_Q"]
-Qo_burn = Qo[burn_in:end]
+Qo = hist_streamflow[:, "410730"]
 res_plots = []
 
 for ((res, opt), node, n_name) in zip(result, node_list, node_names)
     update_params!(node, best_candidate(res)...)
     reset!(node)
-    run_node!(node, climate)
+    @info typeof(node)
+    @time run_node!(node, climate)
 
     node_burn = node.outflow[burn_in:end]
 
@@ -68,4 +70,4 @@ combined_plot = plot(
 
 display(combined_plot)
 
-savefig("multi_model_comparison_updated.png")
+# savefig("multi_model_comparison_updated.png")
