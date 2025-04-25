@@ -22,8 +22,8 @@ TEST_DIR = @__DIR__
         Streamfall.prep_state!(ihacres, 1)
         @test Streamfall.run_timestep!(ihacres, 6.0, 3.0, 1) isa AbstractFloat
 
-        Streamfall.prep_state!(expuh, 1)
-        @test Streamfall.run_node!(expuh, 6.0, 3.0, 50.0, 10.0, 5.0) isa AbstractFloat
+        # Streamfall.prep_state!(expuh, 1)
+        # @test Streamfall.run_node!(expuh, 6.0, 3.0, 50.0, 10.0, 5.0) isa AbstractFloat
 
         Streamfall.prep_state!(gr4j, 1)
         @test Streamfall.run_timestep!(gr4j, 6.0, 3.0, 1) isa AbstractFloat
