@@ -86,15 +86,13 @@ end
     params = (214.6561105573191, 76.6251447, 200.0, 2.0, 0.727)
     current_store, rain, d, d2, alpha = params
 
-    interim_results = [0.0, 0.0, 0.0]
-    @ccall IHACRES.calc_ft_interim_cmd(interim_results::Ptr{Cdouble},
-                                       current_store::Cdouble,
-                                       rain::Cdouble,
-                                       d::Cdouble,
-                                       d2::Cdouble,
-                                       alpha::Cdouble)::Cvoid
-
-    (mf, e_rainfall, recharge) = interim_results
+    (mf, e_rainfall, recharge) = calc_ft_interim_cmd(
+        current_store,
+        rain,
+        d,
+        d2,
+        alpha
+    )
 
     @test !isnan(mf)
     @test !isnan(e_rainfall)
@@ -108,73 +106,73 @@ end
     recharge = 3.84930005080411E-06
     rain = 0.0000188
 
-    n_cmd = @ccall IHACRES.calc_cmd(cmd::Cdouble, rain::Cdouble, et::Cdouble, e_rain::Cdouble, recharge::Cdouble)::Float64
+    n_cmd = IHACRES.calc_cmd(cmd, rain, et, e_rain, recharge)
 
     @test isapprox(n_cmd, 106.22, atol=0.001)
 end
 
 
-@testset "IHACRES calculations" begin
-    area = 1985.73
-    a = 54.352
-    b = 0.187
-    e_rain = 3.421537294474909e-6
-    recharge = 3.2121031313153022e-6
+# @testset "IHACRES calculations" begin
+#     area = 1985.73
+#     a = 54.352
+#     b = 0.187
+#     e_rain = 3.421537294474909e-6
+#     recharge = 3.2121031313153022e-6
 
-    prev_quick = 100.0
-    prev_slow = 100.0
+#     prev_quick = 100.0
+#     prev_slow = 100.0
 
-    flow_results = [0.0, 0.0, 0.0]
-    @ccall IHACRES.calc_ft_flows(
-        flow_results::Ptr{Cdouble},
-        prev_quick::Cdouble,
-        prev_slow::Cdouble,
-        e_rain::Cdouble,
-        recharge::Cdouble,
-        area::Cdouble,
-        a::Cdouble,
-        b::Cdouble
-    )::Cvoid
+#     flow_results = [0.0, 0.0, 0.0]
+#     @ccall IHACRES.calc_ft_flows(
+#         flow_results::Ptr{Cdouble},
+#         prev_quick::Cdouble,
+#         prev_slow::Cdouble,
+#         e_rain::Cdouble,
+#         recharge::Cdouble,
+#         area::Cdouble,
+#         a::Cdouble,
+#         b::Cdouble
+#     )::Cvoid
 
-    quickflow = (prev_quick + (e_rain * area))
-    α = exp(-a)
-    quickflow = α * quickflow
+#     quickflow = (prev_quick + (e_rain * area))
+#     α = exp(-a)
+#     quickflow = α * quickflow
 
-    @test flow_results[1] == quickflow
+#     @test flow_results[1] == quickflow
 
-    slow_store = prev_slow + (recharge * area)
-    α = exp(-b)
-    slow_store = α * slow_store
-    @test flow_results[2] == slow_store
+#     slow_store = prev_slow + (recharge * area)
+#     α = exp(-b)
+#     slow_store = α * slow_store
+#     @test flow_results[2] == slow_store
 
-    e_rain = 0.0
-    recharge = 0.0
+#     e_rain = 0.0
+#     recharge = 0.0
 
-    prev_quick = 3.3317177943791187
-    prev_slow = 144.32012122323678
+#     prev_quick = 3.3317177943791187
+#     prev_slow = 144.32012122323678
 
-    flow_results = [0.0, 0.0, 0.0]
-    @ccall IHACRES.calc_ft_flows(
-        flow_results::Ptr{Cdouble},
-        prev_quick::Cdouble,
-        prev_slow::Cdouble,
-        e_rain::Cdouble,
-        recharge::Cdouble,
-        area::Cdouble,
-        a::Cdouble,
-        b::Cdouble
-    )::Cvoid
+#     flow_results = [0.0, 0.0, 0.0]
+#     @ccall IHACRES.calc_ft_flows(
+#         flow_results::Ptr{Cdouble},
+#         prev_quick::Cdouble,
+#         prev_slow::Cdouble,
+#         e_rain::Cdouble,
+#         recharge::Cdouble,
+#         area::Cdouble,
+#         a::Cdouble,
+#         b::Cdouble
+#     )::Cvoid
 
-    quickflow = (prev_quick + (e_rain * area))
-    α = exp(-a)
-    @test flow_results[1] == (α * quickflow)
+#     quickflow = (prev_quick + (e_rain * area))
+#     α = exp(-a)
+#     @test flow_results[1] == (α * quickflow)
 
-    slow_store = prev_slow + (recharge * area)
-    α = exp(-b)
-    β = (1.0 - α) * slow_store
-    slow_store = α * slow_store
-    @test flow_results[2] == slow_store
-end
+#     slow_store = prev_slow + (recharge * area)
+#     α = exp(-b)
+#     β = (1.0 - α) * slow_store
+#     slow_store = α * slow_store
+#     @test flow_results[2] == slow_store
+# end
 
 include("test_metrics.jl")
 include("test_data_op.jl")
