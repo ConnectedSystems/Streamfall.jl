@@ -9,6 +9,8 @@ include("Nodes/Node.jl")
 include("Climate.jl")
 include("metrics.jl")
 include("calibration.jl")
+include("Analysis/Analysis.jl")
+
 include("Nodes/IHACRES/IHACRESNode.jl")
 # include("Nodes/IHACRES/IHACRESExpuhNode.jl")
 include("Nodes/GR4J/GR4JNode.jl")
@@ -16,6 +18,9 @@ include("Nodes/HyMod/HyModNode.jl")
 include("Nodes/SYMHYD/SYMHYDNode.jl")
 include("Nodes/DamNode.jl")
 include("Nodes/Ensembles/EnsembleNode.jl")
+
+include("viz/Viz.jl")
+include("viz/NetworkViz.jl")
 
 
 function timestep_value(ts::Int, gauge_id::String, col_partial::String, dataset::DataFrame)::Float64
@@ -270,10 +275,6 @@ function run_node!(
         inflow=inflow, extraction=extraction, exchange=exchange
     )
 end
-
-include("Analysis/Analysis.jl")
-include("viz/Viz.jl")
-include("viz/NetworkViz.jl")
 
 # Nodes
 export NetworkNode, GenericNode, GenericDirectNode
