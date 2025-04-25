@@ -46,6 +46,8 @@ abstract type GRNJNode <: NetworkNode end
 """
 GR4J Node
 
+GR4J: modèle du Génie Rural à 4 paramètres Journalier.
+
 A four-parameter model with two stores.
 
 # Parameters
@@ -287,7 +289,7 @@ end
         p_store=0.0, r_store=0.0
     )::Tuple where {F<:Float64}
 
-Generated simulated streamflow for given rainfall and potential evaporation.
+Generated simulated streamflow with GR4J for given rainfall and potential evaporation.
 
 # Parameters
 - `P` : Catchment average rainfall
