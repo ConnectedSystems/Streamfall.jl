@@ -3,7 +3,7 @@ using Dates, DataFrames, CSV, YAML
 using Streamfall
 
 
-DATA_PATH = joinpath(@__DIR__, "data/hymod")
+DATA_PATH = joinpath(dirname(dirname(pathof(Streamfall))), "test/data/hymod")
 
 @testset "Single node calibration" begin
     # Load and generate stream network
@@ -13,8 +13,8 @@ DATA_PATH = joinpath(@__DIR__, "data/hymod")
     # Load climate data
     date_format = "YYYY-mm-dd"
     obs_data = CSV.File(joinpath(DATA_PATH, "leaf_river_data.csv"),
-                        comment="#",
-                        dateformat=date_format) |> DataFrame
+        comment="#",
+        dateformat=date_format) |> DataFrame
 
     # Column names must be the gauge name
     rename!(obs_data, ["leaf_river_outflow" => "leaf_river"])

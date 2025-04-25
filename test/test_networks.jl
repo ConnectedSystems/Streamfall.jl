@@ -7,7 +7,7 @@ using DataFrames
 using Streamfall
 
 
-DATA_PATH = joinpath(@__DIR__, "data/hymod")
+DATA_PATH = joinpath(dirname(dirname(pathof(Streamfall))), "test/data/hymod")
 
 
 @testset "Network loading" begin
@@ -71,7 +71,7 @@ end
 
 
 @testset "Reloading a network spec (HyMod)" begin
-    spec::Dict{String, Union{Dict{String, Any}, Any}} = Streamfall.extract_network_spec(sn)
+    spec::Dict{String,Union{Dict{String,Any},Any}} = Streamfall.extract_network_spec(sn)
     @test spec isa Dict
     @test haskey(spec, "leaf_river") || "Known node does not exist"
 
@@ -97,7 +97,7 @@ end
     )
 
     # Column name must match node name
-    rename!(obs_data, ["leaf_river_outflow"=>"leaf_river"])
+    rename!(obs_data, ["leaf_river_outflow" => "leaf_river"])
     climate_data = obs_data[:, ["Date", "leaf_river_P", "leaf_river_ET"]]
     climate = Climate(climate_data, "_P", "_ET")
 
@@ -109,9 +109,46 @@ end
 
 @testset "Recursing IHACRESNode upstream" begin
     begin
-        include("../examples/run_nodes.jl")
-        # Ensure example does not error out
+        data_path = joinpath(dirname(dirname(pathof(Streamfall))), "test/data/campaspe/")
 
+        # Load and generate stream network
+        sn = load_network("Example Network", joinpath(data_path, "campaspe_network.yml"))
+
+        climate = Climate("../test/data/campaspe/climate/climate.csv", "_rain", "_evap")
+
+        # Historic flows and dam level data
+        calib_data = CSV.read(
+            joinpath(data_path, "gauges", "outflow_and_level.csv"),
+            DataFrame;
+            comment="#"
+        )
+
+        # Historic extractions from the dam
+        extraction_data = CSV.read(
+            joinpath(data_path, "gauges", "dam_extraction.csv"),
+            DataFrame;
+            comment="#"
+        )
+
+        @info "Running example stream..."
+
+        dam_id, dam_node = sn["406000"]
+        Streamfall.run_node!(sn, dam_id, climate; extraction=extraction_data)
+
+        # Extract data for comparison with 1-year burn-in period
+        dam_obs = calib_data[:, "406000"][366:end]
+        dam_sim = dam_node.level[366:end]
+
+        nnse_score = Streamfall.NNSE(dam_obs, dam_sim)
+        nse_score = Streamfall.NSE(dam_obs, dam_sim)
+        rmse_score = Streamfall.RMSE(dam_obs, dam_sim)
+
+        @info "Obj Func Scores:" rmse_score nnse_score nse_score
+
+        nse = round(nse_score, digits=4)
+        rmse = round(rmse_score, digits=4)
+
+        # Ensure example does not error out
         reset!(sn)
         run_basin!(sn, climate; extraction=extraction_data)
         @test Streamfall.RMSE(dam_obs, sn[dam_id].level[366:end]) < 2.5

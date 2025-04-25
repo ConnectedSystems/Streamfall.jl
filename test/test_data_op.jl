@@ -6,7 +6,7 @@ using Streamfall
 
 @testset "Data alignment" begin
 
-    here = @__DIR__
+    here = joinpath(dirname(dirname(pathof(Streamfall))), "test")
     climate_data = joinpath(here, "data/campaspe/climate/climate_historic.csv")
     dam_data_loc = joinpath(here, "data/campaspe/gauges")
 
