@@ -30,7 +30,7 @@ function obj_func(
     return score
 end
 
-"""Assess current node on its outflow."""
+"""Assess current node on its level."""
 function level_obj_func(
     params, climate::Climate, node::NetworkNode, calib_data::Array;
     metric::F=Streamfall.RMSE, inflow=nothing, extraction=nothing, exchange=nothing

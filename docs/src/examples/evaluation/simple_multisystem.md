@@ -23,18 +23,24 @@ In practice, water requirements are provided by another model.
 ```julia
 using CSV, DataFrames, YAML
 using Dates
-using Plots
+using StatsPlots
 using Streamfall
+
+example_data_dir = joinpath(dirname(dirname(pathof(Streamfall))), "test/data/campaspe")
 
 # Load climate data - in this case from a CSV file with data for all nodes.
 # Indicate which columns are precipitation and evaporation data based on partial identifiers
-climate = Climate("../test/data/campaspe/climate/climate.csv", "_rain", "_evap")
+climate = Climate(joinpath(example_data_dir, "climate/climate.csv"), "_rain", "_evap")
 
 # Historic extractions from the dam
-extraction_data = CSV.read("../test/data/campaspe/gauges/dam_extraction.csv", DataFrame; comment="#")
+extraction_data = CSV.read(
+    joinpath(example_data_dir, "gauges/dam_extraction.csv"), 
+    DataFrame; 
+    comment="#"
+)
 
 # Load the example network
-sn = load_network("Example Network", "../test/data/campaspe/two_node_network.yml")
+sn = load_network("Example Network", joinpath(example_data_dir, "two_node_network.yml"))
 
 # Run the model for the basin to obtain baseline values
 run_basin!(sn, climate; extraction=extraction_data)
@@ -119,4 +125,4 @@ display(f)
 Streamfall.temporal_cross_section(sim_dates, calib_data[:, "406000"], sn[2].level)
 ```
 
-![](../assets/simple_water_demand.png)
+![](../../assets/simple_water_demand.png)

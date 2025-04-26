@@ -6,17 +6,19 @@ as the ensemble constituents. The default ensemble is a normalized weighted sum.
 The usual setup process is shown here, detailed in previous sections of this guide.
 
 ```julia
-using Plots
+using StatsPlots
 using CSV, DataFrames
 using Statistics
 using Streamfall
 
-
-climate = Climate("../test/data/campaspe/climate/climate.csv", "_rain", "_evap")
+data_dir = joinpath(
+    dirname(dirname(pathof(Streamfall))),
+    "test/data"
+)
 
 # Historic flows and dam level data
 obs_data = CSV.read(
-    "../test/data/cotter/climate/CAMELS-AUS_410730.csv",
+    joinpath(data_dir, "cotter/climate/CAMELS-AUS_410730.csv"),
     DataFrame;
     comment="#"
 )
@@ -68,9 +70,9 @@ burn_in = 365
 burn_dates = timesteps(climate)[burn_in:end]
 burn_obs = Qo[burn_in:end, "410730"]
 
-ihacres_qp = quickplot(burn_obs, ihacres_node.outflow[burn_in:end], climate, "IHACRES", true)
-gr4j_qp = quickplot(burn_obs, gr4j_node.outflow[burn_in:end], climate, "GR4J", true)
-ensemble_qp = quickplot(burn_obs, ensemble.outflow[burn_in:end], climate, "Weighted Ensemble", true)
+ihacres_qp = quickplot(burn_obs, ihacres_node.outflow[burn_in:end], climate; label="IHACRES", log=true)
+gr4j_qp = quickplot(burn_obs, gr4j_node.outflow[burn_in:end], climate; label="GR4J", log=true)
+ensemble_qp = quickplot(burn_obs, ensemble.outflow[burn_in:end], climate; label="Weighted Ensemble", log=true)
 
 plot(ihacres_qp, gr4j_qp, ensemble_qp; layout=(3, 1), size=(800, 1200))
 ```
@@ -82,7 +84,7 @@ flows and high flows, whereas GR4J had a tendency to overestimate low flows.
 The weighted ensemble combined characteristics of both, with a tendency to overestimate
 low flows as with GR4J.
 
-![](../assets/ensemble_model_comparison_quickplots.png)
+![](../../assets/ensemble_model_comparison_quickplots.png)
 
 Comparing the temporal cross section:
 
@@ -96,7 +98,7 @@ plot(ihacres_xs, gr4j_xs, ensemble_xs; layout=(3, 1), size=(800, 1200))
 
 A reduction in the median error can be seen with extreme errors reduced somewhat.
 
-![](../assets/ensemble_xsection.png)
+![](../../assets/ensemble_xsection.png)
 
 The median error can then be applied to modelled streamflow (on a month-day basis) as a
 form of bias correction.
@@ -104,7 +106,7 @@ form of bias correction.
 ```julia
 q_star = Streamfall.apply_temporal_correction(ensemble, climate, Qo[:, "410730"])
 
-bc_ensemble_qp = quickplot(burn_obs, q_star[burn_in:end], climate, "Bias Corrected Ensemble", true)
+bc_ensemble_qp = quickplot(burn_obs, q_star[burn_in:end], climate; label="Bias Corrected Ensemble", log=true)
 
 bias_corrected_xs = temporal_cross_section(
     burn_dates,
@@ -121,4 +123,9 @@ While the median error has increased, its variance has reduced significantly. At
 time, performance at the 75 and 95% CI remain steady relative to the original weighted
 ensemble results.
 
-![](../assets/ensemble_bias_corrected.png)
+![](../../assets/ensemble_bias_corrected.png)
+
+This ensemble approach may be improved further by:
+
+- Using a rolling window to smooth ensemble predictions
+- Defining a custom objective function to emphasize model performance

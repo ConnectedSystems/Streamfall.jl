@@ -1,4 +1,4 @@
-using Plots, StatsPlots
+using StatsPlots
 
 
 using DataFrames, CSV, Serialization
@@ -6,8 +6,8 @@ using Streamfall, BlackBoxOptim, Bootstrap, Statistics
 import Dates: Date, month, monthday, week, dayofyear
 
 
-HERE = @__DIR__
-DATA_PATH = joinpath(HERE, "../test/data/cotter/")
+HERE = dirname(dirname(pathof(Streamfall)))
+DATA_PATH = joinpath(HERE, "test/data/cotter/")
 
 # # Load observations
 # date_format = "YYYY-mm-dd"
@@ -44,8 +44,8 @@ prb_dt = open("problem_dates.txt", "r") do f
     Date.(x)
 end
 
-replace!(prb_obs, 0=>1e-6)
-replace!(prb_sim, 0=>1e-6)
+replace!(prb_obs, 0 => 1e-6)
+replace!(prb_sim, 0 => 1e-6)
 
 uc_xsect = Streamfall.temporal_cross_section(prb_dt, prb_obs, prb_sim; show_extremes=false, yscale=:log10)  # 
 

@@ -3,8 +3,7 @@ using Statistics
 using Streamfall
 
 
-HERE = @__DIR__
-DATA_PATH = joinpath(HERE, "../../test/data/hymod/")
+DATA_PATH = joinpath(dirname(dirname(pathof(Streamfall))), "test/data/hymod/")
 
 # Load and generate stream network
 network = YAML.load_file(joinpath(DATA_PATH, "hymod_network.yml"))
@@ -19,7 +18,7 @@ obs_data = CSV.read(
 )
 
 hist_streamflow = obs_data[:, "leaf_river_outflow"]
-rename!(obs_data, ["leaf_river_outflow"=>"leaf_river"])
+rename!(obs_data, ["leaf_river_outflow" => "leaf_river"])
 
 climate_data = obs_data[:, ["Date", "leaf_river_P", "leaf_river_ET"]]
 climate = Climate(climate_data, "_P", "_ET")

@@ -1,5 +1,5 @@
 using Distributed
-using Plots
+using StatsPlots
 
 
 N = 4
@@ -11,8 +11,7 @@ end
     using DataFrames, CSV
     using Streamfall, BlackBoxOptim
 
-    HERE = @__DIR__
-    DATA_PATH = joinpath(HERE, "../test/data/cotter/")
+    DATA_PATH = joinpath(dirname(dirname(pathof(Streamfall))), "test/data/cotter/")
 
     # Load observations
     date_format = "YYYY-mm-dd"
@@ -35,13 +34,13 @@ end
 # Create individual nodes
 hymod_node = create_node(SimpleHyModNode, "410730", 129.2)
 gr4j_node = create_node(GR4JNode, "410730", 129.2)
-symhyd_node = create_node(SYMHYDNode, "410730", 129.2)
+simhyd_node = create_node(SIMHYDNode, "410730", 129.2)
 ihacres_node = create_node(IHACRESBilinearNode, "410730", 129.2)
 
 
 # Calibrate each node separately using multiprocessing
-node_names = ["HyMod", "GR4J", "SYMHYD", "IHACRES"]
-node_list = [hymod_node, gr4j_node, symhyd_node, ihacres_node]
+node_names = ["HyMod", "GR4J", "SIMHYD", "IHACRES"]
+node_list = [hymod_node, gr4j_node, simhyd_node, ihacres_node]
 result = pmap(opt_func, node_list)
 
 

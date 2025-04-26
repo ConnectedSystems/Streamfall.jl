@@ -1,4 +1,4 @@
-push!(LOAD_PATH,"../src/")
+push!(LOAD_PATH, "../src/")
 
 # using Pkg
 
@@ -8,10 +8,10 @@ using Documenter, Streamfall
 
 
 makedocs(sitename="Streamfall Documentation",
-    format = Documenter.HTML(
-        prettyurls = get(ENV, "CI", nothing) == "true"
+    format=Documenter.HTML(
+        prettyurls=get(ENV, "CI", nothing) == "true"
     ),
-    pages = [
+    pages=[
         "index.md",
         "primer.md",
         "expected_data_formats.md",
@@ -19,17 +19,18 @@ makedocs(sitename="Streamfall Documentation",
             "examples/examples.md",
             "examples/node_creation.md",
             "examples/network_loading.md",
+            "Model evaluation" => [
+                "examples/evaluation/simple_showcase.md",
+                "examples/evaluation/model_comparison.md",
+                "examples/evaluation/simple_multisystem.md",
+            ],
             "Calibration" => [
                 # "examples/calibration_setup.md",
-                "examples/calibration.md",
-            ],
-            "Model evaluation" => [
-                "examples/simple_showcase.md",
-                "examples/model_comparison.md",
-                "examples/simple_multisystem.md",
+                "examples/calibration/calibration.md",
+                "examples/calibration/custom_calibration.md",
             ],
             "Ensemble modeling" => [
-                "examples/weighted_ensembles.md"
+                "examples/ensembles/weighted_ensembles.md"
             ]
         ],
         "API" => [
@@ -39,7 +40,7 @@ makedocs(sitename="Streamfall Documentation",
                 "API/nodes/IHACRES.md",
                 "API/nodes/HyMod.md",
                 "API/nodes/GR4J.md",
-                "API/nodes/SYMHYD.md",
+                "API/nodes/SIMHYD.md",
                 "API/nodes/Dam.md"
             ],
             "API/plotting.md",
@@ -51,8 +52,8 @@ makedocs(sitename="Streamfall Documentation",
 )
 
 deploydocs(
-    repo = "github.com/ConnectedSystems/Streamfall.jl.git",
-    devbranch = "main",
+    repo="github.com/ConnectedSystems/Streamfall.jl.git",
+    devbranch="main",
     target="build",
     deps=nothing,
     make=nothing

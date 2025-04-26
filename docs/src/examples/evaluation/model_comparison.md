@@ -6,7 +6,7 @@ Here, the Gingera catchment along the Cotter River is examined.
 
 ```julia
 using Distributed
-using Plots
+using StatsPlots
 
 N = 4
 if nworkers() < N
@@ -17,8 +17,8 @@ end
     using CSV, DataFrames
     using Streamfall
 
-    HERE = @__DIR__
-    DATA_PATH = joinpath(HERE, "../test/data/cotter/")
+    HERE = dirname(dirname(pathof(Streamfall)))
+    DATA_PATH = joinpath(HERE, "test/data/cotter/")
 
     # Load observations
     date_format =
@@ -45,13 +45,13 @@ end
 # Create individual nodes
 hymod_node = create_node(SimpleHyModNode, "410730", 129.2)
 gr4j_node = create_node(GR4JNode, "410730", 129.2)
-symhyd_node = create_node(SYMHYDNode, "410730", 129.2)
+simhyd_node = create_node(SIMHYDNode, "410730", 129.2)
 ihacres_node = create_node(IHACRESBilinearNode, "410730", 129.2)
 
 
 # Calibrate each node separately using multiprocessing
-node_types = ["HyMod", "GR4J", "SYMHYD", "IHACRES"]
-node_list = [hymod_node, gr4j_node, symhyd_node, ihacres_node]
+node_types = ["HyMod", "GR4J", "SIMHYD", "IHACRES"]
+node_list = [hymod_node, gr4j_node, simhyd_node, ihacres_node]
 result = pmap(opt_func, node_list)
 
 # Create comparison plot
@@ -67,7 +67,7 @@ for ((res, opt), node, n_name) in zip(result, node_list, node_types)
     node_burn = node.outflow[burn_in:end]
 
     # Plot log scale
-    res_plot = quickplot(Qo, node, climate, n_name, true; burn_in=366)
+    res_plot = quickplot(Qo, node, climate; label=n_name, log=true, burn_in=366)
     push!(res_plots, res_plot)
 end
 
@@ -79,7 +79,7 @@ combined_plot = plot(
 
 display(combined_plot)
 
-# savefig("multi_model_comparison.png")
+savefig("multi_model_comparison.png")
 ```
 
-![](../assets/multi_model_comparison.png)
+![](../../assets/multi_model_comparison.png)

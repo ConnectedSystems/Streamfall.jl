@@ -4,11 +4,15 @@ Loading a pre-defined network from a YAML file.
 
 ```julia
 using YAML
-using Plots, GraphPlot
+using StatsPlots, GraphPlot
 using Streamfall
 
+network_file = joinpath(
+    dirname(dirname(pathof(Streamfall))),
+    "test/data/campaspe/campaspe_network.yml"
+)
 
-sn = load_network("Example Network", "../test/data/campaspe/campaspe_network.yml")
+sn = load_network("Example Network", network_file)
 
 # Find all inlets and outlets
 inlets, outlets = find_inlets_and_outlets(sn)

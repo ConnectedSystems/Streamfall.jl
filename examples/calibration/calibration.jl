@@ -12,7 +12,7 @@ using Statistics
 using CSV, DataFrames, YAML
 using Streamfall
 
-using Plots
+using StatsPlots
 
 
 sn = load_network("Example Network", "../test/data/campaspe/campaspe_network.yml")

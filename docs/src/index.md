@@ -12,7 +12,7 @@ This package includes implementations of the following:
 - GR4J
 - HyMod
 - IHACRES
-- SYMHYD
+- SIMHYD
 
 Performance is expected to be similar to implementations in C and Fortran.
 
@@ -59,7 +59,7 @@ more "hands-on" overview.
     </td>
   </tr>
   <tr>
-    <td>SYMHYD</td>
+    <td>SIMHYD</td>
     <td>-</td>
     <td>
     Chiew, F. H. S., Peel, M. C., Western, A. W., Singh, V. P., & Frevert, D. (2002). Application and testing of the simple rainfall-runoff model SIMHYD. Mathematical models of small watershed hydrology and applications, 335-367.

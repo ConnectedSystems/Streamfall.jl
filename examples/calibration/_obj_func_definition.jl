@@ -1,5 +1,4 @@
-HERE = @__DIR__
-DATA_PATH = joinpath(HERE, "../../test/data/campaspe/")
+DATA_PATH = joinpath(dirname(dirname(pathof(Streamfall))), "test/data/campaspe/")
 
 # Ensure dependent data and packages are available
 using Statistics, DataFrames, CSV
@@ -18,17 +17,17 @@ network = YAML.load_file(joinpath(DATA_PATH, "campaspe_network.yml"))
 sn = create_network("Example Network", network)
 
 climate_data = CSV.File(joinpath(DATA_PATH, "climate/climate_historic.csv"),
-                        comment="#",
-                        dateformat="YYYY-mm-dd") |> DataFrame
+    comment="#",
+    dateformat="YYYY-mm-dd") |> DataFrame
 
-hist_dam_levels = CSV.File(joinpath(DATA_PATH, "dam/historic_levels_for_fit.csv"), 
-                           dateformat="YYYY-mm-dd") |> DataFrame
-hist_dam_releases = CSV.File(joinpath(DATA_PATH, "dam/historic_releases.csv"), 
-                             dateformat="YYYY-mm-dd") |> DataFrame
+hist_dam_levels = CSV.File(joinpath(DATA_PATH, "dam/historic_levels_for_fit.csv"),
+    dateformat="YYYY-mm-dd") |> DataFrame
+hist_dam_releases = CSV.File(joinpath(DATA_PATH, "dam/historic_releases.csv"),
+    dateformat="YYYY-mm-dd") |> DataFrame
 
-climate_data, hist_dam_levels, hist_dam_releases = Streamfall.align_time_frame(climate_data, 
-                                                                               hist_dam_levels, 
-                                                                               hist_dam_releases)
+climate_data, hist_dam_levels, hist_dam_releases = Streamfall.align_time_frame(climate_data,
+    hist_dam_levels,
+    hist_dam_releases)
 
 
 hist_data = Dict(
