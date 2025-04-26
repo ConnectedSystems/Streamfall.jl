@@ -173,16 +173,16 @@ obs_data = CSV.read(
 Qo = extract_flow(obs_data, "410730")
 climate = extract_climate(obs_data)
 
-# Create one instance each of IHACRES_CMD, GR4J and SYMHYD
+# Create one instance each of IHACRES_CMD, GR4J and SIMHYD
 ihacres_node = create_node(IHACRESBilinearNode, "410730_ihacres", 129.2)
 gr4j_node = create_node(GR4JNode, "410730_gr4j", 129.2)
-symhyd_node = create_node(SYMHYDNode, "410730_symhyd", 129.2)
+simhyd_node = create_node(SIMHYDNode, "410730_simhyd", 129.2)
 
 # Create a weighted ensemble with equal weights
 # The default behavior is to combine component predictions with a normalized weighted sum.
 ensemble = create_node(
     WeightedEnsembleNode, 
-    [ihacres_node, gr4j_node, symhyd_node], 
+    [ihacres_node, gr4j_node, simhyd_node], 
     [0.5, 0.5, 0.5]
 )
 
@@ -222,13 +222,13 @@ end
 custom_metrics = Dict(
     "410730_ihacres" => (obs, sim) -> 1.0 - Streamfall.NmKGE(obs, sim),
     "410730_gr4j" => custom_low_flow_objective,
-    "410730_symhyd" => (obs, sim) -> 1.0 - Streamfall.NmKGE(obs, sim)
+    "410730_simhyd" => (obs, sim) -> 1.0 - Streamfall.NmKGE(obs, sim)
 )
 
 # Copy flow data (these can be nodes in a network)
 Qo[:, "410730_ihacres"] = Qo[:, "410730"]
 Qo[:, "410730_gr4j"] = Qo[:, "410730"]
-Qo[:, "410730_symhyd"] = Qo[:, "410730"]
+Qo[:, "410730_simhyd"] = Qo[:, "410730"]
 
 # Copy climate data for each node (these can be nodes in a network)
 insertcols!(
@@ -239,9 +239,9 @@ insertcols!(
     "410730_gr4j_P" => climate.climate_data[:, "410730_P"], 
     "410730_gr4j_PET" => climate.climate_data[:, "410730_PET"], 
     "410730_gr4j_Q" => climate.climate_data[:, "410730_Q"],
-    "410730_symhyd_P" => climate.climate_data[:, "410730_P"], 
-    "410730_symhyd_PET" => climate.climate_data[:, "410730_PET"], 
-    "410730_symhyd_Q" => climate.climate_data[:, "410730_Q"]
+    "410730_simhyd_P" => climate.climate_data[:, "410730_P"], 
+    "410730_simhyd_PET" => climate.climate_data[:, "410730_PET"], 
+    "410730_simhyd_Q" => climate.climate_data[:, "410730_Q"]
 )
 
 # Use the custom objective function in calibration

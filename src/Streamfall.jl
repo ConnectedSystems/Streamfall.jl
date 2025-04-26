@@ -15,7 +15,7 @@ include("Nodes/IHACRES/IHACRESNode.jl")
 # include("Nodes/IHACRES/IHACRESExpuhNode.jl")
 include("Nodes/GR4J/GR4JNode.jl")
 include("Nodes/HyMod/HyModNode.jl")
-include("Nodes/SYMHYD/SYMHYDNode.jl")
+include("Nodes/SIMHYD/SIMHYDNode.jl")
 include("Nodes/DamNode.jl")
 include("Nodes/Ensembles/EnsembleNode.jl")
 
@@ -279,7 +279,7 @@ end
 # Nodes
 export NetworkNode, GenericNode, GenericDirectNode
 export IHACRES, IHACRESNode, IHACRESBilinearNode, DamNode, Climate
-export create_node, GR4JNode, HyModNode, SimpleHyModNode, SYMHYDNode
+export create_node, GR4JNode, HyModNode, SimpleHyModNode, SIMHYDNode
 export EnsembleNode, WeightedEnsembleNode, GREnsembleNode
 
 # Network

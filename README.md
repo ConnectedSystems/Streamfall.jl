@@ -16,7 +16,7 @@ This package includes implementations of the following:
 - GR4J
 - HyMod
 - IHACRES
-- SYMHYD
+- SIMHYD
 
 Performance is expected to be similar to implementations in C and Fortran.
 
@@ -26,7 +26,7 @@ Naive timings (using `@time`) for an example dataset spanning 1963-07-05 - 2014-
   0.016502 seconds (469.25 k allocations: 12.902 MiB)
 - GR4JNode \
   0.015274 seconds (224.75 k allocations: 5.584 MiB)
-- SYMHYDNode \
+- SIMHYDNode \
   0.039540 seconds (638.01 k allocations: 15.190 MiB, 46.99% gc time)
 - IHACRESBilinearNode \
   0.021734 seconds (675.63 k allocations: 17.773 MiB)

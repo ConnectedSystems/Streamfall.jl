@@ -2,9 +2,9 @@ using Parameters
 using ModelParameters
 
 
-const SYMHYD_SOIL_ET_CONST = 10.0
+const SIMHYD_SOIL_ET_CONST = 10.0
 
-Base.@kwdef mutable struct SYMHYDNode{P, A<:AbstractFloat} <: NetworkNode
+Base.@kwdef mutable struct SIMHYDNode{P,A<:AbstractFloat} <: NetworkNode
     name::String
     area::A
 
@@ -34,12 +34,12 @@ end
 
 
 """
-    SYMHYDNode(name::String, spec::AbstractDict)::SYMHYDNode
+    SIMHYDNode(name::String, spec::AbstractDict)::SIMHYDNode
 
-Create SYMHYD node from spec.
+Create SIMHYD node from spec.
 """
-function SYMHYDNode(name::String, spec::AbstractDict)::SYMHYDNode
-    n = create_node(SYMHYDNode, name, spec["area"])
+function SIMHYDNode(name::String, spec::AbstractDict)::SIMHYDNode
+    n = create_node(SIMHYDNode, name, spec["area"])
     node_params = spec["parameters"]
     node_params["sm_store"] = [node_params["initial_sm_store"]]
     node_params["gw_store"] = [node_params["initial_gw_store"]]
@@ -70,10 +70,10 @@ function SYMHYDNode(name::String, spec::AbstractDict)::SYMHYDNode
     return n
 end
 
-function prep_state!(node::SYMHYDNode, sim_length::Int64)::Nothing
-    resize!(node.sm_store, sim_length+1)
-    resize!(node.gw_store, sim_length+1)
-    resize!(node.total_store, sim_length+1)
+function prep_state!(node::SIMHYDNode, sim_length::Int64)::Nothing
+    resize!(node.sm_store, sim_length + 1)
+    resize!(node.gw_store, sim_length + 1)
+    resize!(node.total_store, sim_length + 1)
     node.sm_store[2:end] .= 0.0
     node.gw_store[2:end] .= 0.0
     node.total_store[2:end] .= 0.0
@@ -88,11 +88,11 @@ end
 
 """
     run_timestep!(
-        node::SYMHYDNode, climate::Climate, ts::Int;
+        node::SIMHYDNode, climate::Climate, ts::Int;
         inflow=nothing, extraction=extraction, exchange=nothing
     )::AbstractFloat
     run_timestep!(
-        node::SYMHYDNode,
+        node::SIMHYDNode,
         rain::F,
         et::F,
         ts::Int;
@@ -101,10 +101,10 @@ end
         exchange=nothing
     )::F where {F<:AbstractFloat}
 
-Run SYMHYD for a given timestep.
+Run SIMHYD for a given timestep.
 """
 function run_timestep!(
-    node::SYMHYDNode, climate::Climate, ts::Int;
+    node::SIMHYDNode, climate::Climate, ts::Int;
     inflow=nothing, extraction=extraction, exchange=nothing
 )::AbstractFloat
     P, E = climate_values(node, climate, ts)
@@ -112,7 +112,7 @@ function run_timestep!(
     return run_timestep!(node, P, E, ts; inflow=inflow, extraction=extraction, exchange=exchange)
 end
 function run_timestep!(
-    node::SYMHYDNode,
+    node::SIMHYDNode,
     rain::F,
     et::F,
     ts::Int;
@@ -120,7 +120,7 @@ function run_timestep!(
     extraction=nothing,
     exchange=nothing
 )::F where {F<:AbstractFloat}
-    sm_store, gw_store, total_store, total_runoff, baseflow, event_runoff = run_symhyd(node, rain, et, ts)
+    sm_store, gw_store, total_store, total_runoff, baseflow, event_runoff = run_simhyd(node, rain, et, ts)
 
     node_name = node.name
     wo = timestep_value(ts, node_name, "releases", extraction)
@@ -138,7 +138,7 @@ function run_timestep!(
 end
 
 
-function update_state!(node::SYMHYDNode, sm_store, gw_store, total_store, outflow, baseflow, quickflow)
+function update_state!(node::SIMHYDNode, sm_store, gw_store, total_store, outflow, baseflow, quickflow)
     push!(node.sm_store, sm_store)
     push!(node.gw_store, gw_store)
     push!(node.total_store, total_store)
@@ -146,7 +146,7 @@ function update_state!(node::SYMHYDNode, sm_store, gw_store, total_store, outflo
     push!(node.baseflow, baseflow)
     push!(node.quickflow, quickflow)
 end
-function update_state!(node::SYMHYDNode, ts::Int64, sm_store, gw_store, total_store, outflow, baseflow, quickflow)
+function update_state!(node::SIMHYDNode, ts::Int64, sm_store, gw_store, total_store, outflow, baseflow, quickflow)
     node.sm_store[ts+1] = sm_store
     node.gw_store[ts+1] = gw_store
     node.total_store[ts+1] = total_store
@@ -157,7 +157,7 @@ end
 
 """
     update_params!(
-        node::SYMHYDNode,
+        node::SIMHYDNode,
         baseflow_coef::Float64,
         impervious_threshold::Float64,
         infiltration_coef::Float64,
@@ -172,7 +172,7 @@ end
 Update model parameters.
 """
 function update_params!(
-    node::SYMHYDNode,
+    node::SIMHYDNode,
     baseflow_coef::Float64,
     impervious_threshold::Float64,
     infiltration_coef::Float64,
@@ -198,11 +198,11 @@ end
 
 
 """
-    reset!(node::SYMHYDNode)::Nothing
+    reset!(node::SIMHYDNode)::Nothing
 
 Reset node. Clears all states back to their initial values.
 """
-function reset!(node::SYMHYDNode)::Nothing
+function reset!(node::SIMHYDNode)::Nothing
     # stores
     node.sm_store = [node.sm_store[1]]
     node.gw_store = [node.gw_store[1]]
@@ -218,18 +218,18 @@ end
 
 
 """
-    run_symhyd(node::SYMHYDNode, P::F, ET::F, ts::Int64)::NTuple{6,F} where {F<:Float64}
+    run_simhyd(node::SIMHYDNode, P::F, ET::F, ts::Int64)::NTuple{6,F} where {F<:Float64}
 
-Run SYMHYD for a single time step with given inputs and state variables.
+Run SIMHYD for a single time step with given inputs and state variables.
 """
-function run_symhyd(node::SYMHYDNode, P::F, ET::F, ts::Int64)::NTuple{6,F} where {F<:Float64}
+function run_simhyd(node::SIMHYDNode, P::F, ET::F, ts::Int64)::NTuple{6,F} where {F<:Float64}
 
     sm_store::F = node.sm_store[ts]
     gw_store::F = node.gw_store[ts]
     total_store::F = node.total_store[ts]
 
     pervious_incident::F = P
-	impervious_incident::F = P
+    impervious_incident::F = P
 
     impervious_ET::F = min(node.impervious_threshold, impervious_incident)
     impervious_runoff::F = impervious_incident - impervious_ET
@@ -264,7 +264,7 @@ function run_symhyd(node::SYMHYDNode, P::F, ET::F, ts::Int64)::NTuple{6,F} where
     baseflow_runoff::F = node.baseflow_coef.val::F * gw_store
     gw_store -= baseflow_runoff
 
-    soil_ET::F = min(sm_store, min(ET - interception_ET, sm_fraction*SYMHYD_SOIL_ET_CONST))
+    soil_ET::F = min(sm_store, min(ET - interception_ET, sm_fraction * SIMHYD_SOIL_ET_CONST))
     sm_store -= soil_ET
 
     pervious_frac::F = node.pervious_fraction.val::F
@@ -274,6 +274,6 @@ function run_symhyd(node::SYMHYDNode, P::F, ET::F, ts::Int64)::NTuple{6,F} where
     total_runoff::F = event_runoff + pervious_frac * baseflow_runoff
     baseflow::F = baseflow_runoff * pervious_frac
 
-	# values for time step...
-	return sm_store, gw_store, total_store, total_runoff, baseflow, event_runoff
+    # values for time step...
+    return sm_store, gw_store, total_store, total_runoff, baseflow, event_runoff
 end

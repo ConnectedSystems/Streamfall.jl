@@ -40,7 +40,7 @@ makedocs(sitename="Streamfall Documentation",
                 "API/nodes/IHACRES.md",
                 "API/nodes/HyMod.md",
                 "API/nodes/GR4J.md",
-                "API/nodes/SYMHYD.md",
+                "API/nodes/SIMHYD.md",
                 "API/nodes/Dam.md"
             ],
             "API/plotting.md",

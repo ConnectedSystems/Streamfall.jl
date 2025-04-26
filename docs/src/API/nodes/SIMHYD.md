@@ -1,7 +1,7 @@
-# SYMHYD
+# SIMHYD
 
 ```@autodocs
 Modules = [Streamfall]
 Order   = [:function, :type]
-Pages   = ["Nodes/SYMHYD/SYMHYDNode.jl"]
+Pages   = ["Nodes/SIMHYD/SIMHYDNode.jl"]
 ```

@@ -14,7 +14,7 @@ TEST_DIR = @__DIR__
 
     gr4j = create_node(GR4JNode, "GR4J", 100.0)
     hymod = create_node(SimpleHyModNode, "HyMod", 100.0)
-    symhyd = create_node(SYMHYDNode, "SYMHYD", 100.0)
+    simhyd = create_node(SIMHYDNode, "SIMHYD", 100.0)
 
     @testset "Running a single timestep" begin
         # Prep and run a single timestep simulation for each model
@@ -31,8 +31,8 @@ TEST_DIR = @__DIR__
         Streamfall.prep_state!(hymod, 1)
         @test Streamfall.run_timestep!(hymod, 6.0, 3.0, 1) isa AbstractFloat
 
-        Streamfall.prep_state!(symhyd, 1)
-        @test Streamfall.run_timestep!(symhyd, 6.0, 3.0, 1) isa AbstractFloat
+        Streamfall.prep_state!(simhyd, 1)
+        @test Streamfall.run_timestep!(simhyd, 6.0, 3.0, 1) isa AbstractFloat
     end
 
 end
