@@ -67,7 +67,7 @@ The `quickplot()` function creates the figure displayed above which shows dam le
 left (observed and modelled) with a [Q-Q plot](https://en.wikipedia.org/wiki/Q%E2%80%93Q_plot)
 on the right.
 
-![](../assets/calibrated_example.png)
+![](../../assets/calibrated_example.png)
 
 ```julia
 sim_dates = Streamfall.timesteps(climate)
@@ -86,4 +86,4 @@ Here, we see that while performance is generally good (mean of Median Error is n
 the model can under-estimate dam levels in late-April to May and displays a tendency to
 over-estimate dam levels between January and June, relative to other times.
 
-![](../assets/temporal_xsection_historic_calibrated.png)
+![](../../assets/temporal_xsection_historic_calibrated.png)

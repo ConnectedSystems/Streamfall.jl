@@ -125,4 +125,4 @@ display(f)
 Streamfall.temporal_cross_section(sim_dates, calib_data[:, "406000"], sn[2].level)
 ```
 
-![](../assets/simple_water_demand.png)
+![](../../assets/simple_water_demand.png)

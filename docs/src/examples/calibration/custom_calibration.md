@@ -153,8 +153,8 @@ gr4j_qp = quickplot(burn_obs, gr4j_node.outflow[burn_in:end], climate; label="We
 # savefig(gr4j_qp, "custom_calibration_gr4j.png")
 ```
 
-![](../assets/default_calibration_gr4j.png)
-![](../assets/custom_calibration_gr4j.png)
+![](../../assets/default_calibration_gr4j.png)
+![](../../assets/custom_calibration_gr4j.png)
 
 The results show improved performance under low-flow conditions, at the expense of
 mid-to-high flow conditions.
@@ -260,7 +260,7 @@ ensemble_qp = quickplot(burn_obs, ensemble.outflow[burn_in:end], climate; label=
 # savefig(ensemble_qp, "custom_calibration_ensemble.png")
 ```
 
-![](../assets/custom_calibration_ensemble.png)
+![](../../assets/custom_calibration_ensemble.png)
 
 Here we see the weighted ensemble retains much of the performance characteristics under
 a variety of conditions.

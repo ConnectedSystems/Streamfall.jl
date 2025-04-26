@@ -84,7 +84,7 @@ flows and high flows, whereas GR4J had a tendency to overestimate low flows.
 The weighted ensemble combined characteristics of both, with a tendency to overestimate
 low flows as with GR4J.
 
-![](../assets/ensemble_model_comparison_quickplots.png)
+![](../../assets/ensemble_model_comparison_quickplots.png)
 
 Comparing the temporal cross section:
 
@@ -98,7 +98,7 @@ plot(ihacres_xs, gr4j_xs, ensemble_xs; layout=(3, 1), size=(800, 1200))
 
 A reduction in the median error can be seen with extreme errors reduced somewhat.
 
-![](../assets/ensemble_xsection.png)
+![](../../assets/ensemble_xsection.png)
 
 The median error can then be applied to modelled streamflow (on a month-day basis) as a
 form of bias correction.
@@ -123,7 +123,7 @@ While the median error has increased, its variance has reduced significantly. At
 time, performance at the 75 and 95% CI remain steady relative to the original weighted
 ensemble results.
 
-![](../assets/ensemble_bias_corrected.png)
+![](../../assets/ensemble_bias_corrected.png)
 
 This ensemble approach may be improved further by:
 

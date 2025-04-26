@@ -134,13 +134,13 @@ temporal_cross_section(sim_dates, calib_data[:, "406000"], sn2[3].level)
 
 The last two lines produces the plots below
 
-![](../assets/calibrated_example.png)
+![](../../assets/calibrated_example.png)
 
 The `quickplot()` function creates the figure displayed above which shows dam levels on the
 left (observed and modelled) with a [Q-Q plot](https://en.wikipedia.org/wiki/Q%E2%80%93Q_plot)
 on the right.
 
-![](../assets/temporal_xsection_historic_calibrated.png)
+![](../../assets/temporal_xsection_historic_calibrated.png)
 
 The above shows a "cross-section" of model predictions for each month-day across simulation
 time. It is useful to gain an understanding on when models may underperform and give a
