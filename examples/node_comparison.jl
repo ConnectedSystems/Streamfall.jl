@@ -1,5 +1,5 @@
 using Distributed
-using Plots
+using StatsPlots
 
 
 N = 4
@@ -11,8 +11,7 @@ end
     using DataFrames, CSV
     using Streamfall, BlackBoxOptim
 
-    HERE = @__DIR__
-    DATA_PATH = joinpath(HERE, "../test/data/cotter/")
+    DATA_PATH = joinpath(dirname(dirname(pathof(Streamfall))), "test/data/cotter/")
 
     # Load observations
     date_format = "YYYY-mm-dd"

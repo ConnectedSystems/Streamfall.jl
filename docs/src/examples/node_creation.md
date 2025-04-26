@@ -8,13 +8,13 @@ using Streamfall
 
 hymod_node = create_node(SimpleHyModNode, "410730", 129.2)
 
-# Hymod parameters
-Sm_max = 250.0
-B = 1.0
-alpha = 0.2
-Kf = 0.5
-Ks = 0.05
+# Hymod parameters ("hy_" prefix is simply to avoid any variable name conflicts)
+hy_Sm_max = 250.0
+hy_B = 1.0
+hy_alpha = 0.2
+hy_Kf = 0.5
+hy_Ks = 0.05
 
 # Update parameters
-update_params!(hymod_node, Sm_max, B, alpha, Kf, Ks)
+update_params!(hymod_node, hy_Sm_max, hy_B, hy_alpha, hy_Kf, hy_Ks)
 ```

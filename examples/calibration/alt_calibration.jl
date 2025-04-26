@@ -66,7 +66,7 @@ best_params = best_candidate(res)
 
 reset!(node)
 
-using Plots
+using StatsPlots
 
 update_params!(node, best_params...)
 
@@ -83,9 +83,9 @@ split_mKGE = round(split_mKGE, digits=4)
 rmse = round(rmse, digits=4)
 
 plot(h_data,
-     legend=:bottomleft,
-     title="Calibrated IHACRES\n(Split NmKGE: $(split_mKGE); RMSE: $(rmse))",
-     label="Historic", xlabel="Day", ylabel="Dam Level [mAHD]")
+    legend=:bottomleft,
+    title="Calibrated IHACRES\n(Split NmKGE: $(split_mKGE); RMSE: $(rmse))",
+    label="Historic", xlabel="Day", ylabel="Dam Level [mAHD]")
 
 plot!(n_data, label="IHACRES")
 

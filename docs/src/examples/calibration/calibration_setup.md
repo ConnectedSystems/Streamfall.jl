@@ -4,6 +4,9 @@ The calibration examples all rely on the functions shown here.
 
 List of metrics provided by Streamfall can be found in [Included metrics](@ref)
 
+The example here assumes the data has been installed or copied locally.
+Alternatively, download the `test/data` directory from the project repository and 
+change the `DATA_PATH` variable below accordingly.
 
 ## Importing shared/common packages
 
@@ -12,19 +15,16 @@ List of metrics provided by Streamfall can be found in [Included metrics](@ref)
 using Statistics, DataFrames, CSV
 using Distributed, BlackBoxOptim
 
-using ModelParameters
-using Graphs, MetaGraphs
-using YAML, Plots
+using YAML
+using StatsPlots, GraphPlot
 using Streamfall
 ```
 
-
 ## Load network specification
-
-Note that the `DATA_PATH` is pointing to the `test/data/campaspe/` directory.
 
 ```julia
 # Load and generate stream network
+DATA_PATH = joinpath(dirname(dirname(pathof(Streamfall))), "test/data/campaspe/")
 network = YAML.load_file(joinpath(DATA_PATH, "campaspe_network.yml"))
 sn = create_network("Example Network", network)
 ```
@@ -34,14 +34,15 @@ sn = create_network("Example Network", network)
 ```julia
 # Load climate data
 date_format = "YYYY-mm-dd"
-climate_data = CSV.File(joinpath(data_path, "climate/climate_historic.csv"),
+climate_data = CSV.read(joinpath(DATA_PATH, "climate/climate_historic.csv"),
                         comment="#",
-                        dateformat=date_format) |> DataFrame
+                        dateformat=date_format, DataFrame)
 
-dam_level_fn = joinpath(data_path, "dam/historic_levels_for_fit.csv")
-dam_releases_fn = joinpath(data_path, "dam/historic_releases.csv")
-hist_dam_levels = CSV.File(dam_level_fn, dateformat=date_format) |> DataFrame
-hist_dam_releases = CSV.File(dam_releases_fn, dateformat=date_format) |> DataFrame
+dam_level_fn = joinpath(DATA_PATH, "gauges/406000_historic_levels_for_fit.csv")
+hist_dam_levels = CSV.read(dam_level_fn, dateformat=date_format, DataFrame)
+
+dam_releases_fn = joinpath(DATA_PATH, "gauges/406000_historic_outflow.csv")
+hist_dam_releases = CSV.read(dam_releases_fn, dateformat=date_format, DataFrame)
 
 # Subset to same range
 climate_data, hist_dam_levels, hist_dam_releases = Streamfall.align_time_frame(climate_data, 

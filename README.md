@@ -92,11 +92,11 @@ using CSV, DataFrames, YAML
 using StatsPlots
 using Streamfall
 
-example_data_dir = joinpath(dirname(dirname(pathof(Streamfall))), "test/data")
+data_dir = joinpath(dirname(dirname(pathof(Streamfall))), "test/data")
 
 # Load data file which holds observed streamflow, precipitation and PET data
 obs_data = CSV.read(
-    joinpath(example_data_dir, "cotter/climate/CAMELS-AUS_410730.csv"), 
+    joinpath(data_dir, "cotter/climate/CAMELS-AUS_410730.csv"), 
     DataFrame; 
     comment="#"
 )
@@ -225,12 +225,12 @@ using Streamfall
 
 # Load a network from a file, providing a name for the network and the file path.
 # Creates a graph representation of the stream with associated metadata.
-example_data_dir = joinpath(dirname(dirname(pathof(Streamfall))), "test/data")
-sn = load_network("Example Network", joinpath(example_data_dir, "campaspe/campaspe_network.yml"))
+data_dir = joinpath(dirname(dirname(pathof(Streamfall))), "test/data")
+sn = load_network("Example Network", joinpath(data_dir, "campaspe/campaspe_network.yml"))
 
 # Load climate data, in this case from a CSV file with data for all nodes.
 # Indicate which columns are precipitation and evaporation data based on partial identifiers
-climate = Climate(joinpath(example_data_dir, "campaspe/climate/climate.csv"), "_rain", "_evap")
+climate = Climate(joinpath(data_dir, "campaspe/climate/climate.csv"), "_rain", "_evap")
 
 # This runs an entire stream network
 @info "Running an example stream..."

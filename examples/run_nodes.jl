@@ -4,8 +4,7 @@ using Statistics
 using Streamfall
 
 
-here = @__DIR__
-data_path = joinpath(here, "../test/data/campaspe/")
+data_path = joinpath(dirname(dirname(pathof(Streamfall))), "test/data/campaspe/")
 
 # Load and generate stream network
 sn = load_network("Example Network", joinpath(data_path, "campaspe_network.yml"))

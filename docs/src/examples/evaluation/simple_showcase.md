@@ -20,24 +20,26 @@ This script is run in the `examples` directory.
 """
 
 using CSV, DataFrames, YAML
-using Plots
+using StatsPlots
 using Streamfall
+
+data_dir = joinpath(dirname(dirname(pathof(Streamfall))), "test/data/campaspe")
 
 # Load climate data - in this case from a CSV file with data for all nodes.
 # Indicate which columns are precipitation and evaporation data based on partial identifiers
-climate = Climate("../test/data/campaspe/climate/climate.csv", "_rain", "_evap")
+climate = Climate(joinpath(data_dir, "climate/climate.csv"), "_rain", "_evap")
 
 calib_data = CSV.read(
-    "../test/data/campaspe/gauges/outflow_and_level.csv",
+    joinpath(data_dir, "gauges/outflow_and_level.csv"),
     DataFrame;
     comment="#"
 )
 
 # Historic extractions from the dam
-extraction_data = CSV.read("../test/data/campaspe/gauges/dam_extraction.csv", DataFrame; comment="#")
+extraction_data = CSV.read(joinpath(data_dir, "gauges/dam_extraction.csv"), DataFrame; comment="#")
 
 # Load the two-node example network
-sn = load_network("Example Network", "calibration/lake_eppalock.yml")
+sn = load_network("Example Network", joinpath(data_dir, "two_node_network.yml"))
 
 # Run the dam node and above
 dam_id, dam_node = sn["406000"]
@@ -58,7 +60,7 @@ nse = round(nse_score, digits=4)
 @info "Scores:" rmse nnse nse
 
 # Results of model run
-quickplot(dam_obs, dam_sim, climate, "IHACRES", false; burn_in=366)
+quickplot(dam_obs, dam_sim, climate; label="IHACRES", log=false, burn_in=366)
 ```
 
 The `quickplot()` function creates the figure displayed above which shows dam levels on the

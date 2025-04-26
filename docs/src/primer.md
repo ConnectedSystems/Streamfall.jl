@@ -159,7 +159,11 @@ Date, 406214_rain, 406214_evap, 406219_rain, 406219_evap
 ```julia
 # Load data from CSV
 # Create a climate object, specifying which identifiers to use.
-climate = Climate("../test/data/campaspe/climate/climate.csv", "_rain", "_evap")
+example_data_dir = joinpath(dirname(dirname(pathof(Streamfall))), "test/data")
+climate = Climate(
+    joinpath(example_data_dir, "campaspe/climate/climate.csv"), 
+    "_rain", "_evap"
+)
 ```
 
 ## Running a network or node

@@ -1,4 +1,4 @@
-using Plots
+using StatsPlots
 
 using Statistics
 import Dates: month, monthday, week, dayofyear
@@ -8,8 +8,7 @@ using Streamfall
 import Streamfall: TemporalCrossSection, BlackBoxOptim
 
 
-HERE = @__DIR__
-DATA_PATH = joinpath(HERE, "../test/data/cotter/")
+DATA_PATH = joinpath(dirname(dirname(pathof(Streamfall))), "test/data/cotter/")
 
 # Load observations
 date_format = "YYYY-mm-dd"
@@ -107,7 +106,7 @@ savefig("baseline_xsection.png")
 # split_func(obs, sim) = Streamfall.naive_split_metric(obs, sim; metric=Streamfall.NmKGE, n_members=14)
 function v_metric(obs, sim; metric=Streamfall.NmKGE, n_members=180)
     chunked_scores = Streamfall.naive_split_metric(obs, sim, n_members, metric)
-    return mean(chunked_scores)*0.9 + std(chunked_scores)*0.1
+    return mean(chunked_scores) * 0.9 + std(chunked_scores) * 0.1
 end
 
 uncert_objfunc = (obs, sim) -> 1.0 - v_metric(obs, sim)

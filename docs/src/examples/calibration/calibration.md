@@ -9,18 +9,18 @@ Data is prepped with the script `campaspe_data_prep.jl` in the `test/data/campas
 directory.
 """
 
-using OrderedCollections
-using Glob
-
 using Statistics
-using CSV, DataFrames, YAML
+using CSV, YAML, DataFrames
 using Streamfall
 
 # Import visualization packages to compile extensions
-using Plots, GraphPlot
+using StatsPlots, GraphPlot
 
-
-sn = load_network("Example Network", "../test/data/campaspe/campaspe_network.yml")
+example_data_dir = joinpath(dirname(dirname(pathof(Streamfall))), "test/data")
+sn = load_network(
+    "Example Network", 
+    joinpath(example_data_dir, "campaspe/campaspe_network.yml")
+)
 
 # The Campaspe catchment is represented as a network of eight nodes, including one dam.
 # All nodes use the IHACRES_CMD rainfall-runoff model.
@@ -28,17 +28,22 @@ plot_network(sn)
 
 # Load climate data - in this case from a CSV file with data for all nodes.
 # Indicate which columns are precipitation and evaporation data based on partial identifiers
-climate = Climate("../test/data/campaspe/climate/climate.csv", "_rain", "_evap")
+example_data_dir = joinpath(dirname(dirname(pathof(Streamfall))), "test/data/campaspe")
+climate = Climate(joinpath(example_data_dir, "climate/climate.csv"), "_rain", "_evap")
 
 # Historic flows and dam level data
 calib_data = CSV.read(
-    "../test/data/campaspe/gauges/outflow_and_level.csv",
+    joinpath(example_data_dir, "gauges/outflow_and_level.csv"),
     DataFrame;
     comment="#"
 )
 
 # Historic extractions from the dam
-extraction_data = CSV.read("../test/data/campaspe/gauges/dam_extraction.csv", DataFrame; comment="#")
+extraction_data = CSV.read(
+    joinpath(example_data_dir, "gauges/dam_extraction.csv"), 
+    DataFrame; 
+    comment="#"
+)
 
 # We now have a dataset for calibration (`calib_data`) and a dataset indicating the
 # historic dam extractions (`extraction_data`).
@@ -79,8 +84,9 @@ calibrate!(
     MaxTime=60.0
 );
 
-# Could calibrate a specific node, assuming all nodes upstream have already been calibrated
-# Set `calibrate_all=true` to calibrate all upstream nodes as well.
+# A specific node can also be calibrated, assuming all nodes upstream have already been 
+# calibrated.
+# Otherwise, set `calibrate_all=true` to calibrate all upstream nodes as well.
 # To produce the results shown below, the node upstream from the dam was calibrated an
 # additional 2 hours.
 # calibrate!(
@@ -102,11 +108,11 @@ Streamfall.NSE(dam_obs[366:end], dam_sim[366:end])
 Streamfall.mKGE(dam_obs[366:end], dam_sim[366:end])
 
 # Plot results
-f = quickplot(dam_obs, dam_sim, climate, "Modelled - 406000", false; burn_in=366)
-savefig(f, "example_dam_level.png")
+f = quickplot(dam_obs, dam_sim, climate; label="Modelled - 406000", log=false, burn_in=366)
+# savefig(f, "example_dam_level.png")
 
 # Save calibrated network to a file
-save_network(sn, "example_network_calibrated.yml")
+# save_network(sn, "example_network_calibrated.yml")
 
 # Illustrating that the re-loaded network reproduces the results as above
 sn2 = load_network("Calibrated Example", "example_network_calibrated.yml")
