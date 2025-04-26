@@ -128,4 +128,4 @@ ensemble results.
 This ensemble approach may be improved further by:
 
 - Using a rolling window to smooth ensemble predictions
-- Defining a custom objective function to emphasize model performance
+- Defining a custom objective function to target specific conditions

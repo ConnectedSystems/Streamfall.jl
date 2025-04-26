@@ -218,7 +218,7 @@ function custom_low_flow_objective(obs, sim)
 end
 
 # Assign different metrics to individual nodes
-# Make GR4J 
+# Make the GR4J node use the custom low-flow metric
 custom_metrics = Dict(
     "410730_ihacres" => (obs, sim) -> 1.0 - Streamfall.NmKGE(obs, sim),
     "410730_gr4j" => custom_low_flow_objective,
