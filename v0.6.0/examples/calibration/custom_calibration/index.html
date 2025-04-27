@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Customized calibration · Streamfall Documentation</title><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img src="../../../assets/logo.svg" alt="Streamfall Documentation logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">Streamfall Documentation</a></span></div><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">Streamfall.jl Documentation</a></li><li><a class="tocitem" href="../../../primer/">Primer</a></li><li><a class="tocitem" href="../../../expected_data_formats/">Input data format</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../../examples/">Examples</a></li><li><a class="tocitem" href="../../node_creation/">Node creation</a></li><li><a class="tocitem" href="../../network_loading/">Network Loading</a></li><li><input class="collapse-toggle" id="menuitem-4-4" type="checkbox"/><label class="tocitem" for="menuitem-4-4"><span class="docs-label">Model evaluation</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../evaluation/simple_showcase/">A simple example</a></li><li><a class="tocitem" href="../../evaluation/model_comparison/">Model comparison example</a></li><li><a class="tocitem" href="../../evaluation/simple_multisystem/">Simple two-system interaction</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4-5" type="checkbox" checked/><label class="tocitem" for="menuitem-4-5"><span class="docs-label">Calibration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../calibration/">Example calibration</a></li><li class="is-active"><a class="tocitem" href>Customized calibration</a><ul class="internal"><li><a class="tocitem" href="#Basic-Structure"><span>Basic Structure</span></a></li><li><a class="tocitem" href="#Tips-for-Custom-Objective-Functions"><span>Tips for Custom Objective Functions</span></a></li><li><a class="tocitem" href="#Further-Reading"><span>Further Reading</span></a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-4-6" type="checkbox"/><label class="tocitem" for="menuitem-4-6"><span class="docs-label">Ensemble modeling</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../ensembles/weighted_ensembles/">Weighted Ensemble Modeling</a></li></ul></li></ul></li><li><span class="tocitem">API</span><ul><li><a class="tocitem" href="../../../metrics/">Included metrics</a></li><li><input class="collapse-toggle" id="menuitem-5-2" type="checkbox"/><label class="tocitem" for="menuitem-5-2"><span class="docs-label">Nodes</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../API/nodes/Node/">Generic node methods</a></li><li><a class="tocitem" href="../../../API/nodes/IHACRES/">IHACRES</a></li><li><a class="tocitem" href="../../../API/nodes/HyMod/">HyMod</a></li><li><a class="tocitem" href="../../../API/nodes/GR4J/">GR4J</a></li><li><a class="tocitem" href="../../../API/nodes/SIMHYD/">SIMHYD</a></li><li><a class="tocitem" href="../../../API/nodes/Dam/">Dam (Storage Level)</a></li></ul></li><li><a class="tocitem" href="../../../API/plotting/">Plotting</a></li><li><a class="tocitem" href="../../../API/network/">Network</a></li><li><a class="tocitem" href="../../../API/climate/">Climate</a></li><li><a class="tocitem" href="../../../API/use_methods/">Methods to run a network or node</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li><a class="is-disabled">Calibration</a></li><li class="is-active"><a href>Customized calibration</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Customized calibration</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ConnectedSystems/Streamfall.jl/blob/main/docs/src/examples/calibration/custom_calibration.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Customized-calibration"><a class="docs-heading-anchor" href="#Customized-calibration">Customized calibration</a><a id="Customized-calibration-1"></a><a class="docs-heading-anchor-permalink" href="#Customized-calibration" title="Permalink"></a></h1><p>Streamfall provides built-in methods for model calibration, but custom metrics  and objective functions can be defined to better suit specific calibration needs. This example demonstrates how to create custom metrics that combine multiple performance metrics  or apply specific weightings to different aspects of model performance.</p><h2 id="Basic-Structure"><a class="docs-heading-anchor" href="#Basic-Structure">Basic Structure</a><a id="Basic-Structure-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-Structure" title="Permalink"></a></h2><p>Streamfall adopts a two-pronged approach to handling objective functions.</p><p>The first is a &quot;default&quot; method assigned to each node (which can be overwritten/replaced).</p><p>A custom objective function for calibration typically accepts:</p><ol><li>The parameter values to be evaluated</li><li>Climate data for the simulation</li><li>The network or node being calibrated</li><li>Observational data for comparison</li><li>The metric used to assess performance</li><li>Inputs to account for additional inflow, extraction and groundwater flux</li></ol><p>The function then returns a single scalar value representing the optimization target  (to be minimized).</p><p>Below is an example of the default implementation, copied and defined outside of Streamfall.</p><pre><code class="language-julia hljs">function custom_obj_func(
+    params, climate::Streamfall.Climate, node::Streamfall.NetworkNode, calib_data::Array;
+    metric::F, inflow=nothing, extraction=nothing, exchange=nothing
+) where {F}
+    update_params!(node, params...)
+
+    metric_func = (sim, obs) -&gt; handle_missing(metric, sim, obs; handle_missing=:skip)
+
+    run_node!(node, climate; inflow=inflow, extraction=extraction, exchange=exchange)
+    score = metric_func(node.outflow, calib_data)
+
+    # Reset to clear stored values
+    reset!(node)
+
+    return score
+end
+
+# Example usage: create a node
+ihacres_node = create_node(IHACRESBilinearNode, &quot;410730_ihacres&quot;, 129.2)
+
+# Replace default method with the custom objective function
+ihacres_node.obj_func = custom_obj_func
+
+# Then proceed with calibration as normal
+# calibrate!(...);</code></pre><p>The above allows a finer level of control, allowing the objective function to account for climatic conditions as well as other external forcings (such as groundwater exchange).</p><p>Alternatively, performance metrics can be defined for specific nodes, or node instances that make up an ensemble.</p><p>Lets begin with a default calibration for comparison</p><pre><code class="language-julia hljs">using Statistics
+using CSV, DataFrames
+using Streamfall
+using StatsPlots  # To activate visualization extensions
+
+# Set up data
+data_dir = joinpath(
+    dirname(dirname(pathof(Streamfall))),
+    &quot;test/data&quot;
+)
+
+# Historic flows
+obs_data = CSV.read(
+    joinpath(data_dir, &quot;cotter/climate/CAMELS-AUS_410730.csv&quot;),
+    DataFrame;
+    comment=&quot;#&quot;
+)
+
+Qo = extract_flow(obs_data, &quot;410730&quot;)
+climate = extract_climate(obs_data)
+
+# Create a node
+gr4j_node = create_node(GR4JNode, &quot;410730&quot;, 129.2)
+
+# Calibrate the model using NmKGE
+calibrate!(
+    gr4j_node, climate, Qo, (obs, sim) -&gt; 1.0 - Streamfall.NmKGE(obs, sim);
+    extraction=extraction_data, weighting=0.0,
+    MaxTime=300.0
+);
+
+# Visualize model performance (using a 1-year burn-in period)
+burn_in = 366
+burn_obs = Qo[burn_in:end, &quot;410730&quot;]
+run_node!(gr4j_node, climate)
+gr4j_qp = quickplot(burn_obs, gr4j_node.outflow[burn_in:end], climate; label=&quot;GR4J&quot;, log=true)
+# savefig(gr4j_qp, &quot;default_calibration_gr4j.png&quot;)</code></pre><p>Below, the calibration is repeated using a custom metric which targets low-flow conditions.</p><pre><code class="language-julia hljs"># Create a node
+gr4j_node = create_node(GR4JNode, &quot;410730&quot;, 129.2)
+
+# Define a custom objective function that combines multiple metrics to better account for
+# low-flow periods
+function custom_low_flow_objective(obs, sim)
+    # Filter for low flow periods (e.g., flow &lt; 10th percentile)
+    low_flow_threshold = quantile(obs, 0.1)
+    low_flow_indices = findall(obs .&lt;= low_flow_threshold)
+    
+    # Calculate metrics for low-flow periods
+    if !isempty(low_flow_indices)
+        # Apply log transform to emphasize low flow performance
+        log_obs = log.(obs[low_flow_indices] .+ 1e-6)
+        log_sim = log.(sim[low_flow_indices] .+ 1e-6)
+
+        # Note: we are using Normalized versions of the usual metrics
+        #       so the returned values are 0 - 1.
+        #       We then take the complement as the optimizer seeks to 
+        #       minimize error.
+        kge_low = 1.0 - Streamfall.NmKGE(log_obs, log_sim)
+        
+        # Calculate metrics for all flows for balance
+        kge_all = 1.0 - Streamfall.NmKGE(obs, sim)
+        
+        # Combined score - weighting more heavily toward low flows
+        score = (0.7 * kge_low) + (0.3 * kge_all)
+    else
+        # Fallback if no low flows found
+        score = 1.0 - Streamfall.NmKGE(obs, sim)
+    end
+    
+    return score
+end
+
+# Calibrate the model
+calibrate!(
+    gr4j_node, climate, Qo, custom_low_flow_objective;
+    extraction=extraction_data, weighting=0.0,
+    MaxTime=300.0
+);
+
+# Visualize model performance (using a 1-year burn-in period)
+burn_in = 366
+burn_obs = Qo[burn_in:end, &quot;410730&quot;]
+run_node!(gr4j_node, climate)
+gr4j_qp = quickplot(burn_obs, gr4j_node.outflow[burn_in:end], climate; label=&quot;Weighted Ensemble&quot;, log=true)
+# savefig(gr4j_qp, &quot;custom_calibration_gr4j.png&quot;)</code></pre><p><img src="../../../assets/default_calibration_gr4j.png" alt/> <img src="../../../assets/custom_calibration_gr4j.png" alt/></p><p>The results show improved performance under low-flow conditions, at the expense of mid-to-high flow conditions.</p><p>Below is an example of defining a performance metric for specific nodes. For further detail on ensemble modeling, see the section on <a href="../../ensembles/weighted_ensembles/#Weighted-Ensemble-Modeling">Weighted Ensemble Modeling</a>.</p><pre><code class="language-julia hljs"># Reload data (just in case modifications were made)
+obs_data = CSV.read(
+    joinpath(data_dir, &quot;cotter/climate/CAMELS-AUS_410730.csv&quot;),
+    DataFrame;
+    comment=&quot;#&quot;
+)
+
+Qo = extract_flow(obs_data, &quot;410730&quot;)
+climate = extract_climate(obs_data)
+
+# Create one instance each of IHACRES_CMD, GR4J and SIMHYD
+ihacres_node = create_node(IHACRESBilinearNode, &quot;410730_ihacres&quot;, 129.2)
+gr4j_node = create_node(GR4JNode, &quot;410730_gr4j&quot;, 129.2)
+simhyd_node = create_node(SIMHYDNode, &quot;410730_simhyd&quot;, 129.2)
+
+# Create a weighted ensemble with equal weights
+# The default behavior is to combine component predictions with a normalized weighted sum.
+ensemble = create_node(
+    WeightedEnsembleNode, 
+    [ihacres_node, gr4j_node, simhyd_node], 
+    [0.5, 0.5, 0.5]
+)
+
+# Define a custom objective function that combines multiple metrics
+function custom_low_flow_objective(obs, sim)
+    # Filter for low flow periods (e.g., flow &lt; 10th percentile)
+    low_flow_threshold = quantile(obs, 0.1)
+    low_flow_indices = findall(obs .&lt;= low_flow_threshold)
+
+    # Calculate metrics for all flows for balance
+    kge_all = 1.0 - Streamfall.NmKGE(obs, sim)
+    
+    # Calculate metrics for low-flow periods
+    if !isempty(low_flow_indices)
+        # Apply log transform to emphasize low flow performance
+        log_obs = log.(obs[low_flow_indices] .+ 1e-6)
+        log_sim = log.(sim[low_flow_indices] .+ 1e-6)
+
+        # Note: we are using Normalized versions of the usual metrics
+        #       so the returned values are 0 - 1.
+        #       We then take the complement as the optimizer seeks to 
+        #       minimize error.
+        kge_low = 1.0 - Streamfall.NmKGE(log_obs, log_sim)
+        
+        # Combined score - weighting more heavily toward low flows
+        score = (0.8 * kge_low) + (0.2 * kge_all)
+    else
+        # Fallback if no low flows found
+        score = kge_all
+    end
+    
+    return score
+end
+
+# Assign different metrics to individual nodes
+# Make the GR4J node use the custom low-flow metric
+custom_metrics = Dict(
+    &quot;410730_ihacres&quot; =&gt; (obs, sim) -&gt; 1.0 - Streamfall.NmKGE(obs, sim),
+    &quot;410730_gr4j&quot; =&gt; custom_low_flow_objective,
+    &quot;410730_simhyd&quot; =&gt; (obs, sim) -&gt; 1.0 - Streamfall.NmKGE(obs, sim)
+)
+
+# Copy flow data (these can be nodes in a network)
+Qo[:, &quot;410730_ihacres&quot;] = Qo[:, &quot;410730&quot;]
+Qo[:, &quot;410730_gr4j&quot;] = Qo[:, &quot;410730&quot;]
+Qo[:, &quot;410730_simhyd&quot;] = Qo[:, &quot;410730&quot;]
+
+# Copy climate data for each node (these can be nodes in a network)
+insertcols!(
+    climate.climate_data, 
+    &quot;410730_ihacres_P&quot; =&gt; climate.climate_data[:, &quot;410730_P&quot;], 
+    &quot;410730_ihacres_PET&quot; =&gt; climate.climate_data[:, &quot;410730_PET&quot;], 
+    &quot;410730_ihacres_Q&quot; =&gt; climate.climate_data[:, &quot;410730_Q&quot;],
+    &quot;410730_gr4j_P&quot; =&gt; climate.climate_data[:, &quot;410730_P&quot;], 
+    &quot;410730_gr4j_PET&quot; =&gt; climate.climate_data[:, &quot;410730_PET&quot;], 
+    &quot;410730_gr4j_Q&quot; =&gt; climate.climate_data[:, &quot;410730_Q&quot;],
+    &quot;410730_simhyd_P&quot; =&gt; climate.climate_data[:, &quot;410730_P&quot;], 
+    &quot;410730_simhyd_PET&quot; =&gt; climate.climate_data[:, &quot;410730_PET&quot;], 
+    &quot;410730_simhyd_Q&quot; =&gt; climate.climate_data[:, &quot;410730_Q&quot;]
+)
+
+# Use the custom objective function in calibration
+calibrate_instances!(
+    ensemble,
+    climate, 
+    Qo,
+    custom_metrics;
+    MaxTime=300
+)
+
+burn_in = 366
+burn_obs = Qo[burn_in:end, &quot;410730&quot;]
+run_node!(ensemble, climate)
+ensemble_qp = quickplot(burn_obs, ensemble.outflow[burn_in:end], climate; label=&quot;Weighted Ensemble&quot;, log=true)
+# savefig(ensemble_qp, &quot;custom_calibration_ensemble.png&quot;)</code></pre><p><img src="../../../assets/custom_calibration_ensemble.png" alt/></p><p>Here we see the weighted ensemble retains much of the performance characteristics under a variety of conditions.</p><h2 id="Tips-for-Custom-Objective-Functions"><a class="docs-heading-anchor" href="#Tips-for-Custom-Objective-Functions">Tips for Custom Objective Functions</a><a id="Tips-for-Custom-Objective-Functions-1"></a><a class="docs-heading-anchor-permalink" href="#Tips-for-Custom-Objective-Functions" title="Permalink"></a></h2><ol><li><p><strong>Normalization</strong>: Ensure different metrics are on comparable scales. Consider normalizing values to [0,1] range.</p></li><li><p><strong>Complementary Metrics</strong>: Different metrics capture different aspects of performance. Combining KGE (overall performance) with RMSE (high flows) and log-transformed metrics (low flows) provides balanced calibration.</p></li><li><p><strong>Weighting</strong>: Adjust weights based on your modeling priorities. Higher weights lead to more emphasis on specific aspects.</p></li><li><p><strong>Error Handling</strong>: Include error checking for edge cases (e.g., all zero flows, missing data).</p></li><li><p><strong>Time Efficiency</strong>: Keep objective functions computationally efficient as they&#39;ll be called many times during calibration.</p></li></ol><h2 id="Further-Reading"><a class="docs-heading-anchor" href="#Further-Reading">Further Reading</a><a id="Further-Reading-1"></a><a class="docs-heading-anchor-permalink" href="#Further-Reading" title="Permalink"></a></h2><p>For theoretical background on objective functions and performance metrics:</p><ol><li><p>Fowler, K., Peel, M., Western, A., Zhang, L., 2018. <br/>Improved Rainfall-Runoff Calibration for Drying Climate: Choice of Objective Function. <br/>Water Resources Research 54, 3392–3408. <br/>https://doi.org/10.1029/2017WR022466</p></li><li><p>Garcia, F., Folton, N., Oudin, L., 2017. <br/>Which objective function to calibrate rainfall–runoff models for low-flow index simulations? <br/>Hydrological Sciences Journal 62, 1149–1166. <br/>https://doi.org/10.1080/02626667.2017.1308511</p></li></ol></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../calibration/">« Example calibration</a><a class="docs-footer-nextpage" href="../../ensembles/weighted_ensembles/">Weighted Ensemble Modeling »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Sunday 27 April 2025 04:07">Sunday 27 April 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
