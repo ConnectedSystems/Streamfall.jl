@@ -181,7 +181,7 @@ Area: 1985.73
 │            f │   2.57928 │        0.01 │         3.0 │                             Plant stress threshold, controls at what moisture deficit plants begin to experience stress. │
 │            a │   5.92338 │         0.1 │        10.0 │                                    Quickflow storage coefficient, where higher values lead to faster quickflow response. │
 │            b │ 0.0989926 │       0.001 │         0.1 │                                            Slowflow storage coefficient, lower values lead to slower baseflow recession. │
-│ storage_coef │   1.86134 │     1.0e-10 │        10.0 │                               Groundwater interaction factor, controling how water is exchanged with deeper groundwater. │
+│ storage_coef │   1.86134 │     1.0e-10 │        10.0 │                              Groundwater interaction factor, controlling how water is exchanged with deeper groundwater. │
 │        alpha │  0.727905 │      1.0e-5 │         1.0 │                                                      Effective rainfall scaling factor, partitions rainfall into runoff. │
 └──────────────┴───────────┴─────────────┴─────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
