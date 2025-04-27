@@ -35,7 +35,7 @@ The spec takes the following form:
     # The node type which defines which model is used for this node
     # In this case, it is the IHACRES with the bilinear formulation of the CMD module
     node_type: IHACRESBilinearNode
-    area: 130.0  # subcatchment area in km^2 (from BoM)
+    area: 130.0  # subcatchment area in km^2 (from the Australian Bureau of Meteorology)
 
     # This spec defines a single node system
     # so it has no nodes upstream (inlets) or downstream (outlets)
