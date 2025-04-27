@@ -86,7 +86,7 @@ low flows as with GR4J.
 
 ![](../../assets/ensemble_model_comparison_quickplots.png)
 
-Comparing the temporal cross section:
+Comparing the temporal cross section to get an idea of seasonality:
 
 ```julia
 ihacres_xs = temporal_cross_section(burn_dates, burn_obs, ihacres_node.outflow[burn_in:end]; title="IHACRES", yscale=:log10)
@@ -101,10 +101,11 @@ A reduction in the median error can be seen with extreme errors reduced somewhat
 ![](../../assets/ensemble_xsection.png)
 
 The median error can then be applied to modelled streamflow (on a month-day basis) as a
-form of bias correction.
+form of bias correction. Here, the correction factor is capped to -80% and +40% of predicted
+outflows.
 
 ```julia
-q_star = Streamfall.apply_temporal_correction(ensemble, climate, Qo[:, "410730"])
+q_star = Streamfall.apply_temporal_correction(ensemble, climate, Qo[:, "410730"]; low_cap=0.8, high_cap=0.4)
 
 bc_ensemble_qp = quickplot(burn_obs, q_star[burn_in:end], climate; label="Bias Corrected Ensemble", log=true)
 
@@ -116,12 +117,12 @@ bias_corrected_xs = temporal_cross_section(
     yscale=:log10
 )
 
-plot(bc_ensemble_qp, bias_corrected_xs; layout=(2,1), size=(800, 800))
+ens_qp = plot(bc_ensemble_qp, bias_corrected_xs; layout=(2,1), size=(800, 800))
 ```
 
-While the median error has increased, its variance has reduced significantly. At the same
-time, performance at the 75 and 95% CI remain steady relative to the original weighted
-ensemble results.
+It can be seen here that low flows are better represented, with a commensurate decrease
+in median error (and its variance). At the same time, performance at the 75 and 95% CI 
+remain steady relative to the original weighted ensemble results.
 
 ![](../../assets/ensemble_bias_corrected.png)
 
@@ -129,3 +130,4 @@ This ensemble approach may be improved further by:
 
 - Using a rolling window to smooth ensemble predictions
 - Defining a custom objective function to target specific conditions
+- Using more advanced ensemble approaches other than the simple weighted mean approach
