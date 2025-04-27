@@ -6,9 +6,9 @@ as the ensemble constituents. The default ensemble is a normalized weighted sum.
 The usual setup process is shown here, detailed in previous sections of this guide.
 
 ```julia
-using StatsPlots
-using CSV, DataFrames
 using Statistics
+using CSV, DataFrames
+using StatsPlots
 using Streamfall
 
 data_dir = joinpath(
