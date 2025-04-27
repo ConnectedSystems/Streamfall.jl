@@ -9,15 +9,15 @@ Base.@kwdef mutable struct SIMHYDNode{P,A<:AbstractFloat} <: NetworkNode
     area::A
 
     # parameters
-    baseflow_coef::P = Param(0.5, bounds=(0.0, 1.0))
-    impervious_threshold::P = Param(2.5, bounds=(0.0, 5.0))  # mm
-    infiltration_coef::P = Param(200.0, bounds=(0.0, 400.0))
-    infiltration_shape::P = Param(5.0, bounds=(0.0, 10.0))
-    interflow_coef::P = Param(0.5, bounds=(0.0, 1.0))
-    pervious_fraction::P = Param(0.5, bounds=(0.0, 1.0))
-    risc::P = Param(2.5, bounds=(0.0, 5.0))  # rainfall interception store capacity (mm)
-    recharge_coef::P = Param(0.5, bounds=(0.0, 1.0))
-    smsc::P = Param(250.0, bounds=(1.0, 500.0))  # Soil Moisture Store Capacity (mm)
+    baseflow_coef::P = Param(0.5, bounds=(0.0, 1.0), desc="Rate of release from groundwater.")
+    impervious_threshold::P = Param(2.5, bounds=(0.0, 5.0), desc="Threshold below which rainfall is lost to evaporation (in mm).")  # mm
+    infiltration_coef::P = Param(200.0, bounds=(0.0, 400.0), desc="Maximum infiltration rate. Higher values allow more infiltration into soil.")
+    infiltration_shape::P = Param(5.0, bounds=(0.0, 10.0), desc="Controls decrease in infiltration with increasing soil moisture.")
+    interflow_coef::P = Param(0.5, bounds=(0.0, 1.0), desc="Movement of water laterally through soil.")
+    pervious_fraction::P = Param(0.5, bounds=(0.0, 1.0), desc="Indicates fraction of catchment that is pervious.")
+    risc::P = Param(2.5, bounds=(0.0, 5.0), desc="Represents canopy/vegetation interception capacity (in mm).")
+    recharge_coef::P = Param(0.5, bounds=(0.0, 1.0), desc="Rate of deep percolation from soil to groundwater.")
+    smsc::P = Param(250.0, bounds=(1.0, 500.0), desc="Maximum capacity of soil (in mm).")
 
     # stores
     sm_store::Array{A} = [0.0]
@@ -183,15 +183,16 @@ function update_params!(
     recharge_coef::Float64,
     smsc::Float64
 )::Nothing
-    node.baseflow_coef = Param(baseflow_coef, bounds=node.baseflow_coef.bounds)
-    node.impervious_threshold = Param(impervious_threshold, bounds=node.impervious_threshold.bounds)
-    node.infiltration_coef = Param(infiltration_coef, bounds=node.infiltration_coef.bounds)
-    node.infiltration_shape = Param(infiltration_shape, bounds=node.infiltration_shape.bounds)
-    node.interflow_coef = Param(interflow_coef, bounds=node.interflow_coef.bounds)
-    node.pervious_fraction = Param(pervious_fraction, bounds=node.pervious_fraction.bounds)
-    node.risc = Param(risc, bounds=node.risc.bounds)
-    node.recharge_coef = Param(recharge_coef, bounds=node.recharge_coef.bounds)
-    node.smsc = Param(smsc, bounds=node.smsc.bounds)
+    param_pairs = zip(
+        [:baseflow_coef, :impervious_threshold, :infiltration_coef, :infiltration_shape, :interflow_coef, :pervious_fraction, :risc, :recharge_coef, :smsc],
+        [baseflow_coef, impervious_threshold, infiltration_coef, infiltration_shape, interflow_coef, pervious_fraction, risc, recharge_coef, smsc]
+    )
+
+    # First item will always be the set value, so it can be skipped
+    for (p, v) in param_pairs
+        param = getfield(node, p)
+        setfield!(node, p, Param(v; (keys(param)[2:end] .=> values(param)[2:end])...))
+    end
 
     return nothing
 end

@@ -71,14 +71,10 @@ Base.@kwdef mutable struct GR4JNode{P,A<:AbstractFloat} <: GRNJNode
     const area::A
 
     # Parameters
-    # x1 : maximum capacity of the production store (mm) (> 0)
-    # x2 : groundwater exchange coefficient (mm) (value < and > 0 possible)
-    # x3 : one day ahead maximum capacity of the routing store (mm, > 0)
-    # x4 : time base of unit hydrograph UH1 (days, > 0.5)
-    X1::P = Param(350.0, bounds=(1.0, 1500.0))
-    X2::P = Param(0.0, bounds=(-10.0, 5.0))
-    X3::P = Param(40.0, bounds=(1.0, 500.0))
-    X4::P = Param(0.5, bounds=(0.5, 10.0))
+    X1::P = Param(350.0, bounds=(1.0, 1500.0), desc="Maximum soil water storage capacity.")
+    X2::P = Param(0.0, bounds=(-10.0, 5.0), desc="Water exchange with deeper groundwater and adjacent catchments.")
+    X3::P = Param(40.0, bounds=(1.0, 500.0), desc="Maximum capacity of one day ahead of routing store, controls the baseflow component.")
+    X4::P = Param(0.5, bounds=(0.5, 10.0), desc="Time base of quickflow controlling the timing and shape of hydrograph.")
 
     # stores
     p_store::Vector{A} = [0.0]
@@ -226,10 +222,13 @@ end
 Update parameters for GR4J.
 """
 function update_params!(node::GR4JNode, X1::Float64, X2::Float64, X3::Float64, X4::Float64)::Nothing
-    node.X1 = Param(X1, bounds=node.X1.bounds)
-    node.X2 = Param(X2, bounds=node.X2.bounds)
-    node.X3 = Param(X3, bounds=node.X3.bounds)
-    node.X4 = Param(X4, bounds=node.X4.bounds)
+    param_pairs = zip([:X1, :X2, :X3, :X4], [X1, X2, X3, X4])
+
+    # First item will always be the set value, so it can be skipped
+    for (p, v) in param_pairs
+        param = getfield(node, p)
+        setfield!(node, p, Param(v; (keys(param)[2:end] .=> values(param)[2:end])...))
+    end
 
     return nothing
 end
