@@ -1,4 +1,4 @@
-import ..Analysis: TemporalCrossSection
+import ..Analysis: TemporalCrossSection, offsets
 
 Base.@kwdef mutable struct WeightedEnsembleNode{N<:NetworkNode,P,A<:Real} <: EnsembleNode
     name::String
@@ -177,20 +177,31 @@ end
     apply_temporal_correction(
         ensemble::WeightedEnsembleNode,
         climate::Climate,
-        obs::Vector{T}
+        obs::Vector{T};
+        low_cap::Float64=1.0,
+        high_cap::Float64=1.0
     ) where {T<:Real}
 
 Correct for model bias using median error.
+By default, the correction is capped to ± 100% of model prediction modified by
+`low_cap` and `high_cap`
 """
 function apply_temporal_correction(
     ensemble::WeightedEnsembleNode,
     climate::Climate,
-    obs::Vector{T}
-) where {T<:Real}
+    obs::Vector{Float64};
+    low_cap::Float64=1.0,
+    high_cap::Float64=1.0
+)
+    low_cap = clamp(low_cap, 0.0, 1.0)
+    high_cap = clamp(high_cap, 0.0, 1.0)
+
     dates = timesteps(climate)
     tcs = TemporalCrossSection(dates, obs, ensemble.outflow)
 
-    return max.(ensemble.outflow .+ Streamfall.Analysis.offsets(tcs), 0.0)
+    x = min.(ensemble.outflow .+ offsets(tcs), ensemble.outflow .* (1.0 + high_cap))
+
+    return max.(x, ensemble.outflow .* (1.0 - low_cap))
 end
 
 """

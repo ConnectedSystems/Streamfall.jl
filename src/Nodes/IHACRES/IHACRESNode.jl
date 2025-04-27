@@ -20,7 +20,7 @@ Base.@kwdef mutable struct IHACRESBilinearNode{P,A<:AbstractFloat} <: IHACRESNod
     a::P = Param(0.9, bounds=(0.1, 10.0), desc="Quickflow storage coefficient, where higher values lead to faster quickflow response.")  # quickflow storage coefficient == (1/tau_q)
     b::P = Param(0.1, bounds=(1e-3, 0.1), desc="Slowflow storage coefficient, lower values lead to slower baseflow recession.")  # slowflow storage coefficent == (1/tau_s)
 
-    storage_coef::P = Param(2.9, bounds=(1e-10, 10.0), desc="Groundwater interaction factor, controling how water is exchanged with deeper groundwater.")
+    storage_coef::P = Param(2.9, bounds=(1e-10, 10.0), desc="Groundwater interaction factor, controlling how water is exchanged with deeper groundwater.")
     alpha::P = Param(0.1, bounds=(1e-5, 1 - 1 / 10^9), desc="Effective rainfall scaling factor, partitions rainfall into runoff.")
 
     # const level_params::Array{P, 1} = [
