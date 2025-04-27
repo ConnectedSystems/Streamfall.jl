@@ -19,7 +19,7 @@ end
 Create node of a given type.
 """
 function create_node(node::Type{<:NetworkNode}, name::String, area::Float64)
-    return node{Param, Float64}(; name=name, area=area)
+    return node{Param,Float64}(; name=name, area=area)
 end
 
 
@@ -55,7 +55,6 @@ function GenericDirectNode(name::String, spec::Dict)
 end
 
 
-
 """
     param_info(node::NetworkNode)
 
@@ -71,7 +70,6 @@ function param_info(node::NetworkNode; kwargs...)::Tuple
 
     return param_names, values, bounds
 end
-
 
 """
     get_node_id(mg::MetaDiGraph, node_name::String)::Int64
@@ -160,10 +158,15 @@ function Base.show(io::IO, n::NetworkNode)
     println(io, "Name: $(n.name) [$(ntype_name)]")
     println(io, "Area: $(n.area)")
 
-    param_names, x0, bounds = param_info(n; with_level=false)
-    lb, ub = zip(bounds...)
-    details = hcat(param_names, x0, [lb...], [ub...])
+    n_model = Model(n)
+    param_names = n_model[:fieldname]
+    x0 = n_model[:val]
+    bounds = n_model[:bounds]
+    descs = n_model[:desc]
 
-    pretty_table(io, details, header=["Parameter", "Value", "Lower Bound", "Upper Bound"])
+    lb, ub = zip(bounds...)
+    details = hcat([param_names...], [x0...], [lb...], [ub...], [descs...])
+
+    pretty_table(io, details, header=["Parameter", "Value", "Lower Bound", "Upper Bound", "Description"])
     print("\n")
 end

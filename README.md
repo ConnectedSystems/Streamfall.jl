@@ -172,18 +172,18 @@ To display an overview of a node or network:
 julia> node
 Name: 406219 [IHACRESBilinearNode]
 Area: 1985.73
-┌──────────────┬───────────┬─────────────┬─────────────┐
-│    Parameter │     Value │ Lower Bound │ Upper Bound │
-├──────────────┼───────────┼─────────────┼─────────────┤
-│            d │   84.2802 │        10.0 │       550.0 │
-│           d2 │   2.42241 │      0.0001 │        10.0 │
-│            e │  0.812959 │         0.1 │         1.5 │
-│            f │   2.57928 │        0.01 │         3.0 │
-│            a │   5.92338 │         0.1 │        10.0 │
-│            b │ 0.0989926 │       0.001 │         0.1 │
-│ storage_coef │   1.86134 │     1.0e-10 │        10.0 │
-│        alpha │  0.727905 │      1.0e-5 │         1.0 │
-└──────────────┴───────────┴─────────────┴─────────────┘
+┌──────────────┬───────────┬─────────────┬─────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│    Parameter │     Value │ Lower Bound │ Upper Bound │                                                                                                              Description │
+├──────────────┼───────────┼─────────────┼─────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│            d │   84.2802 │        10.0 │       550.0 │ Catchment moisture deficit threshold, higher values indicate the catchment can hold more water before generating runoff. │
+│           d2 │   2.42241 │      0.0001 │        10.0 │               Scaling factor (d*d2) which creates a second threshold, changing the shape of effective rainfall response. │
+│            e │  0.812959 │         0.1 │         1.5 │                      PET conversion factor, controls the rate of evapotranspiration losses, converts temperature to PET. │
+│            f │   2.57928 │        0.01 │         3.0 │                             Plant stress threshold, controls at what moisture deficit plants begin to experience stress. │
+│            a │   5.92338 │         0.1 │        10.0 │                                    Quickflow storage coefficient, where higher values lead to faster quickflow response. │
+│            b │ 0.0989926 │       0.001 │         0.1 │                                            Slowflow storage coefficient, lower values lead to slower baseflow recession. │
+│ storage_coef │   1.86134 │     1.0e-10 │        10.0 │                               Groundwater interaction factor, controling how water is exchanged with deeper groundwater. │
+│        alpha │  0.727905 │      1.0e-5 │         1.0 │                                                      Effective rainfall scaling factor, partitions rainfall into runoff. │
+└──────────────┴───────────┴─────────────┴─────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Network specification

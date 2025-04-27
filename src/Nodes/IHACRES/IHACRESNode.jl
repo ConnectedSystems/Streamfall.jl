@@ -13,15 +13,15 @@ Base.@kwdef mutable struct IHACRESBilinearNode{P,A<:AbstractFloat} <: IHACRESNod
     const area::A
 
     # https://wiki.ewater.org.au/display/SD41/IHACRES-CMD+-+SRG
-    d::P = Param(200.0, bounds=(10.0, 550.0))  # flow threshold
-    d2::P = Param(2.0, bounds=(0.0001, 10.0))   # flow threshold2
-    e::P = Param(1.0, bounds=(0.999, 1.0))  # temperature to PET conversion factor
-    f::P = Param(0.8, bounds=(0.01, 3.0))  # plant stress threshold factor (multiplicative factor of d)
-    a::P = Param(0.9, bounds=(0.1, 10.0))  # quickflow storage coefficient == (1/tau_q)
-    b::P = Param(0.1, bounds=(1e-3, 0.1))  # slowflow storage coefficent == (1/tau_s)
+    d::P = Param(200.0, bounds=(10.0, 550.0), desc="Catchment moisture deficit threshold, higher values indicate the catchment can hold more water before generating runoff.")
+    d2::P = Param(2.0, bounds=(0.0001, 10.0), desc="Scaling factor (d*d2) which creates a second threshold, changing the shape of effective rainfall response.")
+    e::P = Param(1.0, bounds=(0.999, 1.0), desc="PET conversion factor, controls the rate of evapotranspiration losses, converts temperature to PET.")
+    f::P = Param(0.8, bounds=(0.01, 3.0), desc="Plant stress threshold, controls at what moisture deficit plants begin to experience stress.")
+    a::P = Param(0.9, bounds=(0.1, 10.0), desc="Quickflow storage coefficient, where higher values lead to faster quickflow response.")  # quickflow storage coefficient == (1/tau_q)
+    b::P = Param(0.1, bounds=(1e-3, 0.1), desc="Slowflow storage coefficient, lower values lead to slower baseflow recession.")  # slowflow storage coefficent == (1/tau_s)
 
-    storage_coef::P = Param(2.9, bounds=(1e-10, 10.0))
-    alpha::P = Param(0.1, bounds=(1e-5, 1 - 1 / 10^9))
+    storage_coef::P = Param(2.9, bounds=(1e-10, 10.0), desc="Groundwater interaction factor, controling how water is exchanged with deeper groundwater.")
+    alpha::P = Param(0.1, bounds=(1e-5, 1 - 1 / 10^9), desc="Effective rainfall scaling factor, partitions rainfall into runoff.")
 
     # const level_params::Array{P, 1} = [
     #     Param(-0.01, bounds=(-10.0, -0.01)),  # p1
@@ -462,14 +462,16 @@ function update_params!(
     s_coef::F,
     alpha::F
 )::Nothing where {F<:Float64}
-    node.d = Param(d, bounds=node.d.bounds::Tuple)
-    node.d2 = Param(d2, bounds=node.d2.bounds::Tuple)
-    node.e = Param(e, bounds=node.e.bounds::Tuple)
-    node.f = Param(f, bounds=node.f.bounds::Tuple)
-    node.a = Param(a, bounds=node.a.bounds::Tuple)
-    node.b = Param(b, bounds=node.b.bounds::Tuple)
-    node.storage_coef = Param(s_coef, bounds=node.storage_coef.bounds::Tuple)
-    node.alpha = Param(alpha, bounds=node.alpha.bounds::Tuple)
+    param_pairs = zip(
+        [:d, :d2, :e, :f, :a, :b, :storage_coef, :alpha],
+        [d, d2, e, f, a, b, s_coef, alpha]
+    )
+
+    # First item will always be the set value, so it can be skipped
+    for (p, v) in param_pairs
+        param = getfield(node, p)
+        setfield!(node, p, Param(v; (keys(param)[2:end] .=> values(param)[2:end])...))
+    end
 
     return nothing
 end

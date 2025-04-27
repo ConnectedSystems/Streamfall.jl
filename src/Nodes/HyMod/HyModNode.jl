@@ -25,11 +25,11 @@ Base.@kwdef mutable struct SimpleHyModNode{P,A<:AbstractFloat} <: HyModNode
     const area::A
 
     # parameters
-    Sm_max::P = Param(250.0, bounds=(1.0, 500.0))
-    B::P = Param(1.0, bounds=(0.0, 2.0))
-    alpha::P = Param(0.2, bounds=(0.0, 1.0))
-    Kf::P = Param(0.5, bounds=(0.1, 0.9999))
-    Ks::P = Param(0.05, bounds=(0.001, 0.1))
+    Sm_max::P = Param(250.0, bounds=(1.0, 500.0), desc="Maximum soil storage capacity.")
+    B::P = Param(1.0, bounds=(0.0, 2.0), desc="Controls how quickly the catchment becomes saturated as rainfall accumulates.")
+    alpha::P = Param(0.2, bounds=(0.0, 1.0), desc="The split between quick and slow flow components. Higher values direct more water through quickflow.")
+    Kf::P = Param(0.5, bounds=(0.1, 0.9999), desc="Quickflow recession.")
+    Ks::P = Param(0.05, bounds=(0.001, 0.1), desc="Slowflow recession.")
 
     # stores
     Sm::Array{A} = [0.0]
@@ -173,11 +173,13 @@ end
 Update parameters for HyMod.
 """
 function update_params!(node::HyModNode, Sm_max::F, B::F, alpha::F, Kf::F, Ks::F) where {F<:Float64}
-    node.Sm_max = Param(Sm_max, bounds=node.Sm_max.bounds::Tuple)
-    node.B = Param(B, bounds=node.B.bounds::Tuple)
-    node.alpha = Param(alpha, bounds=node.alpha.bounds::Tuple)
-    node.Kf = Param(Kf, bounds=node.Kf.bounds::Tuple)
-    node.Ks = Param(Ks, bounds=node.Ks.bounds::Tuple)
+    param_pairs = zip([:Sm_max, :B, :alpha, :Kf, :Ks], [Sm_max, B, alpha, Kf, Ks])
+
+    # First item will always be the set value, so it can be skipped
+    for (p, v) in param_pairs
+        param = getfield(node, p)
+        setfield!(node, p, Param(v; (keys(param)[2:end] .=> values(param)[2:end])...))
+    end
 end
 
 function update_state!(
