@@ -12,24 +12,16 @@ Streamfall leverages the Julia language and ecosystem to provide:
 - Support for modelling and assessment of interacting systems
 - A wide range of performance metrics
 
-This package includes implementations of the following:
-- GR4J
-- HyMod
-- IHACRES
-- SIMHYD
-
 Performance is expected to be similar to implementations in C and Fortran.
 
-Naive timings (using `@time`) for an example dataset spanning 1963-07-05 - 2014-12-31 (18808 days, approximately 51.5 years)
+This package includes implementations of the following 
+(with naive timings using the `@time` macro):
+- GR4J [0.015274 seconds (224.75 k allocations: 5.584 MiB)]
+- HyMod [0.016502 seconds (469.25 k allocations: 12.902 MiB)]
+- IHACRES [0.021734 seconds (675.63 k allocations: 17.773 MiB)]
+- SIMHYD [0.022818 seconds (600.39 k allocations: 16.768 MiB)]
 
-- SimpleHyModNode \
-  0.016502 seconds (469.25 k allocations: 12.902 MiB)
-- GR4JNode \
-  0.015274 seconds (224.75 k allocations: 5.584 MiB)
-- SIMHYDNode \
-  0.022818 seconds (600.39 k allocations: 16.768 MiB)
-- IHACRESBilinearNode \
-  0.021734 seconds (675.63 k allocations: 17.773 MiB)
+Timings were taken using an example dataset spanning 1963-07-05 - 2014-12-31 (18808 days, approximately 51.5 years)
 
 The IHACRES rainfall-runoff model was previously implemented with [ihacres_nim](https://github.com/ConnectedSystems/ihacres_nim) but has since been ported to pure Julia.
 
@@ -43,7 +35,7 @@ Streamfall is now registered! The latest release version can be installed with:
 ] add Streamfall
 ```
 
-or the latest development version from GitHub with `dev` () or `add`:
+or the latest development version from GitHub with `dev` or `add`:
 
 ```julia
 # Editable install
