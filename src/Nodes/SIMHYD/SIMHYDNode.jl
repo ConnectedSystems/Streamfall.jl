@@ -235,7 +235,7 @@ function run_simhyd(node::SIMHYDNode, P::F, ET::F, ts::Int64)::NTuple{6,F} where
     impervious_ET::F = min(node.impervious_threshold, impervious_incident)
     impervious_runoff::F = impervious_incident - impervious_ET
 
-    interception_ET::F = min(pervious_incident, min(ET, node.risc))
+    interception_ET::F = min(pervious_incident, min(ET, node.risc.val::F)::F)
     throughfall::F = pervious_incident - impervious_ET
 
     smsc::F = node.smsc.val

@@ -27,7 +27,7 @@ Naive timings (using `@time`) for an example dataset spanning 1963-07-05 - 2014-
 - GR4JNode \
   0.015274 seconds (224.75 k allocations: 5.584 MiB)
 - SIMHYDNode \
-  0.039540 seconds (638.01 k allocations: 15.190 MiB, 46.99% gc time)
+  0.022818 seconds (600.39 k allocations: 16.768 MiB)
 - IHACRESBilinearNode \
   0.021734 seconds (675.63 k allocations: 17.773 MiB)
 
