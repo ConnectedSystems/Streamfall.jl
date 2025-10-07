@@ -162,11 +162,10 @@ function Base.show(io::IO, n::NetworkNode)
     param_names = n_model[:fieldname]
     x0 = n_model[:val]
     bounds = n_model[:bounds]
-    descs = n_model[:desc]
 
     lb, ub = zip(bounds...)
-    details = hcat([param_names...], [x0...], [lb...], [ub...], [descs...])
+    details = hcat([param_names...], [x0...], [lb...], [ub...])
 
-    pretty_table(io, details, header=["Parameter", "Value", "Lower Bound", "Upper Bound", "Description"])
+    pretty_table(io, details, header=["Parameter", "Value", "Lower Bound", "Upper Bound"])
     print("\n")
 end
