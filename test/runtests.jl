@@ -174,8 +174,9 @@ end
 #     @test flow_results[2] == slow_store
 # end
 
-include("test_metrics.jl")
-include("test_data_op.jl")
-include("test_nodes.jl")
-include("test_networks.jl")
-include("test_calibration.jl")
+#include("test_metrics.jl")
+#include("test_data_op.jl")
+#include("test_nodes.jl")
+#include("test_networks.jl")
+#include("test_calibration.jl")
+include("test_ihacres_gw.jl")

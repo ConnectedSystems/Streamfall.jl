@@ -16,6 +16,8 @@ climate_data = CSV.read(
     comment="#"
 )
 
+sn = load_network("Example Network", "campaspe_network.yml")
+
 # Load in observation data for each gauge in network
 outflow_files = readdir(glob"gauges/*_outflow*.csv")
 all_flow_data = CSV.read.(outflow_files, DataFrame; comment="#")
@@ -27,11 +29,11 @@ for name in node_names(sn)
     suffix = "_outflow_[ML]"
 
     if name != "406000"
-        ordered_flow_data[name] = extract_flow(all_flow_data[matching_file_pos], name, suffix)
+        ordered_flow_data[name] = extract_flow(all_flow_data[matching_file_pos], name; suffix=suffix)
         continue
     end
 
-    out = extract_flow(all_flow_data[matching_file_pos], name, suffix)
+    out = extract_flow(all_flow_data[matching_file_pos], name;suffix=suffix)
     ext = all_flow_data[matching_file_pos][:, ["Date", "406000_extractions_[ML]"]]
     df = DataFrame(Date=out.Date)
 

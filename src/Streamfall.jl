@@ -12,6 +12,7 @@ include("calibration.jl")
 include("Analysis/Analysis.jl")
 
 include("Nodes/IHACRES/IHACRESNode.jl")
+include("Nodes/IHACRES/IHACRESBilinearNodeGW.jl")
 # include("Nodes/IHACRES/IHACRESExpuhNode.jl")
 include("Nodes/GR4J/GR4JNode.jl")
 include("Nodes/HyMod/HyModNode.jl")
@@ -278,7 +279,7 @@ end
 
 # Nodes
 export NetworkNode, GenericNode, GenericDirectNode
-export IHACRES, IHACRESNode, IHACRESBilinearNode, DamNode, Climate
+export IHACRES, IHACRESNode, IHACRESBilinearNode, IHACRESBilinearNodeGW, DamNode, Climate
 export create_node, GR4JNode, HyModNode, SimpleHyModNode, SIMHYDNode
 export EnsembleNode, WeightedEnsembleNode, GREnsembleNode
 
@@ -309,5 +310,11 @@ export timesteps
 export Analysis
 
 export apply_bias_correction
+
+# IHACRES_GW functions (for testing and utilities)
+export convert_storage_to_depth, convert_depth_to_storage
+export calc_ft_quick_flow, routing
+export get_simulated_depth
+export get_water_table_elevation, get_water_table_height_above_streambed
 
 end  # end module
